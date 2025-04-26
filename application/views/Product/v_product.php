@@ -10,11 +10,11 @@
                     <i class="fa-solid fa-plus"></i> Tambah Produk
                 </button>
 
-                <?php if ($this->session->flashdata('error')): ?>
-                    <div class="alert alert-danger"><?= $this->session->flashdata('error') ?></div>
+                <?php if ($this->session->flashdata('error')) : ?>
+                <div class="alert alert-danger"><?= $this->session->flashdata('error') ?></div>
                 <?php endif; ?>
-                <?php if ($this->session->flashdata('success')): ?>
-                    <div class="alert alert-success"><?= $this->session->flashdata('success') ?></div>
+                <?php if ($this->session->flashdata('success')) : ?>
+                <div class="alert alert-success"><?= $this->session->flashdata('success') ?></div>
                 <?php endif; ?>
 
                 <!-- Modal Tambah Produk -->
@@ -110,45 +110,42 @@
                                     <th>Barcode</th>
                                     <th>SNI</th>
                                     <?php foreach ($gudang as $g) { ?>
-                                        <th>Stock <?= $g->nama_gudang ?></th>
+                                    <th>Stock <?= $g->nama_gudang ?></th>
                                     <?php } ?>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($product as $pkey => $pvalue) { ?>
-                                    <tr>
-                                        <td><?= $pkey + 1 ?></td>
-                                        <td><?= $pvalue->sku ?></td>
-                                        <td><?= $pvalue->nama_produk ?></td>
-                                        <td><img src="<?= base_url('assets/image/' . $pvalue->gambar) ?>" style="width: 100px; height: 100px;"></td>
-                                        <td>
-                                            <div style="font-family: 'Libre Barcode 39', cursive; font-size: 32px;"><?= $pvalue->barcode ?></div>
-                                            <div><?= $pvalue->barcode ?></div>
-                                        </td>
-                                        <td><img src="<?= base_url('assets/image/' . $pvalue->sni) ?>" style="width: 100px; height: 100px;"></td>
+                                <tr>
+                                    <td><?= $pkey + 1 ?></td>
+                                    <td><?= $pvalue->sku ?></td>
+                                    <td><?= $pvalue->nama_produk ?></td>
+                                    <td><img src="<?= base_url('assets/image/' . $pvalue->gambar) ?>" style="width: 100px; height: 100px;"></td>
+                                    <td><svg id="barcode-<?= $pvalue->idproduct ?>"></svg></td>
+                                    <td><img src="<?= base_url('assets/image/' . $pvalue->sni) ?>" style="width: 100px; height: 100px;"></td>
 
-                                        <?php foreach ($gudang as $g) {
+                                    <?php foreach ($gudang as $g) {
                                             $stok = isset($stokMap[$pvalue->idproduct][$g->idgudang]) ? $stokMap[$pvalue->idproduct][$g->idgudang] : 0;
-                                        ?>
-                                            <td><?= $stok ?></td>
-                                        <?php } ?>
+                                            ?>
+                                    <td><?= $stok ?></td>
+                                    <?php } ?>
 
-                                        <td>
-                                            <button type="button" class="btn btn-warning btnEditProduk" data-sku="<?= $pvalue->sku ?>" data-nama="<?= $pvalue->nama_produk ?>" data-barcode="<?= $pvalue->barcode ?>" data-gambar="<?= $pvalue->gambar ?>" data-sni="<?= $pvalue->sni ?>" data-bs-toggle="modal" data-bs-target="#editProduct">
-                                                <i class="fa fa-edit"></i> Edit
+                                    <td>
+                                        <button type="button" class="btn btn-warning btnEditProduk" data-sku="<?= $pvalue->sku ?>" data-nama="<?= $pvalue->nama_produk ?>" data-barcode="<?= $pvalue->barcode ?>" data-gambar="<?= $pvalue->gambar ?>" data-sni="<?= $pvalue->sni ?>" data-bs-toggle="modal" data-bs-target="#editProduct">
+                                            <i class="fa fa-edit"></i> Edit
+                                        </button>
+                                        <a href="<?php echo base_url('product/deleteProduct?idproduct=' . $pvalue->idproduct); ?>">
+                                            <button type="button" class="btn btn-danger">
+                                                <i class="fa-solid fa-trash-can"></i> Hapus
+                                            </button></a>
+                                        <a href="<?= base_url('product/stockCard?sku=' . $pvalue->sku); ?>">
+                                            <button type="button" class="btn btn-success">
+                                                <i class="fa-solid fa-print"></i> Kartu Stock
                                             </button>
-                                            <a href="<?php echo base_url('product/deleteProduct?idproduct=' . $pvalue->idproduct); ?>">
-                                                <button type="button" class="btn btn-danger">
-                                                    <i class="fa-solid fa-trash-can"></i> Hapus
-                                                </button></a>
-                                            <a href="<?= base_url('product/stockCard?sku=' . $pvalue->sku); ?>">
-                                                <button type="button" class="btn btn-success">
-                                                    <i class="fa-solid fa-print"></i> Kartu Stock
-                                                </button>
-                                            </a>
-                                        </td>
-                                    </tr>
+                                        </a>
+                                    </td>
+                                </tr>
                                 <?php } ?>
                             </tbody>
                         </table>
@@ -164,6 +161,8 @@
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
             <!-- 4. Core theme JS -->
             <script src="<?php echo base_url(); ?>js/scripts.js"></script>
+            <!-- Barcode -->
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
             <!-- Initialize DataTables AFTER all scripts are loaded -->
             <script>
@@ -230,6 +229,12 @@
                             document.getElementById('sniFilename').innerText = "File sebelumnya: " + sniFile;
                         });
                     });
+                });
+
+                document.addEventListener("DOMContentLoaded", function() {
+                    <?php foreach ($product as $pvalue) { ?>
+                    JsBarcode("#barcode-<?= $pvalue->idproduct ?>", "<?= $pvalue->barcode ?>");
+                    <?php } ?>
                 });
             </script>
             </body>

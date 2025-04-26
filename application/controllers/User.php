@@ -69,7 +69,11 @@ class User extends CI_Controller
             'email' => $email,
             'password' => password_hash($password, PASSWORD_DEFAULT),
             'foto' => $foto,
-            'idrole' => $idrole
+            'idrole' => $idrole,
+            'created_by' => $this->session->userdata('username'),
+            'created_date' => date("Y-m-d H:i:s"),
+            'updated_by' => $this->session->userdata('username'),
+            'updated_date' => date("Y-m-d H:i:s")
         ];
 
         $this->db->insert('user', $data);
@@ -140,7 +144,9 @@ class User extends CI_Controller
             'email' => $email,
             'password' => $hashedPassword,
             'foto' => $foto,
-            'idrole' => $idrole
+            'idrole' => $idrole,
+            'updated_by' => $this->session->userdata('username'),
+            'updated_date' => date("Y-m-d H:i:s")
         ];
 
         $this->db->where('iduser', $userId);

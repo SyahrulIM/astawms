@@ -24,7 +24,7 @@
                     </div>
                     <div class="col" style="text-align: right;">
                         <a href="<?php echo base_url('product/exportPdf?sku=' . $product->sku . '&idgudang=' . $selected_gudang); ?>"><button type="button" class="btn btn-success"><i class="fa-solid fa-print"></i> Print PDF</button></a>
-                        <a href="<?php echo base_url('product/exportXlsx?sku=' . $product->sku); ?>"><button type="button" class="btn btn-success"><i class="fa-solid fa-print"></i> Print Excel</button></a>
+                        <a href="<?php echo base_url('product/exportExcel?sku=' . $product->sku . '&idgudang=' . $selected_gudang); ?>"><button type="button" class="btn btn-success"><i class="fa-solid fa-print"></i> Print Excel</button></a>
                     </div>
                 </div>
 

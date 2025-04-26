@@ -34,6 +34,11 @@
 
         <div class="row">
             <div class="col">
+                <h3>SKU: <?php echo $product->sku ?></h3>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
                 <h3>Nama Barang: <?php echo $product->nama_produk ?></h3>
             </div>
         </div>
