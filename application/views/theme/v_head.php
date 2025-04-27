@@ -11,6 +11,8 @@
     <link href="<?php echo base_url(); ?>css/styles.css" rel="stylesheet" />
     <!-- DataTable CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/rowreorder/1.5.0/css/rowReorder.dataTables.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.dataTables.css">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Font Libre Barcode -->
@@ -29,8 +31,8 @@
                 <a class="list-group-item list-group-item-action list-group-item-light p-3" href="<?php echo base_url('product/'); ?>">Database Product</a>
                 <a class="list-group-item list-group-item-action list-group-item-light p-3" href="<?php echo base_url('barangmasuk/'); ?>">Barang Masuk</a>
                 <a class="list-group-item list-group-item-action list-group-item-light p-3" href="<?php echo base_url('outstock/'); ?>">Barang Keluar</a>
-                <?php if($this->session->userdata('idrole') == 1){?>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="<?php echo base_url('user/'); ?>">Pengguna</a>
+                <?php if ($this->session->userdata('idrole') == 1) { ?>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3" href="<?php echo base_url('user/'); ?>">Pengguna</a>
                 <?php } ?>
             </div>
         </div>
@@ -39,9 +41,9 @@
             <!-- Top navigation-->
             <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
                 <div class="container-fluid">
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
+                    <button class="btn btn-primary d-inline d-sm-none" id="sidebarToggle">Menu</button>
+                    <div class="navbar-nav ms-auto mt-2 mt-lg-0" id="navbarSupportedContent">
+                        <ul class="navbar-nav">
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <img src="<?php echo base_url('assets/image/user/' . $this->session->userdata('foto')); ?>" alt="<?php echo $this->session->userdata('username'); ?>" width="21px" height="21px" style="border-radius: 50%; object-fit: cover;">

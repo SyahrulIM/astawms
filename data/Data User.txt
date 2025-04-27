@@ -32,7 +32,7 @@ FTP & explicit FTPS port:  21
 Database wms.astahomeware.com:
 hostname = 103.163.138.82
 username = astahome_it,
-password = dbjh=d17d09,
+password = astawms=d17d09,
 database = astahome_wms,
 dbdriver = mysqli,
 

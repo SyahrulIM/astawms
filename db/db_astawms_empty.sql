@@ -29,25 +29,9 @@ CREATE TABLE IF NOT EXISTS `detail_instock` (
   `sisa` int DEFAULT NULL,
   `keterangan` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   PRIMARY KEY (`iddetail_instock`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table db_astawms.detail_instock: ~12 rows (approximately)
-INSERT INTO `detail_instock` (`iddetail_instock`, `instock_code`, `sku`, `nama_produk`, `jumlah`, `sisa`, `keterangan`) VALUES
-	(1, 'TSC20250426180242', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 100, 100, ''),
-	(2, 'TSC20250426180242', 'AECO-0101', 'Cempal Oval Flower Green - Asta', 100, 100, ''),
-	(3, 'TSC20250426180242', 'AEHG-0101', 'Sarung Tangan Flower Purple - Asta', 100, 100, ''),
-	(4, 'TSC20250426180242', 'ASAP-16', 'Ambrosia Panci Susu Milk Pot + Tutup Kaca 16 cm', 100, 100, ''),
-	(5, 'TSC20250426180442', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 100, 100, ''),
-	(6, 'TSC20250426180442', 'AECO-0101', 'Cempal Oval Flower Green - Asta', 100, 100, ''),
-	(7, 'TSC20250426180442', 'AEHG-0101', 'Sarung Tangan Flower Purple - Asta', 100, 100, ''),
-	(8, 'TSC20250426180442', 'ASAP-16', 'Ambrosia Panci Susu Milk Pot + Tutup Kaca 16 cm', 100, 100, ''),
-	(9, 'TSC20250426183526', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 50, 70, ''),
-	(10, 'TSC20250426183526', 'AECO-0101', 'Cempal Oval Flower Green - Asta', 50, 150, ''),
-	(11, 'TSC20250426183700', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 50, 100, ''),
-	(12, 'TSC20250426183712', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 30, 100, ''),
-	(13, 'TSC20250427193812', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 10, 90, ''),
-	(14, 'TSC20250427203702', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 10, 100, ''),
-	(15, 'TSC20250427203839', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 20, 120, '');
+-- Dumping data for table db_astawms.detail_instock: ~0 rows (approximately)
 
 -- Dumping structure for table db_astawms.detail_outstock
 CREATE TABLE IF NOT EXISTS `detail_outstock` (
@@ -59,15 +43,9 @@ CREATE TABLE IF NOT EXISTS `detail_outstock` (
   `sisa` int DEFAULT NULL,
   `keterangan` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   PRIMARY KEY (`iddetail_outstock`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table db_astawms.detail_outstock: ~4 rows (approximately)
-INSERT INTO `detail_outstock` (`iddetail_outstock`, `outstock_code`, `sku`, `nama_produk`, `jumlah`, `sisa`, `keterangan`) VALUES
-	(1, 'TSC20250426183434', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 30, 70, ''),
-	(2, 'TSC20250426183445', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 50, 20, ''),
-	(3, 'TSC20250426183454', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 50, 50, ''),
-	(4, 'TSC20250426183731', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 20, 80, ''),
-	(5, 'TSC20250426183740', 'AECK-0101', 'Cempal Kotak White Beige - Asta', 30, 70, '');
+-- Dumping data for table db_astawms.detail_outstock: ~0 rows (approximately)
 
 -- Dumping structure for table db_astawms.gudang
 CREATE TABLE IF NOT EXISTS `gudang` (
@@ -94,18 +72,9 @@ CREATE TABLE IF NOT EXISTS `instock` (
   `created_by` varchar(200) DEFAULT NULL,
   `created_date` datetime DEFAULT NULL,
   PRIMARY KEY (`idinstock`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table db_astawms.instock: ~5 rows (approximately)
-INSERT INTO `instock` (`idinstock`, `idgudang`, `instock_code`, `tgl_terima`, `jam_terima`, `datetime`, `user`, `kategori`, `created_by`, `created_date`) VALUES
-	(1, 1, 'TSC20250426180242', '2025-04-26', '18:02:42', '2025-04-26 18:02:42', 'Admin', 'Barang Masuk', NULL, NULL),
-	(2, 2, 'TSC20250426180442', '2025-04-26', '18:04:42', '2025-04-26 18:04:42', 'Admin', 'Barang Masuk', NULL, NULL),
-	(3, 1, 'TSC20250426183526', '2025-04-26', '18:35:26', '2025-04-26 18:35:26', 'Admin', 'Barang Masuk', NULL, NULL),
-	(4, 2, 'TSC20250426183700', '2025-04-26', '18:37:00', '2025-04-26 18:37:00', 'Admin', 'Barang Masuk', NULL, NULL),
-	(5, 1, 'TSC20250426183712', '2025-04-26', '18:37:12', '2025-04-26 18:37:12', 'Admin', 'Barang Masuk', NULL, NULL),
-	(6, 1, 'TSC20250427193812', '2025-04-27', '19:38:12', '2025-04-27 19:38:12', 'Superadmin', 'Barang Masuk', NULL, NULL),
-	(7, 1, 'TSC20250427203702', '2025-04-27', '20:37:02', '2024-02-20 20:02:00', 'Superadmin', 'Barang Masuk', 'Superadmin', '2025-04-27 20:37:02'),
-	(8, 1, 'TSC20250427203839', '2025-04-27', '20:38:39', '2024-02-19 20:02:00', 'Superadmin', 'Barang Masuk', 'Superadmin', '2025-04-27 20:38:39');
+-- Dumping data for table db_astawms.instock: ~0 rows (approximately)
 
 -- Dumping structure for table db_astawms.outstock
 CREATE TABLE IF NOT EXISTS `outstock` (
@@ -120,15 +89,9 @@ CREATE TABLE IF NOT EXISTS `outstock` (
   `created_by` varchar(200) DEFAULT NULL,
   `created_date` datetime DEFAULT NULL,
   PRIMARY KEY (`idoutstock`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table db_astawms.outstock: ~4 rows (approximately)
-INSERT INTO `outstock` (`idoutstock`, `idgudang`, `outstock_code`, `tgl_keluar`, `jam_keluar`, `datetime`, `user`, `kategori`, `created_by`, `created_date`) VALUES
-	(21, 1, 'TSC20250426183434', '2025-04-26', '18:34:34', '2025-04-26 18:34:34', 'Admin', 'Barang Keluar', NULL, NULL),
-	(22, 1, 'TSC20250426183445', '2025-04-26', '18:34:45', '2025-04-26 18:34:45', 'Admin', 'Barang Keluar', NULL, NULL),
-	(23, 2, 'TSC20250426183454', '2025-04-26', '18:34:54', '2025-04-26 18:34:54', 'Admin', 'Barang Keluar', NULL, NULL),
-	(24, 1, 'TSC20250426183731', '2025-04-26', '18:37:31', '2025-04-26 18:37:31', 'Admin', 'Barang Keluar', NULL, NULL),
-	(25, 2, 'TSC20250426183740', '2025-04-26', '18:37:40', '2025-04-26 18:37:40', 'Admin', 'Barang Keluar', NULL, NULL);
+-- Dumping data for table db_astawms.outstock: ~0 rows (approximately)
 
 -- Dumping structure for table db_astawms.product
 CREATE TABLE IF NOT EXISTS `product` (
@@ -669,18 +632,9 @@ CREATE TABLE IF NOT EXISTS `product_stock` (
   `idgudang` int NOT NULL,
   `stok` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`idproduct_stock`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table db_astawms.product_stock: ~8 rows (approximately)
-INSERT INTO `product_stock` (`idproduct_stock`, `idproduct`, `idgudang`, `stok`) VALUES
-	(1, 1, 1, 120),
-	(2, 2, 1, 150),
-	(3, 20, 1, 100),
-	(4, 41, 1, 100),
-	(5, 1, 2, 70),
-	(6, 2, 2, 100),
-	(7, 20, 2, 100),
-	(8, 41, 2, 100);
+-- Dumping data for table db_astawms.product_stock: ~0 rows (approximately)
 
 -- Dumping structure for table db_astawms.role
 CREATE TABLE IF NOT EXISTS `role` (

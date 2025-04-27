@@ -27,6 +27,13 @@
                                             <button type="button" class="btn btn-primary btn-tambah-barang" id="btn-tambah-barang"><i class="fa-solid fa-plus"></i> Tambah Barang</button>
                                         </div>
                                         <div class="col">
+                                            <?php if ($this->session->userdata('idrole') != 4) { ?>
+                                            <input type="datetime-local" class="form-control" id="inputDatetime" name="inputDatetime" placeholder="Pilih Tanggal & Waktu" disabled>
+                                            <?php } else {?>
+                                            <input type="datetime-local" class="form-control" id="inputDatetime" name="inputDatetime" placeholder="Pilih Tanggal & Waktu" disabled>
+                                            <?php } ?>
+                                        </div>
+                                        <div class="col">
                                             <select class="form-select" aria-label="Default select example" id="inputGudang" name="inputGudang" required>
                                                 <option value="" selected disabled>Pilih Gudang</option>
                                                 <?php foreach ($gudang as $gkey => $gvalue) { ?>
@@ -113,7 +120,12 @@
             </div>
             <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
             <!-- 2. DataTables JS -->
+            <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
             <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
+            <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
+            <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/rowReorder.dataTables.js"></script>
+            <script src="https://cdn.datatables.net/responsive/3.0.4/js/dataTables.responsive.js"></script>
+            <script src="https://cdn.datatables.net/responsive/3.0.4/js/responsive.dataTables.js"></script>
             <!-- 3. Bootstrap bundle -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
             <!-- 4. Core theme JS -->
@@ -123,6 +135,7 @@
             <script>
                 $(document).ready(function() {
                     new DataTable('#tableproduct', {
+                        responsive: true,
                         layout: {
                             bottomEnd: {
                                 paging: {

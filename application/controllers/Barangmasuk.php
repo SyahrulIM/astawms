@@ -41,7 +41,10 @@ class Barangmasuk extends CI_Controller
         $inputInstockCode = "TSC" . date("Ymd") . date("His");
         $inputTglTerima = date("Y-m-d");
         $inputJamTerima = date("H:i:s");
-        $inputDatetime = date("Y-m-d H:i:s");
+        $inputDatetime = $this->input->post('inputDatetime');
+        if (empty($inputDatetime)) {
+            $inputDatetime = date("Y-m-d H:i:s");
+        }
         $inputUser = $this->session->userdata('username');
         $inputKategori = $this->input->post('inputKategori');
 
@@ -53,6 +56,8 @@ class Barangmasuk extends CI_Controller
             'datetime' => $inputDatetime,
             'user' => $inputUser,
             'kategori' => $inputKategori,
+            'created_by' => $this->session->userdata('username'),
+            'created_date' => date("Y-m-d H:i:s"),
         ];
 
         $this->db->insert('instock', $data_instock);
