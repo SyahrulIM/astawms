@@ -46,7 +46,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="inputEmail">Email</label>
-                                        <input type="text" class="form-control" id="inputEmail" name="inputEmail" required>
+                                        <input type="email" class="form-control" id="inputEmail" name="inputEmail" required>
                                     </div>
                                     <div class="mb-3">
                                         <label for="inputPassword" class="form-label">Password</label>
@@ -143,18 +143,19 @@
                                     <td><?php echo $uvalue->full_name; ?></td>
                                     <td><?php echo $uvalue->username; ?></td>
                                     <td><?php echo $uvalue->email; ?></td>
-                                    <td><img src="<?php echo base_url('assets/image/user/' . $uvalue->foto); ?>" alt="<?php echo $uvalue->foto; ?>" width="100px" height="100px"></td>
+                                    <td><img src="<?php echo base_url('assets/image/user/' . $uvalue->foto); ?>" alt="<?php echo $uvalue->foto; ?>" width="100px" height="100px" style="border-radius: 50%; object-fit: cover;"></td>
                                     <td><?php echo $uvalue->nama_role; ?></td>
                                     <td>
+                                        <?php if ($uvalue->iduser != 4) { ?>
                                         <button type="button" class="btn btn-warning btnEditUser" data-full_name="<?= $uvalue->full_name ?>" data-username="<?= $uvalue->username ?>" data-email="<?= $uvalue->email ?>" data-foto="<?= $uvalue->foto ?>" data-idrole="<?= $uvalue->idrole ?>" data-bs-toggle="modal" data-bs-target="#editUser">
                                             <i class="fa fa-edit"></i> Edit
                                         </button>
-
                                         <a href="<?php echo base_url('user/deleteUser?iduser=' . $uvalue->iduser); ?>">
                                             <button type="button" class="btn btn-danger">
                                                 <i class="fa-solid fa-trash-can"></i> Hapus
                                             </button>
                                         </a>
+                                        <?php } ?>
                                     </td>
                                 </tr>
                                 <?php } ?>

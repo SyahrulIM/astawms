@@ -39,7 +39,7 @@ class Auth extends CI_Controller
 					'iduser' => $user->iduser,
 					'full_name' => $user->full_name,
 					'username' => $user->username,
-					'role' => $user->role,
+					'idrole' => $user->idrole,
 					'foto' => $user->foto,
 				]);
 				redirect('dashboard');  // Redirect to the dashboard

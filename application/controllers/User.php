@@ -159,7 +159,11 @@ class User extends CI_Controller
     public function deleteUser()
     {
         $iduser = $this->input->get('iduser');
-        $this->db->where('iduser', $iduser)->set('status', 0)->update('user');
+    
+        if ($iduser != 4) {
+            $this->db->where('iduser', $iduser)->set('status', 0)->update('user');
+        }
+    
         redirect('user');
-    }
+    }    
 }

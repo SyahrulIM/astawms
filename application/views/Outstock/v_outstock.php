@@ -6,9 +6,11 @@
                     </div>
                 </div>
                 <!-- Button trigger modal Tambah Produk -->
+                <?php if ($this->session->userdata('idrole') != 4) { ?>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProduct">
                     <i class="fa-solid fa-plus"></i> Tambah Transaksi Barang Keluar
                 </button>
+                <?php } ?>
 
                 <!-- Modal Tambah Produk -->
                 <div class="modal fade" id="addProduct" tabindex="-1" aria-labelledby="addProductLabel" aria-hidden="true">

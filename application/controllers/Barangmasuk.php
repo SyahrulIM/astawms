@@ -42,7 +42,7 @@ class Barangmasuk extends CI_Controller
         $inputTglTerima = date("Y-m-d");
         $inputJamTerima = date("H:i:s");
         $inputDatetime = date("Y-m-d H:i:s");
-        $inputUser = "Admin";
+        $inputUser = $this->session->userdata('username');
         $inputKategori = $this->input->post('inputKategori');
 
         $data_instock = [
