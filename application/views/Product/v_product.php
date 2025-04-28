@@ -6,7 +6,7 @@
                     </div>
                 </div>
                 <!-- Button trigger modal Tambah Produk -->
-                <?php if ($this->session->userdata('idrole') != 4) { ?>
+                <?php if ($this->session->userdata('idrole') != 4 && $this->session->userdata('idrole') != 2) { ?>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProduct">
                     <i class="fa-solid fa-plus"></i> Tambah Produk
                 </button>
@@ -138,7 +138,7 @@
                                     <td><?= $stok ?></td>
                                     <?php } ?>
                                     <td>
-                                        <?php if ($this->session->userdata('idrole') != 4) { ?>
+                                        <?php if ($this->session->userdata('idrole') != 4 && $this->session->userdata('idrole') != 2) { ?>
                                         <button type="button" class="btn btn-warning btnEditProduk" data-sku="<?= $pvalue->sku ?>" data-nama="<?= $pvalue->nama_produk ?>" data-barcode="<?= $pvalue->barcode ?>" data-gambar="<?= $pvalue->gambar ?>" data-sni="<?= $pvalue->sni ?>" data-bs-toggle="modal" data-bs-target="#editProduct">
                                             <i class="fa fa-edit"></i> Edit
                                         </button>

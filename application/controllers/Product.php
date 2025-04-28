@@ -380,16 +380,16 @@ class Product extends CI_Controller
         $content = "<table>";
 
         // Row 1: Title (no border)
-        $content .= "<tr><td colspan='8' style='font-weight:bold; text-align:center;'>Kartu Stok - Asta Homeware</td></tr>";
+        $content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Kartu Stok - Asta Homeware</td></tr>";
 
         // Row 2: SKU (no border)
-        $content .= "<tr><td colspan='8'>SKU: {$sku}</td></tr>";
+        $content .= "<tr><td colspan='9'>SKU: {$sku}</td></tr>";
 
         // Row 3: Nama Produk (no border)
-        $content .= "<tr><td colspan='8'>Nama Produk: {$product->nama_produk}</td></tr>";
+        $content .= "<tr><td colspan='9'>Nama Produk: {$product->nama_produk}</td></tr>";
 
         // Empty row
-        $content .= "<tr><td colspan='8'>&nbsp;</td></tr>";
+        $content .= "<tr><td colspan='9'>&nbsp;</td></tr>";
 
         // Tutup table judul
         $content .= "</table>";
