@@ -1,4 +1,8 @@
--Dashboard planing pengembangan dan dealine
+-Dashboard:
+	-Total barang masuk
+	-Total Barang keluar
+	-Circel grafik
+	-
 -database produk ditambahkan kategori, untuk produk tampa sni muncul tanda silang
 -hak access
 -estimasi biaya
@@ -39,3 +43,9 @@ dbdriver = mysqli,
 Anydesk astawms:
 IP Address: 1827317047
 Password: astawms=d17d09
+
+Selamat Pagi ce berikut adalah alamat webnya dan data usernya.
+
+Url: wms.astahomeware.com
+User: superadmin@gmail.com
+Pass: astawms=d17d09
