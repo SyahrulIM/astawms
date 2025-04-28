@@ -41,6 +41,7 @@
                                     <th>Keluar</th>
                                     <th>Sisa</th>
                                     <th>Penginput</th>
+                                    <th>Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -54,6 +55,7 @@
                                     <td><?php echo $tsvalue->outstock; ?></td>
                                     <td><?php echo $tsvalue->sisa; ?></td>
                                     <td><?php echo $tsvalue->user; ?></td>
+                                    <td><?php echo $tsvalue->keterangan; ?></td>
                                 </tr>
                                 <?php } ?>
                             </tbody>

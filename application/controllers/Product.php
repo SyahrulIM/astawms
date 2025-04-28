@@ -408,6 +408,7 @@ class Product extends CI_Controller
                             <th>Stock Out</th>
                             <th>Sisa</th>
                             <th>User</th>
+                            <th>Keterangan</th>
                         </tr>
                      </thead><tbody>";
 
@@ -423,6 +424,7 @@ class Product extends CI_Controller
                             <td>" . ($row->outstock !== null ? $row->outstock : '-') . "</td>
                             <td>{$row->sisa}</td>
                             <td>{$row->user}</td>
+                            <td>{$row->keterangan}</td>
                          </tr>";
             $no++;
         }

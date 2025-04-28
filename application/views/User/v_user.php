@@ -54,7 +54,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="inputFoto">Foto</label>
-                                        <input type="file" class="form-control" id="inputFoto" name="inputFoto" accept="image/*" required>
+                                        <input type="file" class="form-control" id="inputFoto" name="inputFoto" accept="image/*">
                                     </div>
                                     <div class="mb-3">
                                         <label for="inputRole" class="form-label">Role</label>
