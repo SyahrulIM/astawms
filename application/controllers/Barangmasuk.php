@@ -110,24 +110,25 @@ class Barangmasuk extends CI_Controller
     public function detail_instock()
     {
         $instock_code = $this->input->get('instock_code');
-
+    
         $data_detail_instock = $this->db
-            ->select('detail_instock.*, instock.tgl_terima, instock.jam_terima, instock.user, instock.kategori, gudang.nama_gudang as nama_gudang')
+            ->select('detail_instock.*, instock.tgl_terima, instock.jam_terima, instock.user, instock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk')
             ->from('detail_instock')
             ->join('instock', 'instock.instock_code = detail_instock.instock_code')
             ->join('gudang', 'gudang.idgudang = instock.idgudang')
+            ->join('product', 'detail_instock.sku = product.sku')
             ->where('detail_instock.instock_code', $instock_code)
             ->get()
             ->result();
-
+    
         $title = $instock_code;
         $data = [
             'title' => $title,
             'instock_code' => $instock_code,
             'detailInStock' => $data_detail_instock
         ];
-
+    
         $this->load->view('theme/v_head', $data);
         $this->load->view('barangMasuk/v_detail_instock');
-    }
+    }    
 }

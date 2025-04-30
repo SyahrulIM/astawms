@@ -115,13 +115,14 @@ class Outstock extends CI_Controller
         $outstock_code = $this->input->get('outstock_code');
 
         $data_detail_outstock = $this->db
-            ->select('detail_outstock.*, outstock.tgl_keluar, outstock.jam_keluar, outstock.user, outstock.kategori, gudang.nama_gudang as nama_gudang')
-            ->from('detail_outstock')
-            ->join('outstock', 'detail_outstock.outstock_code = outstock.outstock_code')
-            ->join('gudang', 'outstock.idgudang = gudang.idgudang')
-            ->where('detail_outstock.outstock_code', $outstock_code)
-            ->get()
-            ->result();
+        ->select('detail_outstock.*, outstock.tgl_keluar, outstock.jam_keluar, outstock.user, outstock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk')
+        ->from('detail_outstock')
+        ->join('outstock', 'detail_outstock.outstock_code = outstock.outstock_code')
+        ->join('gudang', 'outstock.idgudang = gudang.idgudang')
+        ->join('product', 'detail_outstock.sku = product.sku') // JOIN tambahan ke product
+        ->where('detail_outstock.outstock_code', $outstock_code)
+        ->get()
+        ->result();    
 
         $title = $outstock_code;
         $data = [
