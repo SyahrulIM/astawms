@@ -39,7 +39,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="inputGambar">Gambar</label>
-                                        <input type="file" class="form-control" id="inputGambar" name="inputGambar" accept="image/*" required>
+                                        <input type="file" class="form-control" id="inputGambar" name="inputGambar" accept="image/*">
                                     </div>
                                     <div class="mb-3">
                                         <label for="inputBarcode" class="form-label">Barcode</label>
@@ -47,7 +47,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="inputSni">SNI</label>
-                                        <input type="file" class="form-control" id="inputSni" name="inputSni" accept="image/*" required>
+                                        <input type="file" class="form-control" id="inputSni" name="inputSni" accept="image/*">
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -138,7 +138,7 @@
                                     <td><?= $stok ?></td>
                                     <?php } ?>
                                     <td>
-                                        <?php if ($this->session->userdata('idrole') != 4 && $this->session->userdata('idrole') != 2) { ?>
+                                    <?php if ($this->session->userdata('idrole') != 4 && $this->session->userdata('idrole') != 2) { ?>
                                         <button type="button" class="btn btn-warning btnEditProduk" data-sku="<?= $pvalue->sku ?>" data-nama="<?= $pvalue->nama_produk ?>" data-barcode="<?= $pvalue->barcode ?>" data-gambar="<?= $pvalue->gambar ?>" data-sni="<?= $pvalue->sni ?>" data-bs-toggle="modal" data-bs-target="#editProduct">
                                             <i class="fa fa-edit"></i> Edit
                                         </button>

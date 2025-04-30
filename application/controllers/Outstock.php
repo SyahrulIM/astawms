@@ -27,8 +27,8 @@ class Outstock extends CI_Controller
             'gudang' => $gudang->result()
         ];
 
-        $this->load->view('theme\v_head', $data);
-        $this->load->view('Outstock\v_outstock');
+        $this->load->view('theme/v_head', $data);
+        $this->load->view('Outstock/v_outstock');
     }
 
     public function stockOut()
@@ -131,6 +131,6 @@ class Outstock extends CI_Controller
         ];
 
         $this->load->view('theme/v_head', $data);
-        $this->load->view('outstock/v_detail_outstock');
+        $this->load->view('Outstock/v_detail_outstock');
     }
 }

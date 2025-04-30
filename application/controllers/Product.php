@@ -36,7 +36,7 @@ class Product extends CI_Controller
         ];
 
         $this->load->view('theme/v_head', $data);
-        $this->load->view('product/v_product');
+        $this->load->view('Product/v_product');
     }
 
 
@@ -235,7 +235,8 @@ class Product extends CI_Controller
                     detail_instock.jumlah AS instock,
                     NULL AS outstock,
                     detail_instock.sisa,
-                    instock.user
+                    instock.user,
+                    detail_instock.keterangan as keterangan
                 FROM detail_instock
                 LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
                 WHERE detail_instock.sku = ? AND instock.idgudang = ?
@@ -249,7 +250,8 @@ class Product extends CI_Controller
                     NULL AS instock,
                     detail_outstock.jumlah AS outstock,
                     detail_outstock.sisa,
-                    outstock.user
+                    outstock.user,
+                    detail_outstock.keterangan as keterangan
                 FROM detail_outstock
                 LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
                 WHERE detail_outstock.sku = ? AND outstock.idgudang = ?
@@ -271,7 +273,7 @@ class Product extends CI_Controller
         ];
 
         $this->load->view('theme/v_head', $data);
-        $this->load->view('product/v_stock_card');
+        $this->load->view('Product/v_stock_card');
     }
 
     public function exportPdf()
@@ -293,7 +295,8 @@ class Product extends CI_Controller
                 detail_instock.jumlah AS instock,
                 NULL AS outstock,
                 detail_instock.sisa,
-                instock.user
+                instock.user,
+                detail_instock.keterangan as keterangan
             FROM detail_instock
             LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
             WHERE detail_instock.sku = ? AND instock.idgudang = ?
@@ -307,7 +310,8 @@ class Product extends CI_Controller
                 NULL AS instock,
                 detail_outstock.jumlah AS outstock,
                 detail_outstock.sisa,
-                outstock.user
+                outstock.user,
+                detail_outstock.keterangan as keterangan
             FROM detail_outstock
             LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
             WHERE detail_outstock.sku = ? AND outstock.idgudang = ?
@@ -326,7 +330,7 @@ class Product extends CI_Controller
         ];
 
         // Load PDF generation view (assuming you have a view for PDF generation)
-        $this->load->view('product/v_print_pdf', $data);
+        $this->load->view('Product/v_print_pdf', $data);
     }
 
     public function exportExcel()
@@ -347,7 +351,8 @@ class Product extends CI_Controller
                 detail_instock.jumlah AS instock,
                 NULL AS outstock,
                 detail_instock.sisa,
-                instock.user
+                instock.user,
+                detail_instock.keterangan as keterangan
             FROM detail_instock
             LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
             WHERE detail_instock.sku = ? AND instock.idgudang = ?
@@ -361,7 +366,8 @@ class Product extends CI_Controller
                 NULL AS instock,
                 detail_outstock.jumlah AS outstock,
                 detail_outstock.sisa,
-                outstock.user
+                outstock.user,
+                detail_outstock.keterangan as keterangan
             FROM detail_outstock
             LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
             WHERE detail_outstock.sku = ? AND outstock.idgudang = ?

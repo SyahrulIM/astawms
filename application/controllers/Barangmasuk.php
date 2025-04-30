@@ -27,8 +27,8 @@ class Barangmasuk extends CI_Controller
             'gudang' => $gudang->result()
         ];
 
-        $this->load->view('theme\v_head', $data);
-        $this->load->view('barangMasuk\v_barang_masuk');
+        $this->load->view('theme/v_head', $data);
+        $this->load->view('barangMasuk/v_barang_masuk');
     }
 
     public function stockIn()
@@ -127,7 +127,7 @@ class Barangmasuk extends CI_Controller
             'detailInStock' => $data_detail_instock
         ];
 
-        $this->load->view('theme\v_head', $data);
-        $this->load->view('barangMasuk\v_detail_instock');
+        $this->load->view('theme/v_head', $data);
+        $this->load->view('barangMasuk/v_detail_instock');
     }
 }

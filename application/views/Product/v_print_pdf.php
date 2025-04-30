@@ -69,7 +69,6 @@
                                 <td><?php echo $tsvalue->instock; ?></td>
                                 <td><?php echo $tsvalue->outstock; ?></td>
                                 <td><?php echo $tsvalue->sisa; ?></td>
-                                <td><?php echo $tsvalue->user; ?></td>
                                 <td><?php echo $tsvalue->keterangan; ?></td>
                             </tr>
                         <?php } ?>

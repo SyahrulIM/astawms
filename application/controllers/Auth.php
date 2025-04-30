@@ -11,7 +11,7 @@ class Auth extends CI_Controller
             redirect('dashboard');  // Redirect to the dashboard if logged in
         }
 
-        $this->load->view('auth/v_auth');
+        $this->load->view('Auth/v_auth');
     }
 
 	public function login()
@@ -22,7 +22,7 @@ class Auth extends CI_Controller
 	
 		if ($this->form_validation->run() == FALSE) {
 			// If validation fails, reload the login page with validation errors
-			$this->load->view('auth/v_auth');
+			$this->load->view('Auth/v_auth');
 		} else {
 			// Get user input
 			$email = $this->input->post('email');

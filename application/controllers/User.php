@@ -25,8 +25,8 @@ class User extends CI_Controller
             'user' => $user,
         ];
 
-        $this->load->view('theme\v_head', $data);
-        $this->load->view('user\v_user');
+        $this->load->view('theme/v_head', $data);
+        $this->load->view('User/v_user');
     }
 
     public function addUser()

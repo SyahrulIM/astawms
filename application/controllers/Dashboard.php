@@ -18,17 +18,13 @@ class Dashboard extends CI_Controller
 	{
 		$title = 'Dashboard';
         $product = $this->db->get('product');
-        $inStock = $this->db->get('instock');
-        $outStock = $this->db->get('outstock');
         $data = [
             'title' => $title,
-            'product' => $product->result(),
-            'instock' => $inStock->result(),
-            'outstock' => $outStock->result()
+            'product' => $product->result()
         ];
 
-		$this->load->view('theme\v_head', $data);
-		$this->load->view('dashboard\v_dashboard');
+		$this->load->view('theme/v_head', $data);
+		$this->load->view('Dashboard/v_dashboard');
 	}
 
 }

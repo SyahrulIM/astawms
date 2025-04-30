@@ -2,7 +2,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col">
-                        <h1 class="mt-4">Detail Barang Masuk - <?php echo $outstock_code ?></h1>
+                        <h1 class="mt-4">Detail Barang Keluar - <?php echo $outstock_code ?></h1>
                     </div>
                 </div>
                 <div class="row">
