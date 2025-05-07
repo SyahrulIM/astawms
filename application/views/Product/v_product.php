@@ -198,6 +198,7 @@
                     const form = document.querySelector('#addProduct form');
                     const inputGambar = document.getElementById('inputGambar');
                     const inputSni = document.getElementById('inputSni');
+                    const inputSku = document.getElementById('inputSku');
 
                     function isValidImage(file) {
                         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
@@ -205,6 +206,12 @@
                     }
 
                     form.addEventListener('submit', function(e) {
+                        if (/\s/.test(inputSku.value)) {
+                            alert('SKU tidak boleh mengandung spasi.');
+                            e.preventDefault();
+                            return;
+                        }
+
                         if (inputGambar.files.length > 0 && !isValidImage(inputGambar.files[0])) {
                             alert('Format file Gambar harus JPG, JPEG, atau PNG.');
                             e.preventDefault();
