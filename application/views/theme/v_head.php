@@ -28,13 +28,16 @@
         <!-- Sidebar-->
         <div class="border-end bg-white" id="sidebar-wrapper">
             <div class="sidebar-heading border-bottom bg-light text-center"><img src="<?php echo base_url('assets/image/logo A asta biru.png') ?>" alt="Asta Logo" width="20px">WMS</div>
+            <?php
+            $current = $this->uri->segment(1); // Get the first segment of URI
+            ?>
             <div class="list-group list-group-flush">
-                <a class="list-group-item list-group-item-action list-group-item-light p-3" href="<?php echo base_url('dashboard/'); ?>">Dashboard</a>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3" href="<?php echo base_url('product/'); ?>">Database Product</a>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3" href="<?php echo base_url('barangmasuk/'); ?>">Barang Masuk</a>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3" href="<?php echo base_url('outstock/'); ?>">Barang Keluar</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'dashboard') ? 'active' : ''; ?>" href="<?php echo base_url('dashboard/'); ?>">Dashboard</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'product') ? 'active' : ''; ?>" href="<?php echo base_url('product/'); ?>">Database Product</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'barangmasuk') ? 'active' : ''; ?>" href="<?php echo base_url('barangmasuk/'); ?>">Barang Masuk</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'outstock') ? 'active' : ''; ?>" href="<?php echo base_url('outstock/'); ?>">Barang Keluar</a>
                 <?php if ($this->session->userdata('idrole') == 1) { ?>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3" href="<?php echo base_url('user/'); ?>">Pengguna</a>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>">Pengguna</a>
                 <?php } ?>
             </div>
         </div>
