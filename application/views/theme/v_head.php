@@ -19,6 +19,8 @@
     <link href='https://fonts.googleapis.com/css?family=Libre Barcode 39' rel='stylesheet'>
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="<?php echo base_url('assets/image/favicon.ico'); ?>">
+    <!--  -->
+    <script src="https://unpkg.com/bwip-js/dist/bwip-js-min.js"></script>
 </head>
 
 <body>
