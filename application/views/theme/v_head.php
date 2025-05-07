@@ -34,8 +34,18 @@
             <div class="list-group list-group-flush">
                 <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'dashboard') ? 'active' : ''; ?>" href="<?php echo base_url('dashboard/'); ?>">Dashboard</a>
                 <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'product') ? 'active' : ''; ?>" href="<?php echo base_url('product/'); ?>">Database Product</a>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'barangmasuk') ? 'active' : ''; ?>" href="<?php echo base_url('barangmasuk/'); ?>">Barang Masuk</a>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'outstock') ? 'active' : ''; ?>" href="<?php echo base_url('outstock/'); ?>">Barang Keluar</a>
+                <!-- Transaksi Dropdown -->
+                <div class="list-group-item p-0">
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3 d-flex justify-content-between align-items-center <?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#transaksiSubmenu" role="button" aria-expanded="<?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'true' : 'false'; ?>" aria-controls="transaksiSubmenu">
+                        Transaksi
+                        <i class="fas fa-chevron-down small"></i>
+                    </a>
+                    <div class="collapse <?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'show' : ''; ?>" id="transaksiSubmenu">
+                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'verification') ? 'active' : ''; ?>" href="<?= base_url('verification'); ?>">Verifikasi Transaksi</a>
+                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'barangmasuk') ? 'active' : ''; ?>" href="<?= base_url('barangmasuk'); ?>">Barang Masuk</a>
+                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'outstock') ? 'active' : ''; ?>" href="<?= base_url('outstock'); ?>">Barang Keluar</a>
+                    </div>
+                </div>
                 <?php if ($this->session->userdata('idrole') == 1) { ?>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>">Pengguna</a>
                 <?php } ?>

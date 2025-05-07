@@ -58,47 +58,17 @@ class Barangmasuk extends CI_Controller
             'kategori' => $inputKategori,
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
+            'status_verification' => 0, // belum diverifikasi
         ];
-
         $this->db->insert('instock', $data_instock);
 
         foreach ($inputSKU as $key => $sku) {
-            $jumlah = (int) $inputJumlah[$key];
-
-            $product = $this->db->where('sku', $sku)->get('product')->row();
-
-            // Ambil stok existing di product_stock
-            $stok_exist = $this->db->get_where('product_stock', [
-                'idproduct' => $product->idproduct,
-                'idgudang' => $inputGudang
-            ])->row();
-
-            if ($stok_exist) {
-                $stokBaru = $stok_exist->stok + $jumlah;
-
-                // Update stok
-                $this->db->set('stok', $stokBaru);
-                $this->db->where('idproduct', $product->idproduct);
-                $this->db->where('idgudang', $inputGudang);
-                $this->db->update('product_stock');
-            } else {
-                $stokBaru = $jumlah;
-
-                // Insert stok baru
-                $this->db->insert('product_stock', [
-                    'idproduct' => $product->idproduct,
-                    'idgudang' => $inputGudang,
-                    'stok' => $stokBaru
-                ]);
-            }
-
-            // Insert ke detail_instock dengan sisa hasil penjumlahan
             $data_detail_instock = [
                 'instock_code' => $inputInstockCode,
                 'sku' => $sku,
                 'nama_produk' => $inputNamaProduk[$key],
-                'jumlah' => $jumlah,
-                'sisa' => $stokBaru, // sesuai stok terbaru di gudang tersebut
+                'jumlah' => (int)$inputJumlah[$key],
+                'sisa' => 0,
                 'keterangan' => $inputKeterangan[$key],
             ];
             $this->db->insert('detail_instock', $data_detail_instock);
@@ -110,7 +80,7 @@ class Barangmasuk extends CI_Controller
     public function detail_instock()
     {
         $instock_code = $this->input->get('instock_code');
-    
+
         $data_detail_instock = $this->db
             ->select('detail_instock.*, instock.tgl_terima, instock.jam_terima, instock.user, instock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk')
             ->from('detail_instock')
@@ -120,15 +90,15 @@ class Barangmasuk extends CI_Controller
             ->where('detail_instock.instock_code', $instock_code)
             ->get()
             ->result();
-    
+
         $title = $instock_code;
         $data = [
             'title' => $title,
             'instock_code' => $instock_code,
             'detailInStock' => $data_detail_instock
         ];
-    
+
         $this->load->view('theme/v_head', $data);
         $this->load->view('barangMasuk/v_detail_instock');
-    }    
+    }
 }
