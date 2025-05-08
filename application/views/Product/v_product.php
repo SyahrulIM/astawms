@@ -124,9 +124,7 @@
                                         <td><?= $pvalue->sku ?></td>
                                         <td><?= $pvalue->nama_produk ?></td>
                                         <td><img src="<?= base_url('assets/image/' . $pvalue->gambar) ?>" style="width: 100px; height: 100px;"></td>
-                                        <td>
-                                            <canvas id="barcode-<?= $pvalue->idproduct ?>" width="150" height="70"></canvas>
-                                        </td>
+                                        <td><canvas id="barcode-<?= $pvalue->idproduct ?>" width="150" height="70"></canvas></td>
                                         <td>
                                             <?php if (!empty($pvalue->sni)) { ?>
                                                 <img src="<?= base_url('assets/image/' . $pvalue->sni) ?>" style="width: 100px; height: 100px;">
@@ -155,6 +153,9 @@
                                                     <i class="fa-solid fa-print"></i> Kartu Stock
                                                 </button>
                                             </a>
+                                            <button class="btn btn-sm btn-primary" onclick="downloadCanvasAsJpeg('barcode-<?= $pvalue->idproduct ?>', 'barcode_<?= $pvalue->sku ?>', '<?= $pvalue->barcode ?>')">
+                                                <i class="fa fa-download"></i> Download Barcode
+                                            </button>
                                         </td>
                                     </tr>
                                 <?php } ?>
@@ -272,6 +273,26 @@
                         }
                     <?php } ?>
                 });
+
+                function downloadCanvasAsJpeg(canvasId, filename, barcodeText) {
+                    const canvas = document.getElementById(canvasId);
+                    JsBarcode(canvas, barcodeText, {
+                        format: "CODE128",
+                        width: 2,
+                        height: 40,
+                        displayValue: true
+                    });
+
+                    setTimeout(() => {
+                        const image = canvas.toDataURL("image/jpeg", 1.0);
+                        const link = document.createElement('a');
+                        link.href = image;
+                        link.download = filename + '.jpg';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }, 500); // Delay to ensure the barcode is rendered
+                }
             </script>
             </body>
 
