@@ -48,40 +48,65 @@ class Verification extends CI_Controller
 		if ($type !== 'instock' && $type !== 'outstock') {
 			show_error('Tipe stok tidak valid.');
 		}
-
+	
 		$main_table = $type;
-		$detail_table = 'detail_' . $type;
 		$kode_field = $type . '_code';
-
+	
 		$trx = $this->db->where($kode_field, $code)->get($main_table)->row();
 		if (!$trx) {
 			show_error(ucfirst($type) . ' tidak ditemukan.');
 			return;
 		}
-
-		// Cegah verifikasi ulang
+	
+		// Ambil tanggal transaksi
+		$tanggal_field = $type === 'instock' ? 'tgl_terima' : 'tgl_keluar';
+		$jam_field = $type === 'instock' ? 'jam_terima' : 'jam_keluar';
+	
+		$tanggal = $trx->$tanggal_field;
+		$jam = $trx->$jam_field;
+	
+		// Cek apakah ada transaksi sebelumnya yang belum diverifikasi
+		$query_unverified = "
+			SELECT * FROM (
+				SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
+				UNION ALL
+				SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
+			) AS all_unverified
+			WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
+			LIMIT 1
+		";
+	
+		$older_unverified = $this->db->query($query_unverified)->row();
+		if ($older_unverified) {
+			$this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi. Harap verifikasi berdasarkan urutan waktu.');
+			redirect('verification');
+			return;
+		}
+	
+		// Lanjutkan verifikasi jika tidak ada yang lebih lama
 		if ($trx->status_verification != 0) {
 			$this->session->set_flashdata('error', 'Transaksi sudah diverifikasi sebelumnya.');
 			redirect('verification');
 			return;
 		}
-
+	
 		$this->db->set('status_verification', 1)
 			->where($kode_field, $code)
 			->update($main_table);
-
+	
 		$idgudang = $trx->idgudang;
+		$detail_table = 'detail_' . $type;
 		$details = $this->db->where($kode_field, $code)->get($detail_table)->result();
-
+	
 		foreach ($details as $detail) {
 			$sku = $detail->sku;
-			$jumlah = (int) $detail->jumlah;
-
+			$jumlah = (int)$detail->jumlah;
+	
 			$product = $this->db->where('sku', $sku)->get('product')->row();
 			if (!$product) continue;
-
+	
 			$idproduct = $product->idproduct;
-
+	
 			$stock = $this->db->where('idproduct', $idproduct)->where('idgudang', $idgudang)->get('product_stock')->row();
 			if (!$stock) {
 				$this->db->insert('product_stock', [
@@ -90,21 +115,21 @@ class Verification extends CI_Controller
 					'stok' => 0
 				]);
 			}
-
+	
 			if ($type === 'instock') {
 				$this->db->set('stok', "stok + {$jumlah}", false);
 			} else {
 				$this->db->set('stok', "stok - {$jumlah}", false);
 			}
-
+	
 			$this->db->where('idproduct', $idproduct)
 				->where('idgudang', $idgudang)
 				->update('product_stock');
 		}
-
+	
 		$this->session->set_flashdata('success', 'Stok berhasil diverifikasi dan diperbarui.');
 		redirect('verification');
-	}
+	}	
 
 	public function get_details($type, $kode)
 	{
@@ -134,27 +159,53 @@ class Verification extends CI_Controller
 		if ($type !== 'instock' && $type !== 'outstock') {
 			show_error('Tipe stok tidak valid.');
 		}
-
+	
+		$main_table = $type;
 		$kode_field = $type . '_code';
-		$trx = $this->db->where($kode_field, $code)->get($type)->row();
-
+	
+		$trx = $this->db->where($kode_field, $code)->get($main_table)->row();
 		if (!$trx) {
 			show_error('Transaksi tidak ditemukan.');
 			return;
 		}
-
+	
+		// Ambil tanggal dan jam transaksi
+		$tanggal_field = $type === 'instock' ? 'tgl_terima' : 'tgl_keluar';
+		$jam_field = $type === 'instock' ? 'jam_terima' : 'jam_keluar';
+	
+		$tanggal = $trx->$tanggal_field;
+		$jam = $trx->$jam_field;
+	
+		// Cek apakah ada transaksi sebelumnya yang belum diverifikasi
+		$query_unverified = "
+			SELECT * FROM (
+				SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
+				UNION ALL
+				SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
+			) AS all_unverified
+			WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
+			LIMIT 1
+		";
+	
+		$older_unverified = $this->db->query($query_unverified)->row();
+		if ($older_unverified) {
+			$this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi atau ditolak. Harap proses berdasarkan urutan waktu.');
+			redirect('verification');
+			return;
+		}
+	
 		// Cegah reject ulang
 		if ($trx->status_verification != 0) {
 			$this->session->set_flashdata('error', 'Transaksi sudah diproses sebelumnya.');
 			redirect('verification');
 			return;
 		}
-
+	
 		$this->db->set('status_verification', 2)
 			->where($kode_field, $code)
-			->update($type);
-
+			->update($main_table);
+	
 		$this->session->set_flashdata('error', 'Transaksi berhasil ditolak.');
 		redirect('verification');
-	}
+	}	
 }
