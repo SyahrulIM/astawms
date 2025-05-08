@@ -53,18 +53,24 @@ class Verification extends CI_Controller
 		$detail_table = 'detail_' . $type;
 		$kode_field = $type . '_code';
 
-		$this->db->set('status_verification', 1)
-			->where($kode_field, $code)
-			->update($main_table);
-
 		$trx = $this->db->where($kode_field, $code)->get($main_table)->row();
 		if (!$trx) {
 			show_error(ucfirst($type) . ' tidak ditemukan.');
 			return;
 		}
 
-		$idgudang = $trx->idgudang;
+		// Cegah verifikasi ulang
+		if ($trx->status_verification != 0) {
+			$this->session->set_flashdata('error', 'Transaksi sudah diverifikasi sebelumnya.');
+			redirect('verification');
+			return;
+		}
 
+		$this->db->set('status_verification', 1)
+			->where($kode_field, $code)
+			->update($main_table);
+
+		$idgudang = $trx->idgudang;
 		$details = $this->db->where($kode_field, $code)->get($detail_table)->result();
 
 		foreach ($details as $detail) {
@@ -102,26 +108,53 @@ class Verification extends CI_Controller
 
 	public function get_details($type, $kode)
 	{
+		$type = strtoupper($type);
+
 		if ($type == 'INSTOCK') {
-			// Fetch the main transaction based on kode_transaksi
 			$trx = $this->db->get_where('instock', ['instock_code' => $kode])->row();
-	
-			// If transaction is found
-			if ($trx) {
-				// Fetch the details of the transaction from the 'detail_instock' table
-				$details = $this->db->get_where('detail_instock', ['instock_code' => $kode])->result();
-	
-				// If details are found, return them as JSON
-				if ($details) {
-					echo json_encode(['details' => $details]);
-				} else {
-					echo json_encode(['error' => 'Transaction details not found']);
-				}
-			} else {
-				echo json_encode(['error' => 'Transaction not found']);
-			}
+			$details = $this->db->get_where('detail_instock', ['instock_code' => $kode])->result();
+		} elseif ($type == 'OUTSTOCK') {
+			$trx = $this->db->get_where('outstock', ['outstock_code' => $kode])->row();
+			$details = $this->db->get_where('detail_outstock', ['outstock_code' => $kode])->result();
 		} else {
 			echo json_encode(['error' => 'Invalid transaction type']);
+			return;
 		}
-	}	
+
+		if ($trx && $details) {
+			echo json_encode(['details' => $details]);
+		} else {
+			echo json_encode(['error' => 'Transaction or details not found']);
+		}
+	}
+
+	public function reject($type, $code)
+	{
+		$type = strtolower($type);
+		if ($type !== 'instock' && $type !== 'outstock') {
+			show_error('Tipe stok tidak valid.');
+		}
+
+		$kode_field = $type . '_code';
+		$trx = $this->db->where($kode_field, $code)->get($type)->row();
+
+		if (!$trx) {
+			show_error('Transaksi tidak ditemukan.');
+			return;
+		}
+
+		// Cegah reject ulang
+		if ($trx->status_verification != 0) {
+			$this->session->set_flashdata('error', 'Transaksi sudah diproses sebelumnya.');
+			redirect('verification');
+			return;
+		}
+
+		$this->db->set('status_verification', 2)
+			->where($kode_field, $code)
+			->update($type);
+
+		$this->session->set_flashdata('error', 'Transaksi berhasil ditolak.');
+		redirect('verification');
+	}
 }

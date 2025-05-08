@@ -49,3 +49,7 @@ Selamat Pagi ce berikut adalah alamat webnya dan data usernya.
 Url: wms.astahomeware.com
 User: superadmin@gmail.com
 Pass: astawms=d17d09
+
+Website astahomeware.com
+User: hello@astahomeware.com
+Pass: h3LL0@4sT4#!!

@@ -2,6 +2,11 @@
 <div class="container-fluid">
     <div class="row mt-4">
         <div class="col">
+            <?php if ($this->session->flashdata('success')) : ?>
+                <div class="alert alert-success"><?= $this->session->flashdata('success') ?></div>
+            <?php elseif ($this->session->flashdata('error')) : ?>
+                <div class="alert alert-danger"><?= $this->session->flashdata('error') ?></div>
+            <?php endif; ?>
             <table id="tableproduct" class="display" style="width:100%">
                 <thead>
                     <tr>
@@ -27,16 +32,20 @@
                                     <?php if ($trx->status_verification == 1) : ?>
                                         <span class="badge bg-success">Accept</span>
                                     <?php elseif ($trx->status_verification == 2) : ?>
-                                        <span class="badge bg-danger">Cancel</span>
+                                        <span class="badge bg-danger">Reject</span>
                                     <?php else : ?>
                                         <span class="badge bg-warning text-dark">Pending</span>
                                     <?php endif; ?>
                                 </h5>
                             </td>
                             <td>
-                                <button type="button" class="btn btn-info btn-verifikasi" data-bs-toggle="modal" data-bs-target="#verifikasiModal" data-id="<?= $trx->kode_transaksi ?>" data-tipe="<?= $trx->tipe ?>">
-                                    Verifikasi
-                                </button>
+                                <?php if ($trx->status_verification == 0) : ?>
+                                    <button type="button" class="btn btn-info btn-verifikasi" data-bs-toggle="modal" data-bs-target="#verifikasiModal" data-id="<?= $trx->kode_transaksi ?>" data-tipe="<?= $trx->tipe ?>">
+                                        Verifikasi
+                                    </button>
+                                <?php else : ?>
+                                    <span class="text-muted">Sudah diverifikasi</span>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -46,7 +55,7 @@
     </div>
 </div>
 
-<!-- Verifikasi Modal -->
+<!-- Verification Modal -->
 <div class="modal fade" id="verifikasiModal" tabindex="-1" aria-labelledby="verifikasiModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -73,7 +82,7 @@
                 </table>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger" id="rejectVerifikasi">Reject</button>
                 <button type="button" class="btn btn-primary" id="confirmVerifikasi">Ya, Verifikasi</button>
             </div>
         </div>
@@ -104,43 +113,47 @@
             }
         });
 
-        $(document).on('click', '.btn-verifikasi', function() {
-            selectedTransactionCode = $(this).data('id'); // Get the transaction code
-            selectedTransactionType = 'INSTOCK'; // Set the transaction type (INSTOCK in this case)
+        $('.btn-verifikasi').on('click', function() {
+            selectedTransactionCode = $(this).data('id');
+            selectedTransactionType = $(this).data('tipe');
 
-            // Make an AJAX request to fetch the transaction details
             $.ajax({
                 url: '<?= base_url('verification/get_details/') ?>' + selectedTransactionType + '/' + selectedTransactionCode,
                 type: 'GET',
+                dataType: 'json',
                 success: function(response) {
-                    console.log(response); // Check the response in the console
+                    console.log(response);
+                    $('#detailStockTable').empty();
                     if (response.details) {
-                        // Populate the details table with transaction data
-                        $('#detailStockTable').empty(); // Clear the table first
                         response.details.forEach(function(detail) {
                             var row = '<tr>' +
                                 '<td>' + detail.sku + '</td>' +
                                 '<td>' + detail.nama_produk + '</td>' +
                                 '<td>' + detail.jumlah + '</td>' +
-                                '<td>' + detail.sisa_stok + '</td>' +
+                                '<td>' + detail.sisa + '</td>' +
                                 '</tr>';
-                            $('#detailStockTable').append(row); // Append each row to the table
+                            $('#detailStockTable').append(row);
                         });
                     } else {
-                        alert('Failed to fetch transaction details.');
+                        $('#detailStockTable').html('<tr><td colspan="4">Tidak ada data</td></tr>');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error: ", error); // Log error for debugging
-                    alert('Failed to fetch transaction details.');
+                    console.error("Error: ", error);
+                    $('#detailStockTable').html('<tr><td colspan="4">Gagal memuat data</td></tr>');
                 }
             });
         });
 
-
         $('#confirmVerifikasi').on('click', function() {
             if (selectedTransactionCode && selectedTransactionType) {
                 window.location.href = "<?= base_url('verification/confirm_stock/') ?>" + selectedTransactionType + "/" + selectedTransactionCode;
+            }
+        });
+
+        $('#rejectVerifikasi').on('click', function() {
+            if (selectedTransactionCode && selectedTransactionType) {
+                window.location.href = "<?= base_url('verification/reject/') ?>" + selectedTransactionType + "/" + selectedTransactionCode;
             }
         });
 

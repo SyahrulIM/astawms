@@ -47,7 +47,8 @@ class Outstock extends CI_Controller
         }
         $inputUser = $this->session->userdata('username');
         $inputKategori = $this->input->post('inputKategori');
-
+    
+        // Menambahkan status_verification = 0 untuk transaksi ini
         $data_outstock = [
             'idgudang' => $inputGudang,
             'outstock_code' => $inputOutstockCode,
@@ -56,26 +57,27 @@ class Outstock extends CI_Controller
             'datetime' => $inputDatetime,
             'user' => $inputUser,
             'kategori' => $inputKategori,
+            'status_verification' => 0,  // Status verification yang baru
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
         ];
-
+    
         foreach ($inputSKU as $key => $sku) {
             $jumlah = (int) $inputJumlah[$key];
-
+    
             // Ambil produk berdasarkan SKU
             $product = $this->db->where('sku', $sku)->get('product')->row();
             $idproduct = $product->idproduct;
-
+    
             // Cek stok awal di gudang tersebut
             $product_stock = $this->db
                 ->where('idproduct', $idproduct)
                 ->where('idgudang', $inputGudang)
                 ->get('product_stock')
                 ->row();
-
+    
             if (!$product_stock) {
-                // Kalau belum ada, insert dulu stok awal dengan 0
+                // Kalau belum ada, insert stok awal dengan 0
                 $this->db->insert('product_stock', [
                     'idproduct' => $idproduct,
                     'idgudang' => $inputGudang,
@@ -85,7 +87,7 @@ class Outstock extends CI_Controller
             } else {
                 $sisa_stok = $product_stock->stok - $jumlah;
             }
-
+    
             // Simpan detail outstock
             $data_detail_outstock = [
                 'outstock_code' => $inputOutstockCode,
@@ -96,19 +98,16 @@ class Outstock extends CI_Controller
                 'keterangan' => $inputKeterangan[$key],
             ];
             $this->db->insert('detail_outstock', $data_detail_outstock);
-
-            // Update stok di tabel product_stock
-            $this->db->set('stok', "stok - {$jumlah}", false);
-            $this->db->where('idproduct', $idproduct);
-            $this->db->where('idgudang', $inputGudang);
-            $this->db->update('product_stock');
+    
+            // Hapus update stok product_stock
+            // Tidak perlu update 'product_stock' lagi di sini
         }
-
-        // Simpan ke tabel outstock utama
+    
+        // Simpan ke tabel outstock utama dengan status_verification = 0
         $this->db->insert('outstock', $data_outstock);
-
+    
         redirect('outstock');
-    }
+    }    
 
     public function detail_outstock()
     {
