@@ -227,41 +227,40 @@ class Product extends CI_Controller
         $product = $this->db->where('sku', $sku)->get('product')->row();
 
         $query = "
-            SELECT * FROM (
-                SELECT 
-                    detail_instock.instock_code AS stock_code,
-                    instock.datetime,
-                    instock.kategori,
-                    detail_instock.jumlah AS instock,
-                    NULL AS outstock,
-                    detail_instock.sisa,
-                    instock.user,
-                    detail_instock.keterangan as keterangan
-                FROM detail_instock
-                LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
-                WHERE detail_instock.sku = ? AND instock.idgudang = ?
+        SELECT * FROM (
+            SELECT 
+                detail_instock.instock_code AS stock_code,
+                instock.datetime,
+                instock.kategori,
+                detail_instock.jumlah AS instock,
+                NULL AS outstock,
+                detail_instock.sisa,
+                instock.user,
+                detail_instock.keterangan as keterangan
+            FROM detail_instock
+            LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
+            WHERE detail_instock.sku = ? AND instock.idgudang = ? AND instock.status_verification = 1
     
-                UNION ALL
+            UNION ALL
     
-                SELECT 
-                    detail_outstock.outstock_code AS stock_code,
-                    outstock.datetime,
-                    outstock.kategori,
-                    NULL AS instock,
-                    detail_outstock.jumlah AS outstock,
-                    detail_outstock.sisa,
-                    outstock.user,
-                    detail_outstock.keterangan as keterangan
-                FROM detail_outstock
-                LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
-                WHERE detail_outstock.sku = ? AND outstock.idgudang = ?
-            ) AS stock_transaction
-            ORDER BY datetime
-        ";
+            SELECT 
+                detail_outstock.outstock_code AS stock_code,
+                outstock.datetime,
+                outstock.kategori,
+                NULL AS instock,
+                detail_outstock.jumlah AS outstock,
+                detail_outstock.sisa,
+                outstock.user,
+                detail_outstock.keterangan as keterangan
+            FROM detail_outstock
+            LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
+            WHERE detail_outstock.sku = ? AND outstock.idgudang = ? AND outstock.status_verification = 1
+        ) AS stock_transaction
+        ORDER BY datetime
+    ";    
 
         $transaction_stock = $this->db->query($query, [$sku, $idgudang, $sku, $idgudang])->result();
 
-        // List semua gudang untuk dropdown
         $gudang_list = $this->db->get('gudang')->result();
 
         $data = [
@@ -282,10 +281,8 @@ class Product extends CI_Controller
         $sku = $this->input->get('sku');
         $idgudang = $this->input->get('idgudang');  // Get selected warehouse ID
 
-        // Fetch product details
         $product = $this->db->where('sku', $sku)->get('product')->row();
 
-        // Modified query to filter by both SKU and idgudang
         $query = "
         SELECT * FROM (
             SELECT 
@@ -299,7 +296,7 @@ class Product extends CI_Controller
                 detail_instock.keterangan as keterangan
             FROM detail_instock
             LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
-            WHERE detail_instock.sku = ? AND instock.idgudang = ?
+            WHERE detail_instock.sku = ? AND instock.idgudang = ? AND instock.status_verification = 1
     
             UNION ALL
     
@@ -314,22 +311,19 @@ class Product extends CI_Controller
                 detail_outstock.keterangan as keterangan
             FROM detail_outstock
             LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
-            WHERE detail_outstock.sku = ? AND outstock.idgudang = ?
+            WHERE detail_outstock.sku = ? AND outstock.idgudang = ? AND outstock.status_verification = 1
         ) AS stock_transaction
         ORDER BY datetime
-        ";
+    ";    
 
-        // Get transaction data for the selected SKU and warehouse
         $transaction_stock = $this->db->query($query, [$sku, $idgudang, $sku, $idgudang])->result();
 
-        // Prepare the data to pass to the view
         $data = [
             'title' => $title,
             'product' => $product,
             'transaction_stock' => $transaction_stock,
         ];
 
-        // Load PDF generation view (assuming you have a view for PDF generation)
         $this->load->view('Product/v_print_pdf', $data);
     }
 
@@ -338,10 +332,8 @@ class Product extends CI_Controller
         $sku = $this->input->get('sku');
         $idgudang = $this->input->get('idgudang');
 
-        // Fetch product details
         $product = $this->db->where('sku', $sku)->get('product')->row();
 
-        // Query transactions
         $query = "
         SELECT * FROM (
             SELECT 
@@ -355,10 +347,10 @@ class Product extends CI_Controller
                 detail_instock.keterangan as keterangan
             FROM detail_instock
             LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
-            WHERE detail_instock.sku = ? AND instock.idgudang = ?
-        
+            WHERE detail_instock.sku = ? AND instock.idgudang = ? AND instock.status_verification = 1
+    
             UNION ALL
-        
+    
             SELECT 
                 detail_outstock.outstock_code AS stock_code,
                 outstock.datetime,
@@ -370,40 +362,24 @@ class Product extends CI_Controller
                 detail_outstock.keterangan as keterangan
             FROM detail_outstock
             LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
-            WHERE detail_outstock.sku = ? AND outstock.idgudang = ?
+            WHERE detail_outstock.sku = ? AND outstock.idgudang = ? AND outstock.status_verification = 1
         ) AS stock_transaction
         ORDER BY datetime
-        ";
+    ";    
 
         $transaction_stock = $this->db->query($query, [$sku, $idgudang, $sku, $idgudang])->result();
 
-        // Load helper for download
         $this->load->helper('download');
 
-        // Build the Excel content
         $filename = 'kartu_stok_' . $sku . '.xls';
 
         $content = "<table>";
-
-        // Row 1: Title (no border)
         $content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Kartu Stok - Asta Homeware</td></tr>";
-
-        // Row 2: SKU (no border)
         $content .= "<tr><td colspan='9'>SKU: {$sku}</td></tr>";
-
-        // Row 3: Nama Produk (no border)
         $content .= "<tr><td colspan='9'>Nama Produk: {$product->nama_produk}</td></tr>";
-
-        // Empty row
         $content .= "<tr><td colspan='9'>&nbsp;</td></tr>";
-
-        // Tutup table judul
         $content .= "</table>";
-
-        // Buka table baru khusus tabel transaksi yang pakai border
         $content .= "<table border='1'>";
-
-        // Table header
         $content .= "<thead>
                         <tr>
                             <th>No</th>
@@ -418,7 +394,6 @@ class Product extends CI_Controller
                         </tr>
                      </thead><tbody>";
 
-        // Table data
         $no = 1;
         foreach ($transaction_stock as $row) {
             $content .= "<tr>
@@ -434,10 +409,8 @@ class Product extends CI_Controller
                          </tr>";
             $no++;
         }
-
         $content .= "</tbody></table>";
 
-        // Force Download as Excel
         header("Content-type: application/vnd.ms-excel");
         header("Content-Disposition: attachment; filename={$filename}");
         header("Pragma: no-cache");
