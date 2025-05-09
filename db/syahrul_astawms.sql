@@ -1,0 +1,5 @@
+ALTER TABLE `instock`
+	ADD COLUMN `no_manual` VARCHAR(200) NULL DEFAULT NULL AFTER `kategori`;
+
+ALTER TABLE `outstock`
+	ADD COLUMN `no_manual` VARCHAR(200) NULL DEFAULT NULL AFTER `kategori`;

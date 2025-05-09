@@ -42,6 +42,7 @@ class Barangmasuk extends CI_Controller
         $inputTglTerima = date("Y-m-d");
         $inputJamTerima = date("H:i:s");
         $inputDatetime = $this->input->post('inputDatetime');
+        $inputNo = $this->input->post('inputNo');
         if (empty($inputDatetime)) {
             $inputDatetime = date("Y-m-d H:i:s");
         }
@@ -56,6 +57,7 @@ class Barangmasuk extends CI_Controller
             'datetime' => $inputDatetime,
             'user' => $inputUser,
             'kategori' => $inputKategori,
+            'no_manual' => $inputNo,
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
             'status_verification' => 0, // belum diverifikasi
@@ -82,7 +84,7 @@ class Barangmasuk extends CI_Controller
         $instock_code = $this->input->get('instock_code');
 
         $data_detail_instock = $this->db
-            ->select('detail_instock.*, instock.tgl_terima, instock.jam_terima, instock.user, instock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk')
+            ->select('detail_instock.*, instock.tgl_terima, instock.jam_terima, instock.user, instock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk, instock.no_manual as no_manual')
             ->from('detail_instock')
             ->join('instock', 'instock.instock_code = detail_instock.instock_code')
             ->join('gudang', 'gudang.idgudang = instock.idgudang')
@@ -91,11 +93,14 @@ class Barangmasuk extends CI_Controller
             ->get()
             ->result();
 
+        $no_manual = isset($data_detail_instock[0]) ? $data_detail_instock[0]->no_manual : '-';
+
         $title = $instock_code;
         $data = [
             'title' => $title,
             'instock_code' => $instock_code,
-            'detailInStock' => $data_detail_instock
+            'detailInStock' => $data_detail_instock,
+            'no_manual' => $no_manual
         ];
 
         $this->load->view('theme/v_head', $data);

@@ -42,6 +42,7 @@ class Outstock extends CI_Controller
         $inputTglTerima = date("Y-m-d");
         $inputJamTerima = date("H:i:s");
         $inputDatetime = $this->input->post('inputDatetime');
+        $inputNo = $this->input->post('inputNo');
         if (empty($inputDatetime)) {
             $inputDatetime = date("Y-m-d H:i:s");
         }
@@ -57,6 +58,7 @@ class Outstock extends CI_Controller
             'datetime' => $inputDatetime,
             'user' => $inputUser,
             'kategori' => $inputKategori,
+            'no_manual' => $inputNo,
             'status_verification' => 0,  // Status verification yang baru
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
@@ -114,7 +116,7 @@ class Outstock extends CI_Controller
         $outstock_code = $this->input->get('outstock_code');
 
         $data_detail_outstock = $this->db
-        ->select('detail_outstock.*, outstock.tgl_keluar, outstock.jam_keluar, outstock.user, outstock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk')
+        ->select('detail_outstock.*, outstock.tgl_keluar, outstock.jam_keluar, outstock.user, outstock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk, outstock.no_manual as no_manual')
         ->from('detail_outstock')
         ->join('outstock', 'detail_outstock.outstock_code = outstock.outstock_code')
         ->join('gudang', 'outstock.idgudang = gudang.idgudang')
@@ -123,11 +125,14 @@ class Outstock extends CI_Controller
         ->get()
         ->result();    
 
+        $no_manual = isset($data_detail_outstock[0]) ? $data_detail_outstock[0]->no_manual : '-';
+
         $title = $outstock_code;
         $data = [
             'title' => $title,
             'outstock_code' => $outstock_code,
-            'detailoutstock' => $data_detail_outstock
+            'detailoutstock' => $data_detail_outstock,
+            'no_manual' => $no_manual
         ];
 
         $this->load->view('theme/v_head', $data);

@@ -3,6 +3,7 @@
                 <div class="row">
                     <div class="col">
                         <h1 class="mt-4">Detail Barang Keluar - <?php echo $outstock_code ?></h1>
+                        <h4>Nomer : <?php echo $no_manual ?></h4>
                     </div>
                 </div>
                 <div class="row">

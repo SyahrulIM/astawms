@@ -27,11 +27,7 @@
                                             <button type="button" class="btn btn-primary btn-tambah-barang" id="btn-tambah-barang"><i class="fa-solid fa-plus"></i> Tambah Barang</button>
                                         </div>
                                         <div class="col">
-                                            <?php if ($this->session->userdata('idrole') != 4) { ?>
-                                            <input type="datetime-local" class="form-control" id="inputDatetime" name="inputDatetime" placeholder="Pilih Tanggal & Waktu" disabled>
-                                            <?php } else {?>
-                                            <input type="datetime-local" class="form-control" id="inputDatetime" name="inputDatetime" placeholder="Pilih Tanggal & Waktu" disabled>
-                                            <?php } ?>
+                                        <input type="text" class="form-control input-no" id="inputNo" name="inputNo" placeholder="No Manual">
                                         </div>
                                         <div class="col">
                                             <select class="form-select" aria-label="Default select example" id="inputGudang" name="inputGudang" required>
@@ -45,7 +41,7 @@
                                             <select class="form-select" aria-label="Default select example" id="inputKategori" name="inputKategori" required>
                                                 <option selected disabled>Pilih Kategori</option>
                                                 <option value="Barang Keluar">Barang Keluar</option>
-                                                <option value="Penyesuaian">Penyesuaian</option>
+                                                <option value="Mutasi">Mutasi</option>
                                             </select>
                                         </div>
                                     </div>
@@ -94,6 +90,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Kode OutStock</th>
+                                    <th>Nomer</th>
                                     <th>Tanggal</th>
                                     <th>User Penginput</th>
                                     <th>Kategori</th>
@@ -105,6 +102,7 @@
                                 <tr>
                                     <td><?php echo $oskey + 1; ?></td>
                                     <td><?php echo $osvalue->outstock_code; ?></td>
+                                    <td><?php echo $osvalue->no_manual; ?></td>
                                     <td><?php echo $osvalue->datetime; ?></td>
                                     <td><?php echo $osvalue->user; ?></td>
                                     <td><?php echo $osvalue->kategori; ?></td>
