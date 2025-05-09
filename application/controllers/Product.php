@@ -226,38 +226,50 @@ class Product extends CI_Controller
 
         $product = $this->db->where('sku', $sku)->get('product')->row();
 
+        if (!$product) {
+            show_error('Produk tidak ditemukan.');
+        }
+
         $query = "
-        SELECT * FROM (
+        SELECT 
+            stock_code,
+            datetime,
+            kategori,
+            instock,
+            outstock,
+            @saldo := @saldo + IFNULL(instock,0) - IFNULL(outstock,0) AS sisa,
+            user,
+            keterangan
+        FROM (
             SELECT 
                 detail_instock.instock_code AS stock_code,
                 instock.datetime,
                 instock.kategori,
                 detail_instock.jumlah AS instock,
                 NULL AS outstock,
-                detail_instock.sisa,
                 instock.user,
-                detail_instock.keterangan as keterangan
+                detail_instock.keterangan AS keterangan
             FROM detail_instock
             LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
             WHERE detail_instock.sku = ? AND instock.idgudang = ? AND instock.status_verification = 1
-    
+        
             UNION ALL
-    
+        
             SELECT 
                 detail_outstock.outstock_code AS stock_code,
                 outstock.datetime,
                 outstock.kategori,
                 NULL AS instock,
                 detail_outstock.jumlah AS outstock,
-                detail_outstock.sisa,
                 outstock.user,
-                detail_outstock.keterangan as keterangan
+                detail_outstock.keterangan AS keterangan
             FROM detail_outstock
             LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
             WHERE detail_outstock.sku = ? AND outstock.idgudang = ? AND outstock.status_verification = 1
         ) AS stock_transaction
+        JOIN (SELECT @saldo := 0) AS vars
         ORDER BY datetime
-    ";    
+        ";
 
         $transaction_stock = $this->db->query($query, [$sku, $idgudang, $sku, $idgudang])->result();
 
@@ -283,38 +295,50 @@ class Product extends CI_Controller
 
         $product = $this->db->where('sku', $sku)->get('product')->row();
 
+        if (!$product) {
+            show_error('Produk tidak ditemukan.');
+        }
+
         $query = "
-        SELECT * FROM (
+        SELECT 
+            stock_code,
+            datetime,
+            kategori,
+            instock,
+            outstock,
+            @saldo := @saldo + IFNULL(instock,0) - IFNULL(outstock,0) AS sisa,
+            user,
+            keterangan
+        FROM (
             SELECT 
                 detail_instock.instock_code AS stock_code,
                 instock.datetime,
                 instock.kategori,
                 detail_instock.jumlah AS instock,
                 NULL AS outstock,
-                detail_instock.sisa,
                 instock.user,
-                detail_instock.keterangan as keterangan
+                detail_instock.keterangan AS keterangan
             FROM detail_instock
             LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
             WHERE detail_instock.sku = ? AND instock.idgudang = ? AND instock.status_verification = 1
-    
+        
             UNION ALL
-    
+        
             SELECT 
                 detail_outstock.outstock_code AS stock_code,
                 outstock.datetime,
                 outstock.kategori,
                 NULL AS instock,
                 detail_outstock.jumlah AS outstock,
-                detail_outstock.sisa,
                 outstock.user,
-                detail_outstock.keterangan as keterangan
+                detail_outstock.keterangan AS keterangan
             FROM detail_outstock
             LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
             WHERE detail_outstock.sku = ? AND outstock.idgudang = ? AND outstock.status_verification = 1
         ) AS stock_transaction
+        JOIN (SELECT @saldo := 0) AS vars
         ORDER BY datetime
-    ";    
+        ";
 
         $transaction_stock = $this->db->query($query, [$sku, $idgudang, $sku, $idgudang])->result();
 
@@ -334,38 +358,50 @@ class Product extends CI_Controller
 
         $product = $this->db->where('sku', $sku)->get('product')->row();
 
+        if (!$product) {
+            show_error('Produk tidak ditemukan.');
+        }
+
         $query = "
-        SELECT * FROM (
+        SELECT 
+            stock_code,
+            datetime,
+            kategori,
+            instock,
+            outstock,
+            @saldo := @saldo + IFNULL(instock,0) - IFNULL(outstock,0) AS sisa,
+            user,
+            keterangan
+        FROM (
             SELECT 
                 detail_instock.instock_code AS stock_code,
                 instock.datetime,
                 instock.kategori,
                 detail_instock.jumlah AS instock,
                 NULL AS outstock,
-                detail_instock.sisa,
                 instock.user,
-                detail_instock.keterangan as keterangan
+                detail_instock.keterangan AS keterangan
             FROM detail_instock
             LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
             WHERE detail_instock.sku = ? AND instock.idgudang = ? AND instock.status_verification = 1
-    
+        
             UNION ALL
-    
+        
             SELECT 
                 detail_outstock.outstock_code AS stock_code,
                 outstock.datetime,
                 outstock.kategori,
                 NULL AS instock,
                 detail_outstock.jumlah AS outstock,
-                detail_outstock.sisa,
                 outstock.user,
-                detail_outstock.keterangan as keterangan
+                detail_outstock.keterangan AS keterangan
             FROM detail_outstock
             LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
             WHERE detail_outstock.sku = ? AND outstock.idgudang = ? AND outstock.status_verification = 1
         ) AS stock_transaction
+        JOIN (SELECT @saldo := 0) AS vars
         ORDER BY datetime
-    ";    
+        ";
 
         $transaction_stock = $this->db->query($query, [$sku, $idgudang, $sku, $idgudang])->result();
 
