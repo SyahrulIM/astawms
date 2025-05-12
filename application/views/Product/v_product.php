@@ -132,6 +132,7 @@
                                     <?php foreach ($gudang as $g) { ?>
                                         <th>Stock <?= $g->nama_gudang ?></th>
                                     <?php } ?>
+                                    <th>Tanggal Dibuat</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -155,6 +156,7 @@
                                         ?>
                                             <td><?= $stok ?></td>
                                         <?php } ?>
+                                        <td><?= $pvalue->created_date ?></td>
                                         <td>
                                             <?php if ($this->session->userdata('idrole') != 4 && $this->session->userdata('idrole') != 2) { ?>
                                                 <button type="button" class="btn btn-warning btnEditProduk" data-sku="<?= $pvalue->sku ?>" data-nama="<?= $pvalue->nama_produk ?>" data-barcode="<?= $pvalue->barcode ?>" data-gambar="<?= $pvalue->gambar ?>" data-sni="<?= $pvalue->sni ?>" data-bs-toggle="modal" data-bs-target="#editProduct">
@@ -207,7 +209,10 @@
                                     firstLast: false
                                 }
                             }
-                        }
+                        },
+                        order: [
+                            [8, 'dsc']
+                        ] // Index kolom 'created_date', ganti sesuai urutan sebenarnya
                     });
                 });
 
