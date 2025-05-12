@@ -58,7 +58,6 @@
                     </form>
                 </div>
                 <!-- End -->
-
                 <!-- Modal Edit Produk -->
                 <div class="modal fade" id="editProduct" tabindex="-1" aria-labelledby="editProductLabel" aria-hidden="true">
                     <form method="post" action="<?php echo base_url('product/editProduct') ?>" enctype="multipart/form-data">
@@ -98,6 +97,25 @@
                             </div>
                         </div>
                     </form>
+                </div>
+                <!-- End -->
+                <!-- Modal Konfirmasi Hapus -->
+                <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="confirmDeleteLabel">Konfirmasi Hapus</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Apa Anda Yakin ingin menghapus produk <strong><span id="productInfo"></span></strong>?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <a id="btnConfirmDelete" href="#" class="btn btn-danger">Ya, Hapus</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <!-- End -->
                 <div class="row">
@@ -142,11 +160,9 @@
                                                 <button type="button" class="btn btn-warning btnEditProduk" data-sku="<?= $pvalue->sku ?>" data-nama="<?= $pvalue->nama_produk ?>" data-barcode="<?= $pvalue->barcode ?>" data-gambar="<?= $pvalue->gambar ?>" data-sni="<?= $pvalue->sni ?>" data-bs-toggle="modal" data-bs-target="#editProduct">
                                                     <i class="fa fa-edit"></i> Edit
                                                 </button>
-                                                <a href="<?php echo base_url('product/deleteProduct?idproduct=' . $pvalue->idproduct); ?>">
-                                                    <button type="button" class="btn btn-danger">
-                                                        <i class="fa-solid fa-trash-can"></i> Hapus
-                                                    </button>
-                                                </a>
+                                                <button type="button" class="btn btn-danger btnDelete" data-url="<?= base_url('product/deleteProduct?idproduct=' . $pvalue->idproduct); ?>" data-nama="<?= $pvalue->nama_produk ?>" data-sku="<?= $pvalue->sku ?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                                                    <i class="fa-solid fa-trash-can"></i> Hapus
+                                                </button>
                                             <?php } ?>
                                             <a href="<?= base_url('product/stockCard?sku=' . $pvalue->sku); ?>">
                                                 <button type="button" class="btn btn-success">
@@ -293,6 +309,19 @@
                         document.body.removeChild(link);
                     }, 500); // Delay to ensure the barcode is rendered
                 }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.querySelectorAll('.btnDelete').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const nama = this.getAttribute('data-nama');
+                            const sku = this.getAttribute('data-sku');
+                            const url = this.getAttribute('data-url');
+
+                            document.getElementById('productInfo').textContent = `${nama} (SKU: ${sku})`;
+                            document.getElementById('btnConfirmDelete').href = url;
+                        });
+                    });
+                });
             </script>
             </body>
 

@@ -49,6 +49,7 @@
                 <?php if ($this->session->userdata('idrole') == 1) { ?>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>">Pengguna</a>
                 <?php } ?>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'delivery_note') ? 'active' : ''; ?>" href="<?php echo base_url('delivery_note/'); ?>">Surat Jalan</a>
             </div>
         </div>
         <!-- Page content wrapper-->
@@ -56,7 +57,7 @@
             <!-- Top navigation-->
             <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
                 <div class="container-fluid">
-                    <button class="btn btn-primary d-inline d-sm-none" id="sidebarToggle">Menu</button>
+                    <button class="btn btn-primary d-inline d-xl-none" id="sidebarToggle">Menu</button>
                     <div class="navbar-nav ms-auto mt-2 mt-lg-0" id="navbarSupportedContent">
                         <ul class="navbar-nav">
                             <li class="nav-item dropdown">

@@ -27,7 +27,7 @@
                                             <button type="button" class="btn btn-primary btn-tambah-barang" id="btn-tambah-barang"><i class="fa-solid fa-plus"></i> Tambah Barang</button>
                                         </div>
                                         <div class="col">
-                                            <input type="text" class="form-control input-no" id="inputNo" name="inputNo" placeholder="No Manual">
+                                            <input type="text" class="form-control input-no" id="inputNo" name="inputNo" placeholder="No Manual" required>
                                         </div>
                                         <div class="col">
                                             <select class="form-select" aria-label="Default select example" id="inputGudang" name="inputGudang" required>
