@@ -99,6 +99,26 @@
                     </form>
                 </div>
                 <!-- End -->
+                <!-- Modal Konfirmasi Simpan -->
+                <div class="modal fade" id="confirmSaveModal" tabindex="-1" aria-labelledby="confirmSaveLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="confirmSaveLabel">Konfirmasi Simpan</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                            </div>
+                            <div class="modal-body">
+                                Apakah Anda yakin ingin menyimpan perubahan produk ini?<br>
+                                <strong id="productConfirmInfo"></strong>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="button" id="btnConfirmSave" class="btn btn-primary">Ya, Simpan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End -->
                 <!-- Modal Konfirmasi Hapus -->
                 <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
                     <div class="modal-dialog">
@@ -217,33 +237,67 @@
                 });
 
                 document.addEventListener("DOMContentLoaded", function() {
-                    const form = document.querySelector('#addProduct form');
-                    const inputGambar = document.getElementById('inputGambar');
-                    const inputSni = document.getElementById('inputSni');
+                    const formAdd = document.querySelector('#addProduct form');
                     const inputSku = document.getElementById('inputSku');
+                    const inputNama = document.getElementById('inputNamaProduk');
+                    const btnConfirmSave = document.getElementById('btnConfirmSave');
+                    let currentForm = null;
 
-                    function isValidImage(file) {
-                        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-                        return allowedTypes.includes(file.type);
-                    }
-
-                    form.addEventListener('submit', function(e) {
+                    formAdd.addEventListener('submit', function(e) {
+                        e.preventDefault();
                         if (/\s/.test(inputSku.value)) {
                             alert('SKU tidak boleh mengandung spasi.');
-                            e.preventDefault();
                             return;
                         }
 
-                        if (inputGambar.files.length > 0 && !isValidImage(inputGambar.files[0])) {
+                        const gambar = document.getElementById('inputGambar');
+                        const sni = document.getElementById('inputSni');
+                        if (gambar.files.length > 0 && !isValidImage(gambar.files[0])) {
                             alert('Format file Gambar harus JPG, JPEG, atau PNG.');
-                            e.preventDefault();
                             return;
                         }
 
-                        if (inputSni.files.length > 0 && !isValidImage(inputSni.files[0])) {
+                        if (sni.files.length > 0 && !isValidImage(sni.files[0])) {
                             alert('Format file SNI harus JPG, JPEG, atau PNG.');
-                            e.preventDefault();
                             return;
+                        }
+
+                        // Show modal konfirmasi
+                        document.getElementById('productConfirmInfo').textContent = `${inputNama.value} (SKU: ${inputSku.value})`;
+                        currentForm = formAdd;
+                        const modal = new bootstrap.Modal(document.getElementById('confirmSaveModal'));
+                        modal.show();
+                    });
+
+                    // Tombol "Ya, Simpan" di modal konfirmasi
+                    btnConfirmSave.addEventListener('click', function() {
+                        if (currentForm) {
+                            currentForm.submit();
+                        }
+                    });
+                });
+
+                document.addEventListener("DOMContentLoaded", function() {
+                    const formEdit = document.querySelector('#editProduct form');
+                    const editSku = document.getElementById('editSku');
+                    const editNama = document.getElementById('editNamaProduk');
+                    const btnConfirmSave = document.getElementById('btnConfirmSave');
+                    let currentForm = null;
+
+                    formEdit.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        // Show modal konfirmasi saat form disubmit
+                        document.getElementById('productConfirmInfo').textContent = `${editNama.value} (SKU: ${editSku.value})`;
+                        currentForm = formEdit; // Menyimpan form saat ini
+                        const modal = new bootstrap.Modal(document.getElementById('confirmSaveModal'));
+                        modal.show(); // Tampilkan modal konfirmasi
+                    });
+
+                    // Tombol "Ya, Simpan" di modal konfirmasi
+                    btnConfirmSave.addEventListener('click', function() {
+                        if (currentForm) {
+                            currentForm.submit(); // Jika konfirmasi, kirimkan form
                         }
                     });
                 });
