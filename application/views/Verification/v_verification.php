@@ -73,7 +73,6 @@
                             <th>SKU</th>
                             <th>Nama Produk</th>
                             <th>Jumlah</th>
-                            <th>Stok Tersedia</th>
                         </tr>
                     </thead>
                     <tbody id="detailStockTable">
@@ -130,7 +129,6 @@
                                 '<td>' + detail.sku + '</td>' +
                                 '<td>' + detail.nama_produk + '</td>' +
                                 '<td>' + detail.jumlah + '</td>' +
-                                '<td>' + detail.sisa + '</td>' +
                                 '</tr>';
                             $('#detailStockTable').append(row);
                         });
