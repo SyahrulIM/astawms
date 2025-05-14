@@ -1,9 +1,18 @@
             <!-- Page content-->
             <div class="container-fluid">
-                <div class="row">
+                <div class="row mt-4">
                     <div class="col">
-                        <h1 class="mt-4">Detail Barang Keluar - <?php echo $outstock_code ?></h1>
+                        <h1>Detail Barang Keluar - <?php echo $outstock_code ?></h1>
                         <h4>Nomer : <?php echo $no_manual ?></h4>
+                    </div>
+                    <div class="col">
+                        <div class="d-flex justify-content-end mt-auto">
+                            <a href="<?php echo base_url('outstock/exportExcel?outstock_code=' . $outstock_code); ?>">
+                                <button type="button" class="btn btn-success">
+                                    <i class="fa-solid fa-print"></i> Print Excel
+                                </button>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div class="row">
@@ -21,14 +30,14 @@
                             </thead>
                             <tbody>
                                 <?php foreach ($detailoutstock as $doskey => $dosvalue) { ?>
-                                <tr>
-                                    <td><?php echo $doskey + 1; ?></td>
-                                    <td><?php echo $dosvalue->sku; ?></td>
-                                    <td><?php echo $dosvalue->nama_produk; ?></td>
-                                    <td><?php echo $dosvalue->nama_gudang; ?></td>
-                                    <td><?php echo $dosvalue->jumlah; ?></td>
-                                    <td><?php echo $dosvalue->keterangan; ?></td>
-                                </tr>
+                                    <tr>
+                                        <td><?php echo $doskey + 1; ?></td>
+                                        <td><?php echo $dosvalue->sku; ?></td>
+                                        <td><?php echo $dosvalue->nama_produk; ?></td>
+                                        <td><?php echo $dosvalue->nama_gudang; ?></td>
+                                        <td><?php echo $dosvalue->jumlah; ?></td>
+                                        <td><?php echo $dosvalue->keterangan; ?></td>
+                                    </tr>
                                 <?php } ?>
                             </tbody>
                         </table>

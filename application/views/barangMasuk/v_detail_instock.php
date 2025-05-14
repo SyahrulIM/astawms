@@ -1,9 +1,18 @@
             <!-- Page content-->
             <div class="container-fluid">
-                <div class="row">
+                <div class="row mt-4">
                     <div class="col">
-                        <h1 class="mt-4">Detail Barang Masuk - <?php echo $instock_code ?></h1>
+                        <h1>Detail Barang Masuk - <?php echo $instock_code ?></h1>
                         <h4>Nomer : <?php echo $no_manual ?></h4>
+                    </div>
+                    <div class="col">
+                        <div class="d-flex justify-content-end mt-auto">
+                            <a href="<?php echo base_url('barangmasuk/exportExcel?instock_code=' . $instock_code); ?>">
+                                <button type="button" class="btn btn-success">
+                                    <i class="fa-solid fa-print"></i> Print Excel
+                                </button>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div class="row">

@@ -6,11 +6,9 @@ class Barangmasuk extends CI_Controller
     public function __construct()
     {
         parent::__construct();
-        // Check if the user is logged in
         if (!$this->session->userdata('logged_in')) {
-            // Redirect to login with a message
             $this->session->set_flashdata('error', 'Eeettss gak boleh nakal, Login dulu ya kak hehe.');
-            redirect('auth');  // Assuming 'auth' is your login controller
+            redirect('auth');
         }
     }
 
@@ -105,5 +103,63 @@ class Barangmasuk extends CI_Controller
 
         $this->load->view('theme/v_head', $data);
         $this->load->view('barangMasuk/v_detail_instock');
+    }
+
+        public function exportExcel()
+    {
+        $instock_code = $this->input->get('instock_code');
+
+        $detail_instock = $this->db
+            ->select('detail_instock.*, instock.tgl_terima, instock.jam_terima, instock.user, instock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk, instock.no_manual as no_manual')
+            ->from('detail_instock')
+            ->join('instock', 'instock.instock_code = detail_instock.instock_code')
+            ->join('gudang', 'gudang.idgudang = instock.idgudang')
+            ->join('product', 'detail_instock.sku = product.sku')
+            ->where('detail_instock.instock_code', $instock_code)
+            ->get()
+            ->result();
+
+        $no_manual = isset($detail_instock[0]) ? $detail_instock[0]->no_manual : '-';
+
+        $filename = 'Barang_Masuk_' . $instock_code . '.xls';
+
+        $content = "<table>";
+        $content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Barang Masuk - Asta Homeware</td></tr>";
+        $content .= "<tr><td colspan='9'>Kode Barang Mauk: {$instock_code}</td></tr>";
+        $content .= "<tr><td colspan='9'>Nomer: {$no_manual}</td></tr>";
+        $content .= "<tr><td colspan='9'>&nbsp;</td></tr>";
+        $content .= "</table>";
+        $content .= "<table border='1'>";
+        $content .= "<thead>
+                        <tr>
+                            <th>No</th>
+                            <th>SKU</th>
+                            <th>Nama Produk</th>
+                            <th>Gudang</th>
+                            <th>Jumlah</th>
+                            <th>Keterangan</th>
+                        </tr>
+                     </thead><tbody>";
+
+        $no = 1;
+        foreach ($detail_instock as $row) {
+            $content .= "<tr>
+                            <td>{$no}</td>
+                            <td>{$row->sku}</td>
+                            <td>{$row->nama_produk}</td>
+                            <td>{$row->nama_gudang}</td>
+                            <td>{$row->jumlah}</td>
+                            <td>{$row->keterangan}</td>
+                         </tr>";
+            $no++;
+        }
+        $content .= "</tbody></table>";
+
+        header("Content-type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename={$filename}");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+        echo $content;
+        exit;
     }
 }

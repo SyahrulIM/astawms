@@ -48,7 +48,7 @@ class Outstock extends CI_Controller
         }
         $inputUser = $this->session->userdata('username');
         $inputKategori = $this->input->post('inputKategori');
-    
+
         // Menambahkan status_verification = 0 untuk transaksi ini
         $data_outstock = [
             'idgudang' => $inputGudang,
@@ -63,21 +63,21 @@ class Outstock extends CI_Controller
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
         ];
-    
+
         foreach ($inputSKU as $key => $sku) {
             $jumlah = (int) $inputJumlah[$key];
-    
+
             // Ambil produk berdasarkan SKU
             $product = $this->db->where('sku', $sku)->get('product')->row();
             $idproduct = $product->idproduct;
-    
+
             // Cek stok awal di gudang tersebut
             $product_stock = $this->db
                 ->where('idproduct', $idproduct)
                 ->where('idgudang', $inputGudang)
                 ->get('product_stock')
                 ->row();
-    
+
             if (!$product_stock) {
                 // Kalau belum ada, insert stok awal dengan 0
                 $this->db->insert('product_stock', [
@@ -89,7 +89,7 @@ class Outstock extends CI_Controller
             } else {
                 $sisa_stok = $product_stock->stok - $jumlah;
             }
-    
+
             // Simpan detail outstock
             $data_detail_outstock = [
                 'outstock_code' => $inputOutstockCode,
@@ -100,30 +100,30 @@ class Outstock extends CI_Controller
                 'keterangan' => $inputKeterangan[$key],
             ];
             $this->db->insert('detail_outstock', $data_detail_outstock);
-    
+
             // Hapus update stok product_stock
             // Tidak perlu update 'product_stock' lagi di sini
         }
-    
+
         // Simpan ke tabel outstock utama dengan status_verification = 0
         $this->db->insert('outstock', $data_outstock);
-    
+
         redirect('outstock');
-    }    
+    }
 
     public function detail_outstock()
     {
         $outstock_code = $this->input->get('outstock_code');
 
         $data_detail_outstock = $this->db
-        ->select('detail_outstock.*, outstock.tgl_keluar, outstock.jam_keluar, outstock.user, outstock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk, outstock.no_manual as no_manual')
-        ->from('detail_outstock')
-        ->join('outstock', 'detail_outstock.outstock_code = outstock.outstock_code')
-        ->join('gudang', 'outstock.idgudang = gudang.idgudang')
-        ->join('product', 'detail_outstock.sku = product.sku') // JOIN tambahan ke product
-        ->where('detail_outstock.outstock_code', $outstock_code)
-        ->get()
-        ->result();    
+            ->select('detail_outstock.*, outstock.tgl_keluar, outstock.jam_keluar, outstock.user, outstock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk, outstock.no_manual as no_manual')
+            ->from('detail_outstock')
+            ->join('outstock', 'detail_outstock.outstock_code = outstock.outstock_code')
+            ->join('gudang', 'outstock.idgudang = gudang.idgudang')
+            ->join('product', 'detail_outstock.sku = product.sku') // JOIN tambahan ke product
+            ->where('detail_outstock.outstock_code', $outstock_code)
+            ->get()
+            ->result();
 
         $no_manual = isset($data_detail_outstock[0]) ? $data_detail_outstock[0]->no_manual : '-';
 
@@ -137,5 +137,65 @@ class Outstock extends CI_Controller
 
         $this->load->view('theme/v_head', $data);
         $this->load->view('Outstock/v_detail_outstock');
+    }
+
+    public function exportExcel()
+    {
+        $outstock_code = $this->input->get('outstock_code');
+
+        $detail_outstock = $this->db
+            ->select('detail_outstock.*, outstock.tgl_keluar, outstock.jam_keluar, outstock.user, outstock.kategori, gudang.nama_gudang as nama_gudang, product.nama_produk as nama_produk, outstock.no_manual as no_manual')
+            ->from('detail_outstock')
+            ->join('outstock', 'detail_outstock.outstock_code = outstock.outstock_code')
+            ->join('gudang', 'outstock.idgudang = gudang.idgudang')
+            ->join('product', 'detail_outstock.sku = product.sku')
+            ->where('detail_outstock.outstock_code', $outstock_code)
+            ->get()
+            ->result();
+
+        $this->load->helper('download');
+
+        $no_manual = isset($detail_outstock[0]) ? $detail_outstock[0]->no_manual : '-';
+
+        $filename = 'Barang_Keluar_' . $outstock_code . '.xls';
+
+        $content = "<table>";
+        $content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Barang Keluar - Asta Homeware</td></tr>";
+        $content .= "<tr><td colspan='9'>Kode Barang Keluar: {$outstock_code}</td></tr>";
+        $content .= "<tr><td colspan='9'>Nomer: {$no_manual}</td></tr>";
+        $content .= "<tr><td colspan='9'>&nbsp;</td></tr>";
+        $content .= "</table>";
+        $content .= "<table border='1'>";
+        $content .= "<thead>
+                        <tr>
+                            <th>No</th>
+                            <th>SKU</th>
+                            <th>Nama Produk</th>
+                            <th>Gudang</th>
+                            <th>Jumlah</th>
+                            <th>Keterangan</th>
+                        </tr>
+                     </thead><tbody>";
+
+        $no = 1;
+        foreach ($detail_outstock as $row) {
+            $content .= "<tr>
+                            <td>{$no}</td>
+                            <td>{$row->sku}</td>
+                            <td>{$row->nama_produk}</td>
+                            <td>{$row->nama_gudang}</td>
+                            <td>{$row->jumlah}</td>
+                            <td>{$row->keterangan}</td>
+                         </tr>";
+            $no++;
+        }
+        $content .= "</tbody></table>";
+
+        header("Content-type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename={$filename}");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+        echo $content;
+        exit;
     }
 }
