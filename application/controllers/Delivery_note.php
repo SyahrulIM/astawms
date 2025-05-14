@@ -21,7 +21,7 @@ class Delivery_note extends CI_Controller
         $this->db->join('role', 'role.idrole = user.idrole');
         $admin = $this->db->get('user')->result();
 
-        $this->db->select('delivery_note.no_manual as no_manual, user_received.full_name as user_received, delivery_note.send_date as send_date, user_input.full_name as user_input');
+        $this->db->select('delivery_note.no_manual as no_manual, user_received.full_name as user_received, delivery_note.send_date as send_date, user_input.full_name as user_input, delivery_note.created_date as created_date');
         $this->db->join('user as user_received','user_received.iduser = delivery_note.idreceived', 'left');
         $this->db->join('user as user_input','user_input.iduser = delivery_note.iduser', 'left');
         $this->db->where('delivery_note.status', 1);

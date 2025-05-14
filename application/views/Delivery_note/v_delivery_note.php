@@ -73,6 +73,7 @@
                                     <th>Nama Penerima</th>
                                     <th>Tanggal Kirim</th>
                                     <th>Penginput</th>
+                                    <th>Tanggal Input</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -84,6 +85,7 @@
                                         <td><?php echo $dvalue->user_received;?></td>
                                         <td><?php echo $dvalue->send_date;?></td>
                                         <td><?php echo $dvalue->user_input;?></td>
+                                        <td><?php echo $dvalue->created_date;?></td>
                                         <td><button type="button" class="btn btn-success">Detail</button></td>
                                     </tr>
                                 <?php } ?>

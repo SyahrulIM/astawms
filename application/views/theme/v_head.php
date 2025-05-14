@@ -39,10 +39,25 @@
                 <div class="list-group-item p-0">
                     <a class="list-group-item list-group-item-action list-group-item-light p-3 d-flex justify-content-between align-items-center <?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#transaksiSubmenu" role="button" aria-expanded="<?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'true' : 'false'; ?>" aria-controls="transaksiSubmenu">
                         Transaksi
+                        <?php
+                        $this->load->helper('transaction');
+                        if (number_pending_verification() > 0) {
+                        ?>
+                            <span class="badge rounded-pill text-bg-danger">Butuh Verifikasi</span>
+                        <?php } ?>
                         <i class="fas fa-chevron-down small"></i>
                     </a>
                     <div class="collapse <?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'show' : ''; ?>" id="transaksiSubmenu">
-                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'verification') ? 'active' : ''; ?>" href="<?= base_url('verification'); ?>">Verifikasi Transaksi</a>
+                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'verification') ? 'active' : ''; ?>" href="<?= base_url('verification'); ?>">
+                            Verifikasi Transaksi
+                            <?php
+                            $this->load->helper('transaction');
+                            $pending = number_pending_verification();
+                            if ($pending > 0) {
+                                echo '<span class="badge text-bg-danger">' . $pending . '</span>';
+                            }
+                            ?>
+                        </a>
                         <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'barangmasuk') ? 'active' : ''; ?>" href="<?= base_url('barangmasuk'); ?>">Barang Masuk</a>
                         <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'outstock') ? 'active' : ''; ?>" href="<?= base_url('outstock'); ?>">Barang Keluar</a>
                     </div>
