@@ -34,6 +34,7 @@
             <div class="list-group list-group-flush">
                 <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'dashboard') ? 'active' : ''; ?>" href="<?php echo base_url('dashboard/'); ?>">Dashboard</a>
                 <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'product') ? 'active' : ''; ?>" href="<?php echo base_url('product/'); ?>">Database Product</a>
+                <!-- <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'customer') ? 'active' : ''; ?>" href="<?php echo base_url('customer/'); ?>">Database Customer</a> -->
                 <!-- Transaksi Dropdown -->
                 <div class="list-group-item p-0">
                     <a class="list-group-item list-group-item-action list-group-item-light p-3 d-flex justify-content-between align-items-center <?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#transaksiSubmenu" role="button" aria-expanded="<?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'true' : 'false'; ?>" aria-controls="transaksiSubmenu">
@@ -49,7 +50,16 @@
                 <?php if ($this->session->userdata('idrole') == 1) { ?>
                     <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>">Pengguna</a>
                 <?php } ?>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'delivery_note') ? 'active' : ''; ?>" href="<?php echo base_url('delivery_note/'); ?>">Surat Jalan</a>
+                <div class="list-group-item p-0">
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3 d-flex justify-content-between align-items-center <?= in_array($current, ['delivery_note']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#suratjalanSubmenu" role="button" aria-expanded="<?= in_array($current, ['customer', 'delivery_note']) ? 'true' : 'false'; ?>" aria-controls="suratjalanSubmenu">
+                        Surat Jalan
+                        <i class="fas fa-chevron-down small"></i>
+                    </a>
+                    <div class="collapse <?= in_array($current, ['delivery_note']) ? 'show' : ''; ?>" id="suratjalanSubmenu">
+                        <!-- <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'customer') ? 'active' : ''; ?>" href="<?= base_url('customer'); ?>">Database Pelanggan</a> -->
+                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_note') ? 'active' : ''; ?>" href="<?= base_url('delivery_note'); ?>">Realisasi Pengiriman</a>
+                    </div>
+                </div>
             </div>
         </div>
         <!-- Page content wrapper-->
