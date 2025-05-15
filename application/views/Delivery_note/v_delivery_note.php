@@ -43,7 +43,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="inputFoto">Foto Surat Jalan</label>
-                                        <input type="file" class="form-control" id="inputFoto" name="inputFoto" accept="image/*">
+                                        <input type="file" class="form-control" id="inputFoto" name="inputFoto" accept="image/*" capture="environment">
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -64,6 +64,7 @@
                                     <th>Tanggal Kirim</th>
                                     <th>Penginput</th>
                                     <th>Tanggal Input</th>
+                                    <th>Surat Jalan</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -76,6 +77,7 @@
                                         <td><?php echo $dvalue->send_date; ?></td>
                                         <td><?php echo $dvalue->user_input; ?></td>
                                         <td><?php echo $dvalue->created_date; ?></td>
+                                        <td><img src="<?php echo base_url('assets/image/surat_jalan/'.$dvalue->foto);?>" alt="<?php echo $dvalue->foto;?>" width="100px" height="100px"></td>
                                         <td>
                                             <?php if ($dvalue->progress == 1) { ?>
                                                 <span class="badge rounded-pill text-bg-primary">Dikirim</span>
@@ -86,10 +88,13 @@
                                             <?php } ?>
                                         </td>
                                         <td>
-                                            <a href="<?= site_url('delivery_note/updateDelivery?id=' . $dvalue->iddelivery_note) ?>" class="btn btn-sm btn-primary">
-                                                <button type="button" class="btn btn-primary">Verifikasi</button>
-                                            </a>
-                                            <button type="button" class="btn btn-info">Validasi</button>
+                                            <?php if ($dvalue->progress == 1) { ?>
+                                                <a href="<?= site_url('delivery_note/updateDelivery?id=' . $dvalue->iddelivery_note) ?>" class="btn btn-sm btn-primary">
+                                                    <button type="button" class="btn btn-primary">Verifikasi</button>
+                                                </a>
+                                            <?php } else if ($dvalue->progress == 2) { ?>
+                                                <button type="button" class="btn btn-info">Validasi</button>
+                                            <?php } ?>
                                         </td>
                                     </tr>
                                 <?php } ?>

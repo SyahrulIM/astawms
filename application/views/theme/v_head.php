@@ -62,9 +62,6 @@
                         <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'outstock') ? 'active' : ''; ?>" href="<?= base_url('outstock'); ?>">Barang Keluar</a>
                     </div>
                 </div>
-                <?php if ($this->session->userdata('idrole') == 1) { ?>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>">Pengguna</a>
-                <?php } ?>
                 <div class="list-group-item p-0">
                     <a class="list-group-item list-group-item-action list-group-item-light p-3 d-flex justify-content-between align-items-center <?= in_array($current, ['delivery_note']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#suratjalanSubmenu" role="button" aria-expanded="<?= in_array($current, ['customer', 'delivery_note']) ? 'true' : 'false'; ?>" aria-controls="suratjalanSubmenu">
                         Surat Jalan
@@ -75,6 +72,9 @@
                         <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_note') ? 'active' : ''; ?>" href="<?= base_url('delivery_note'); ?>">Realisasi Pengiriman</a>
                     </div>
                 </div>
+                <?php if ($this->session->userdata('idrole') == 1) { ?>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>">Pengguna</a>
+                <?php } ?>
             </div>
         </div>
         <!-- Page content wrapper-->

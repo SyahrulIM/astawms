@@ -27,7 +27,8 @@ class Delivery_note extends CI_Controller
     delivery_note.send_date,
     user_input.full_name as user_input,
     delivery_note.created_date,
-    delivery_note_log.progress
+    delivery_note_log.progress,
+    delivery_note.foto
 ');
         $this->db->join('user as user_input', 'user_input.iduser = delivery_note.iduser', 'left');
 
@@ -64,6 +65,14 @@ class Delivery_note extends CI_Controller
         $iduser = $this->session->userdata('iduser');
         $now = date("Y-m-d H:i:s");
 
+        // Cek duplikasi no_manual
+        $cek = $this->db->get_where('delivery_note', ['no_manual' => $no_manual, 'status' => 1])->row();
+        if ($cek) {
+            $this->session->set_flashdata('error', 'No Surat Jalan sudah terpakai. Gunakan nomor yang berbeda.');
+            redirect('delivery_note');
+            return;
+        }
+
         $foto = ''; // Default kosong
 
         // Upload gambar
@@ -73,11 +82,11 @@ class Delivery_note extends CI_Controller
             $config['file_name'] = 'surat_jalan_' . time();
             $config['overwrite'] = true;
 
-            $this->load->library('upload', $config); // pastikan library upload sudah diload
+            $this->load->library('upload', $config);
 
             if ($this->upload->do_upload('inputFoto')) {
                 $uploadData = $this->upload->data();
-                $foto = $uploadData['file_name']; // Simpan nama file yang berhasil diupload
+                $foto = $uploadData['file_name'];
             } else {
                 $this->session->set_flashdata('error', $this->upload->display_errors());
                 redirect('delivery_note');
@@ -111,6 +120,7 @@ class Delivery_note extends CI_Controller
 
         $this->db->insert('delivery_note_log', $data_log);
 
+        $this->session->set_flashdata('success', 'Realisasi pengiriman berhasil ditambahkan.');
         redirect('delivery_note');
     }
 
