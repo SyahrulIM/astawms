@@ -1,8 +1,8 @@
             <!-- Page content-->
             <div class="container-fluid">
-                <div class="row mt-4">
+                <div class="row">
                     <div class="col">
-                        <h1>Realisasi Pengiriman</h1>
+                        <h1 class="mt-4">Realisasi Pengiriman</h1>
                     </div>
                 </div>
                 <?php if ($this->session->userdata('idrole') != 4) { ?>
@@ -30,7 +30,7 @@
                 <!-- Modal Tambah Delivery -->
                 <div class="modal fade" id="addDeliver" tabindex="-1" aria-labelledby="addDeliverLabel" aria-hidden="true">
                     <div class="modal-dialog">
-                        <form method="post" enctype="multipart/form-data" action="<?php echo base_url('Delivery_note/createDelivery') ?>">
+                        <form method="post" action="<?php echo base_url('Delivery_note/createDelivery') ?>">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <h1 class="modal-title fs-5" id="addDeliverLabel">Tambah Realisasi Pengiriman</h1>
@@ -42,8 +42,17 @@
                                         <input type="text" class="form-control input-no" id="inputNo" name="inputNo">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="inputFoto">Foto Surat Jalan</label>
-                                        <input type="file" class="form-control" id="inputFoto" name="inputFoto" accept="image/*">
+                                        <label for="inputReceived" class="form-label">Nama Penerima</label>
+                                        <select class="form-control input-received" name="inputReceived" id="inputReceived">
+                                            <option selected>Pilih Penerima</option>
+                                            <?php foreach ($admin as $akey => $avalue) { ?>
+                                                <option value="<?php echo $avalue->iduser; ?>"><?php echo $avalue->full_name; ?> | <?php echo $avalue->nama_role; ?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="inputDate" class="form-label">Tanggal Kirim</label>
+                                        <input class="form-control input-date" type="datetime-local" id="inputDate" name="inputDate">
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -61,36 +70,23 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Nomer Surat Jalan</th>
+                                    <th>Nama Penerima</th>
                                     <th>Tanggal Kirim</th>
                                     <th>Penginput</th>
                                     <th>Tanggal Input</th>
-                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($delivery as $dkey => $dvalue) { ?>
                                     <tr>
-                                        <td><?php echo $dkey + 1; ?></td>
-                                        <td><?php echo $dvalue->no_manual; ?></td>
-                                        <td><?php echo $dvalue->send_date; ?></td>
-                                        <td><?php echo $dvalue->user_input; ?></td>
-                                        <td><?php echo $dvalue->created_date; ?></td>
-                                        <td>
-                                            <?php if ($dvalue->progress == 1) { ?>
-                                                <span class="badge rounded-pill text-bg-primary">Dikirim</span>
-                                            <?php } else if ($dvalue->progress == 2) { ?>
-                                                <span class="badge rounded-pill text-bg-secondary">Terverifikasi(Diterima)</span>
-                                            <?php } else { ?>
-                                                <span class="badge rounded-pill text-bg-success">Tervalidasi(Terdata)</span>
-                                            <?php } ?>
-                                        </td>
-                                        <td>
-                                            <a href="<?= site_url('delivery_note/updateDelivery?id=' . $dvalue->iddelivery_note) ?>" class="btn btn-sm btn-primary">
-                                                <button type="button" class="btn btn-primary">Verifikasi</button>
-                                            </a>
-                                            <button type="button" class="btn btn-info">Validasi</button>
-                                        </td>
+                                        <td><?php echo $dkey + 1;?></td>
+                                        <td><?php echo $dvalue->no_manual;?></td>
+                                        <td><?php echo $dvalue->user_received;?></td>
+                                        <td><?php echo $dvalue->send_date;?></td>
+                                        <td><?php echo $dvalue->user_input;?></td>
+                                        <td><?php echo $dvalue->created_date;?></td>
+                                        <td><button type="button" class="btn btn-primary">Verifikasi Pengirim</button><button type="button" class="btn btn-info">Verifikasi Penerima</button></td>
                                     </tr>
                                 <?php } ?>
                             </tbody>

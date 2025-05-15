@@ -2,6 +2,11 @@
 <div class="container-fluid">
     <div class="row mt-4">
         <div class="col">
+            <h1>Verifikasi Transaksi</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
             <?php if ($this->session->flashdata('success')) : ?>
                 <div class="alert alert-success"><?= $this->session->flashdata('success') ?></div>
             <?php elseif ($this->session->flashdata('error')) : ?>
