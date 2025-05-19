@@ -21,6 +21,7 @@
     <link rel="icon" type="image/x-icon" href="<?php echo base_url('assets/image/favicon.ico'); ?>">
     <!-- Barcode  -->
     <script src="https://unpkg.com/bwip-js/dist/bwip-js-min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 
 <body>
@@ -63,13 +64,45 @@
                     </div>
                 </div>
                 <div class="list-group-item p-0">
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3 d-flex justify-content-between align-items-center <?= in_array($current, ['delivery_note']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#suratjalanSubmenu" role="button" aria-expanded="<?= in_array($current, ['customer', 'delivery_note']) ? 'true' : 'false'; ?>" aria-controls="suratjalanSubmenu">
-                        Surat Jalan
-                        <i class="fas fa-chevron-down small"></i>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= in_array($current, ['delivery_note']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#suratjalanSubmenu" role="button" aria-expanded="<?= in_array($current, ['customer', 'delivery_note']) ? 'true' : 'false'; ?>" aria-controls="suratjalanSubmenu">
+                        <div class="d-flex justify-content-between align-items-start w-100">
+                            <div>Surat Jalan</div>
+
+                            <div class="d-flex flex-column align-items-end text-end">
+                                <?php
+                                $this->load->helper('transaction');
+                                $verifikasi = number_pending_verification_delivery();
+                                $validasi = number_pending_validasi_delivery();
+
+                                if ($verifikasi > 0) {
+                                    echo '<span class="badge rounded-pill text-bg-primary mb-1">Butuh Verifikasi</span>';
+                                }
+
+                                if ($validasi > 0) {
+                                    echo '<span class="badge rounded-pill text-bg-info mb-1">Butuh Validasi</span>';
+                                }
+                                ?>
+                                <i class="fas fa-chevron-down small"></i>
+                            </div>
+                        </div>
                     </a>
                     <div class="collapse <?= in_array($current, ['delivery_note']) ? 'show' : ''; ?>" id="suratjalanSubmenu">
                         <!-- <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'customer') ? 'active' : ''; ?>" href="<?= base_url('customer'); ?>">Database Pelanggan</a> -->
-                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_note') ? 'active' : ''; ?>" href="<?= base_url('delivery_note'); ?>">Realisasi Pengiriman</a>
+                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_note') ? 'active' : ''; ?>" href="<?= base_url('delivery_note'); ?>">
+                            Realisasi Pengiriman
+                            <?php
+                            $this->load->helper('transaction');
+                            $pending_verification = number_pending_verification_delivery();
+                            if ($pending_verification > 0) : ?>
+                                <span class="badge rounded-pill text-bg-primary"><?= $pending_verification; ?></span>
+                            <?php endif; ?>
+                            <?php
+                            $this->load->helper('transaction');
+                            $pending_validasi = number_pending_validasi_delivery();
+                            if ($pending_validasi > 0) : ?>
+                                <span class="badge rounded-pill text-bg-info"><?= $pending_validasi; ?></span>
+                            <?php endif; ?>
+                        </a>
                     </div>
                 </div>
                 <?php if ($this->session->userdata('idrole') == 1) { ?>
@@ -79,15 +112,62 @@
         </div>
         <!-- Page content wrapper-->
         <div id="page-content-wrapper">
-            <!-- Top navigation-->
-            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-                <div class="container-fluid">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom position-relative">
+                <div class="container-fluid d-flex align-items-center justify-content-between">
+                    <!-- Tombol Menu (kiri) -->
                     <button class="btn btn-primary d-inline d-xl-none" id="sidebarToggle">Menu</button>
-                    <div class="navbar-nav ms-auto mt-2 mt-lg-0" id="navbarSupportedContent">
-                        <ul class="navbar-nav">
+
+                    <!-- Marquee untuk mobile: inline, tampil hanya di mobile -->
+                    <?php
+                    $this->load->helper('transaction');
+                    $pending_all = total_pending_verification_all();
+                    if ($pending_all > 0) {
+                    ?>
+                        <marquee class="d-inline d-lg-none ms-2" style="font-weight: bold; color: white;
+    background-color: #dc3545;
+    border-radius: 10px;">
+
+                            <?php
+                            $this->load->helper('transaction');
+                            $pending = number_pending_verification();
+                            if ($pending > 0) {
+                                echo "Ada " . $pending . " Pending Verifikasi Transaksi";
+                            }
+                            ?> <?php
+                                $this->load->helper('transaction');
+                                $pending = total_pending_delivery();
+                                if ($pending > 0) {
+                                    echo "| ada " . $pending . " Dikirim Surat Jalan";
+                                }
+                                ?>
+                        </marquee>
+                    <?php } ?>
+
+                    <!-- Marquee untuk desktop: posisi absolute di tengah, hanya tampil di desktop -->
+                    <marquee class="d-none d-lg-block position-absolute" style="left: 50%; transform: translateX(-50%); width: 50%; font-weight: bold; color: white;
+    background-color: #dc3545;
+    border-radius: 10px;">
+                        <?php
+                        $this->load->helper('transaction');
+                        $pending = number_pending_verification();
+                        if ($pending > 0) {
+                            echo "Ada " . $pending . " Pending Verifikasi Transaksi";
+                        }
+                        ?> <?php
+                            $this->load->helper('transaction');
+                            $pending = total_pending_delivery();
+                            if ($pending > 0) {
+                                echo "| Ada " . $pending . " Dikirim Surat Jalan";
+                            }
+                            ?>
+                    </marquee>
+
+                    <!-- Profile (kanan) -->
+                    <div class="navbar-nav ms-auto mt-2 mt-lg-0">
+                        <ul class="navbar-nav d-flex align-items-center">
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <img src="<?php echo base_url('assets/image/user/' . $this->session->userdata('foto')); ?>" alt="" width="21px" height="21px" style="border-radius: 50%; object-fit: cover;">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <img src="<?php echo base_url('assets/image/user/' . $this->session->userdata('foto')); ?>" alt="" width="21px" height="21px" style="border-radius: 50%; object-fit: cover; margin-right: 0.5rem;">
                                     <?php echo $this->session->userdata('username'); ?>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
