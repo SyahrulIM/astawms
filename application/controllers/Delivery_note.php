@@ -120,6 +120,38 @@ class Delivery_note extends CI_Controller
 
         $this->db->insert('delivery_note_log', $data_log);
 
+        // Fonnte WhatsApp API Integration
+        $token = 'EyuhsmTqzeKaDknoxdxt';
+        $target = '085156340619';
+        $message = 'Surat Jalan dengan nomor ' . $no_manual . ' telah berhasil dibuat oleh ' . $username . '.';
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.fonnte.com/send',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => array(
+                'target' => $target,
+                'message' => $message,
+                'countryCode' => '62',
+            ),
+            CURLOPT_HTTPHEADER => array(
+                'Authorization: ' . $token
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+        echo $response;
+        //End
+
         $this->session->set_flashdata('success', 'Realisasi pengiriman berhasil ditambahkan.');
         redirect('delivery_note');
     }
