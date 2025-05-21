@@ -162,14 +162,18 @@
                                         <td><?php echo $dvalue->send_date; ?></td>
                                         <td><?php echo $dvalue->user_input; ?></td>
                                         <td><?php echo $dvalue->created_date; ?></td>
-                                        <td><img src="<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>" alt="<?php echo $dvalue->foto; ?>" width="100px" height="100px"></td>
+                                        <td>
+                                            <img src="<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>" alt="<?php echo $dvalue->foto; ?>" width="100px" height="100px" oncontextmenu="return false;">
+                                        </td>
                                         <td>
                                             <?php if ($dvalue->progress == 1) { ?>
                                                 <span class="badge rounded-pill text-bg-secondary">Dikirim</span>
                                             <?php } else if ($dvalue->progress == 2) { ?>
                                                 <span class="badge rounded-pill text-bg-primary">Terverifikasi(Diterima)</span>
+                                            <?php } else if ($dvalue->progress == 3) { ?>
+                                                <span class="badge rounded-pill text-bg-info">Tervalidasi(Terdata)</span>
                                             <?php } else { ?>
-                                                <span class="badge rounded-pill text-bg-success">Tervalidasi(Terdata)</span>
+                                                <span class="badge rounded-pill text-bg-success">Final Direksi</span>
                                             <?php } ?>
                                         </td>
                                         <td>
@@ -181,10 +185,16 @@
                                                 <a href="#" class="btn btn-sm btn-info mb-1" onclick="showValidasiModal('<?php echo site_url('delivery_note/validasiDelivery?id=' . $dvalue->iddelivery_note); ?>')">
                                                     <i class="fas fa-check-double"></i> Validasi
                                                 </a><br>
+                                            <?php } else if ($dvalue->progress == 3) { ?>
+                                                <a href="#" class="btn btn-sm btn-success mb-1" onclick="showValidasiModal('<?php echo site_url('delivery_note/finalDelivery?id=' . $dvalue->iddelivery_note); ?>')">
+                                                    <i class="fas fa-check-double"></i> Final DIR
+                                                </a><br>
                                             <?php } ?>
-                                            <a href="<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>" download class="btn btn-sm btn-outline-secondary">
-                                                <i class="fas fa-download small"></i> Download Surat Jalan
-                                            </a>
+                                            <?php if ($this->session->userdata('idrole') == 1) { ?>
+                                                <a href="<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>" download class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-download small"></i> Download Surat Jalan
+                                                </a>
+                                            <?php } ?>
                                         </td>
                                     </tr>
                                 <?php } ?>

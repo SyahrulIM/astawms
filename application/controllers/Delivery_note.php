@@ -249,4 +249,51 @@ class Delivery_note extends CI_Controller
         $this->session->set_flashdata('success', 'Validasi pengiriman berhasil.');
         redirect('delivery_note');
     }
+
+        public function finalDelivery()
+    {
+        $id = $this->input->get('id');
+        $username = $this->session->userdata('username');
+        $now = date("Y-m-d H:i:s");
+
+        if (!$id) {
+            $this->session->set_flashdata('error', 'ID pengiriman tidak ditemukan.');
+            redirect('delivery_note');
+            return;
+        }
+
+        // Cek apakah delivery_note valid
+        $cek = $this->db->get_where('delivery_note', ['iddelivery_note' => $id])->row();
+        if (!$cek) {
+            $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
+            redirect('delivery_note');
+            return;
+        }
+
+        // Cek apakah progress 3 sudah ada
+        $exists = $this->db->get_where('delivery_note_log', [
+            'iddelivery_note' => $id,
+            'progress' => 4
+        ])->num_rows();
+
+        if ($exists > 0) {
+            $this->session->set_flashdata('warning', 'Progress 3 sudah pernah ditambahkan sebelumnya.');
+            redirect('delivery_note');
+            return;
+        }
+
+        // Insert progress 3 ke log
+        $log = [
+            'iddelivery_note' => $id,
+            'progress' => 4,
+            'description' => 'Pengiriman Divalidasi',
+            'created_by' => $username,
+            'created_date' => $now,
+            'status' => 1
+        ];
+        $this->db->insert('delivery_note_log', $log);
+
+        $this->session->set_flashdata('success', 'Validasi pengiriman berhasil.');
+        redirect('delivery_note');
+    }
 }
