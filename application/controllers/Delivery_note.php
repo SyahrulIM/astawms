@@ -123,7 +123,7 @@ class Delivery_note extends CI_Controller
         // Fonnte WhatsApp API Integration
         $token = 'EyuhsmTqzeKaDknoxdxt';
         $target = '085156340619';
-        $message = 'Surat Jalan dengan nomor ' . $no_manual . ' telah berhasil dibuat oleh ' . $username . '.';
+        $message = 'Surat Jalan dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
 
         $curl = curl_init();
 
