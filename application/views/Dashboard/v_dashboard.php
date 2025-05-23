@@ -5,7 +5,35 @@
                         <div class="card" style="width: 18rem;">
                             <div class="card-body">
                                 <h5 class="card-title">Total Product</h5>
-                                <h1 class="card-text"><?php echo count($product)?></h1>
+                                <h1 class="card-text"><?php echo count($product) ?></h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card" style="width: 18rem;">
+                            <div class="card-body">
+                                <h5 class="card-title">Butuh Verifikasi Transaksi</h5>
+                                <h1 class="card-text">
+                                    <?php
+                                    $this->load->helper('transaction');
+                                    $pending = number_pending_verification();
+                                    echo $pending; // akan tetap menampilkan 0 jika hasilnya nol
+                                    ?>
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card" style="width: 18rem;">
+                            <div class="card-body">
+                                <h5 class="card-title">Butuh Verifikasi Surat Jalan</h5>
+                                <h1 class="card-text">
+                                    <?php
+                                    $this->load->helper('transaction');
+                                    $pending = total_pending_delivery();
+                                    echo $pending; // akan tetap menampilkan 0 jika hasilnya nol
+                                    ?>
+                                </h1>
                             </div>
                         </div>
                     </div>
