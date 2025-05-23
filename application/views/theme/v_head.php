@@ -71,9 +71,9 @@
                             <div class="d-flex flex-column align-items-end text-end">
                                 <?php
                                 $this->load->helper('transaction');
-                                $verifikasi = number_pending_verification_delivery_note();
-                                $validasi = number_pending_validasi_delivery_note();
-                                $final = number_pending_final_delivery_note();
+                                $verifikasi = number_pending_verification_delivery_note() + number_pending_verification_delivery_manual();
+                                $validasi = number_pending_validasi_delivery_note() + number_pending_validasi_delivery_manual();
+                                $final = number_pending_final_delivery_note() + number_pending_final_delivery_manual();
 
                                 if ($verifikasi > 0) {
                                     echo '<div><span class="badge rounded-pill text-bg-primary">Butuh Verifikasi</span></div>';
@@ -114,7 +114,25 @@
                                 <span class="badge rounded-pill text-bg-success"><?= $pending_final; ?></span>
                             <?php endif; ?>
                         </a>
-                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_manual') ? 'active' : ''; ?>" href="<?= base_url('delivery_manual'); ?>">Realisasi Pengiriman Manual</a>
+                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_manual') ? 'active' : ''; ?>" href="<?= base_url('delivery_manual'); ?>">
+                            Realisasi Pengiriman Manual
+                            <?php
+                            $this->load->helper('transaction');
+                            $manual_pending_verification = number_pending_verification_delivery_manual();
+                            if ($manual_pending_verification > 0) : ?>
+                                <span class="badge rounded-pill text-bg-primary"><?= $manual_pending_verification; ?></span>
+                            <?php endif; ?>
+                            <?php
+                            $manual_pending_validasi = number_pending_validasi_delivery_manual();
+                            if ($manual_pending_validasi > 0) : ?>
+                                <span class="badge rounded-pill text-bg-info"><?= $manual_pending_validasi; ?></span>
+                            <?php endif; ?>
+                            <?php
+                            $manual_pending_final = number_pending_final_delivery_manual();
+                            if ($manual_pending_final > 0) : ?>
+                                <span class="badge rounded-pill text-bg-success"><?= $manual_pending_final; ?></span>
+                            <?php endif; ?>
+                        </a>
                     </div>
                 </div>
                 <?php if ($this->session->userdata('idrole') == 1) { ?>
@@ -147,7 +165,7 @@
                             }
                             ?> <?php
                                 $this->load->helper('transaction');
-                                $pending = total_pending_delivery_note();
+                                $pending = total_pending_delivery();
                                 if ($pending > 0) {
                                     echo "| ada " . $pending . " Dikirim Surat Jalan";
                                 }
@@ -167,7 +185,7 @@
                         }
                         ?> <?php
                             $this->load->helper('transaction');
-                            $pending = total_pending_delivery_note();
+                            $pending = total_pending_delivery();
                             if ($pending > 0) {
                                 echo "| Ada " . $pending . " Dikirim Surat Jalan";
                             }

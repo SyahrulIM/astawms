@@ -72,5 +72,6 @@ Fonnte
 Account Number: 6282245361511
 Password: vMLPwr
 
-accurate:
+accurate pos:
 @HotDog123
+Pin; 313131

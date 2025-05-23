@@ -111,7 +111,7 @@ class Outstock extends CI_Controller
         // WhatsApp API
         $token = 'EyuhsmTqzeKaDknoxdxt';
         $target = '085156340619';
-        $message = 'Transaksi barang masuk dengan kode instock ' . $inputOutstockCode .
+        $message = 'Transaksi barang keluar dengan kode outstock ' . $inputOutstockCode .
             (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
             ' telah dibuat oleh ' . $this->session->userdata('username') .
             '. Admin Stock dimohon untuk segera melakukan pengecekan verifikasi transaksi.';
