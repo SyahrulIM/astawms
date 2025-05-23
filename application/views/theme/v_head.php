@@ -71,38 +71,50 @@
                             <div class="d-flex flex-column align-items-end text-end">
                                 <?php
                                 $this->load->helper('transaction');
-                                $verifikasi = number_pending_verification_delivery();
-                                $validasi = number_pending_validasi_delivery();
+                                $verifikasi = number_pending_verification_delivery_note();
+                                $validasi = number_pending_validasi_delivery_note();
+                                $final = number_pending_final_delivery_note();
 
                                 if ($verifikasi > 0) {
-                                    echo '<span class="badge rounded-pill text-bg-primary mb-1">Butuh Verifikasi</span>';
+                                    echo '<div><span class="badge rounded-pill text-bg-primary">Butuh Verifikasi</span></div>';
                                 }
 
                                 if ($validasi > 0) {
-                                    echo '<span class="badge rounded-pill text-bg-info mb-1">Butuh Validasi</span>';
+                                    echo '<div><span class="badge rounded-pill text-bg-info">Butuh Validasi</span></div>';
+                                }
+
+                                if ($final > 0) {
+                                    echo '<div><span class="badge rounded-pill text-bg-success">Butuh Final</span></div>';
                                 }
                                 ?>
-                                <i class="fas fa-chevron-down small"></i>
+                                <i class="fas fa-chevron-down small mt-1"></i>
                             </div>
                         </div>
                     </a>
-                    <div class="collapse <?= in_array($current, ['delivery_note']) ? 'show' : ''; ?>" id="suratjalanSubmenu">
+                    <div class="collapse <?= in_array($current, ['delivery_note', 'delivery_manual']) ? 'show' : ''; ?>" id="suratjalanSubmenu">
                         <!-- <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'customer') ? 'active' : ''; ?>" href="<?= base_url('customer'); ?>">Database Pelanggan</a> -->
                         <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_note') ? 'active' : ''; ?>" href="<?= base_url('delivery_note'); ?>">
                             Realisasi Pengiriman
                             <?php
                             $this->load->helper('transaction');
-                            $pending_verification = number_pending_verification_delivery();
+                            $pending_verification = number_pending_verification_delivery_note();
                             if ($pending_verification > 0) : ?>
                                 <span class="badge rounded-pill text-bg-primary"><?= $pending_verification; ?></span>
                             <?php endif; ?>
                             <?php
                             $this->load->helper('transaction');
-                            $pending_validasi = number_pending_validasi_delivery();
+                            $pending_validasi = number_pending_validasi_delivery_note();
                             if ($pending_validasi > 0) : ?>
                                 <span class="badge rounded-pill text-bg-info"><?= $pending_validasi; ?></span>
                             <?php endif; ?>
+                            <?php
+                            $this->load->helper('transaction');
+                            $pending_final = number_pending_final_delivery_note();
+                            if ($pending_final > 0) : ?>
+                                <span class="badge rounded-pill text-bg-success"><?= $pending_final; ?></span>
+                            <?php endif; ?>
                         </a>
+                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_manual') ? 'active' : ''; ?>" href="<?= base_url('delivery_manual'); ?>">Realisasi Pengiriman Manual</a>
                     </div>
                 </div>
                 <?php if ($this->session->userdata('idrole') == 1) { ?>
@@ -135,7 +147,7 @@
                             }
                             ?> <?php
                                 $this->load->helper('transaction');
-                                $pending = total_pending_delivery();
+                                $pending = total_pending_delivery_note();
                                 if ($pending > 0) {
                                     echo "| ada " . $pending . " Dikirim Surat Jalan";
                                 }
@@ -155,7 +167,7 @@
                         }
                         ?> <?php
                             $this->load->helper('transaction');
-                            $pending = total_pending_delivery();
+                            $pending = total_pending_delivery_note();
                             if ($pending > 0) {
                                 echo "| Ada " . $pending . " Dikirim Surat Jalan";
                             }

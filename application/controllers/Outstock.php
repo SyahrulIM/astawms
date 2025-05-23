@@ -108,6 +108,32 @@ class Outstock extends CI_Controller
         // Simpan ke tabel outstock utama dengan status_verification = 0
         $this->db->insert('outstock', $data_outstock);
 
+        // WhatsApp API
+        $token = 'EyuhsmTqzeKaDknoxdxt';
+        $target = '085156340619';
+        $message = 'Transaksi barang masuk dengan kode instock ' . $inputOutstockCode .
+            (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
+            ' telah dibuat oleh ' . $this->session->userdata('username') .
+            '. Admin Stock dimohon untuk segera melakukan pengecekan verifikasi transaksi.';
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.fonnte.com/send',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => array(
+                'target' => $target,
+                'message' => $message,
+                'countryCode' => '62',
+            ),
+            CURLOPT_HTTPHEADER => array(
+                'Authorization: ' . $token
+            ),
+        ));
+        $response = curl_exec($curl);
+        curl_close($curl);
+        echo $response;
+        // End
+
         redirect('outstock');
     }
 

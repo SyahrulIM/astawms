@@ -30,7 +30,7 @@
                 <!-- Modal Tambah Delivery -->
                 <div class="modal fade" id="addDeliver" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="addDeliverLabel" aria-hidden="true">
                     <div class="modal-dialog">
-                        <form method="post" enctype="multipart/form-data" action="<?php echo base_url('Delivery_note/createDelivery') ?>">
+                        <form method="post" enctype="multipart/form-data" action="<?php echo base_url('Delivery_manual/createDelivery') ?>">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <h1 class="modal-title fs-5" id="addDeliverLabel">Tambah Realisasi Pengiriman</h1>
@@ -102,25 +102,6 @@
                     </div>
                 </div>
                 <!-- End -->
-                <!-- Modal Konfirmasi Final -->
-                <div class="modal fade" id="confirmFinalModal" tabindex="-1" aria-labelledby="confirmFinalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Konfirmasi Final DIR</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                            </div>
-                            <div class="modal-body">
-                                Apakah Anda yakin ingin memfinal pengiriman ini?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                <a id="confirmFinalBtn" href="#" class="btn btn-primary">Ya, Final</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- End -->
                 <!-- Modal Scan Barcode -->
                 <div class="modal fade" id="scanBarcodeModal" tabindex="-1" aria-labelledby="scanBarcodeModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
@@ -158,17 +139,6 @@
                     </div>
                 </div>
                 <!-- End -->
-                <!-- Modal Preview Surat Jalan -->
-                <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-body p-0">
-                                <img id="modalImage" src="#" alt="Preview Surat Jalan" style="width:100%; height:auto;" oncontextmenu="return false;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- End -->
                 <div class="row">
                     <div class="col">
                         <table id="tableproduct" class="display" style="width:100%">
@@ -193,7 +163,7 @@
                                         <td><?php echo $dvalue->user_input; ?></td>
                                         <td><?php echo $dvalue->created_date; ?></td>
                                         <td>
-                                            <img src="<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>" alt="<?php echo $dvalue->foto; ?>" width="100px" height="100px" style="cursor:pointer;" onclick="showImageModal('<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>')" oncontextmenu="return false;">
+                                            <img src="<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>" alt="<?php echo $dvalue->foto; ?>" width="100px" height="100px" oncontextmenu="return false;">
                                         </td>
                                         <td>
                                             <?php if ($dvalue->progress == 1) { ?>
@@ -208,15 +178,15 @@
                                         </td>
                                         <td>
                                             <?php if ($dvalue->progress == 1) { ?>
-                                                <a href="#" class="btn btn-sm btn-primary mb-1" onclick="showConfirmModal('<?php echo site_url('delivery_note/updateDelivery?id=' . $dvalue->iddelivery_note); ?>')">
+                                                <a href="#" class="btn btn-sm btn-primary mb-1" onclick="showConfirmModal('<?php echo site_url('delivery_manual/updateDelivery?id=' . $dvalue->iddelivery_note); ?>')">
                                                     <i class="fas fa-check"></i> Verifikasi
                                                 </a><br>
                                             <?php } else if ($dvalue->progress == 2) { ?>
-                                                <a href="#" class="btn btn-sm btn-info mb-1" onclick="showValidasiModal('<?php echo site_url('delivery_note/validasiDelivery?id=' . $dvalue->iddelivery_note); ?>')">
+                                                <a href="#" class="btn btn-sm btn-info mb-1" onclick="showValidasiModal('<?php echo site_url('delivery_manual/validasiDelivery?id=' . $dvalue->iddelivery_note); ?>')">
                                                     <i class="fas fa-check-double"></i> Validasi
                                                 </a><br>
                                             <?php } else if ($dvalue->progress == 3) { ?>
-                                                <a href="#" class="btn btn-sm btn-success mb-1" onclick="showFinalModal('<?php echo site_url('delivery_note/finalDelivery?id=' . $dvalue->iddelivery_note); ?>')">
+                                                <a href="#" class="btn btn-sm btn-success mb-1" onclick="showValidasiModal('<?php echo site_url('delivery_manual/finalDelivery?id=' . $dvalue->iddelivery_note); ?>')">
                                                     <i class="fas fa-check-double"></i> Final DIR
                                                 </a><br>
                                             <?php } ?>
@@ -271,11 +241,6 @@
                 function showValidasiModal(link) {
                     $('#confirmValidasiBtn').attr('href', link);
                     $('#confirmValidasiModal').modal('show');
-                }
-
-                function showFinalModal(link) {
-                    $('#confirmFinalBtn').attr('href', link);
-                    $('#confirmFinalModal').modal('show');
                 }
 
                 let html5QrcodeScanner;
@@ -372,12 +337,6 @@
                         tracks.forEach(track => track.stop());
                     }
                     $('#photoCaptureModal').modal('hide');
-                }
-
-                function showImageModal(src) {
-                    document.getElementById('modalImage').src = src;
-                    const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
-                    modal.show();
                 }
             </script>
             </body>

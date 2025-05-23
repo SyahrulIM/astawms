@@ -53,3 +53,24 @@ Pass: astawms=d17d09
 Website astahomeware.com
 User: hello@astahomeware.com
 Pass: h3LL0@4sT4#!!
+
+http://member.jagoanhosting.com/
+username: schiannger@gmail.com
+password: Fl1pfl0p@#
+PHP Version 7.4
+
+Fingerspot Asta Homeware
+ID: 1
+PASS: 3101
+
+Fingerspot Asta Homeware
+Serial Number : 616129018421315
+Kode Aktivasi : 41615-2A48-1A875-832D-65A0F-0964-B95C9
+Mesin: Revo 180
+
+Fonnte
+Account Number: 6282245361511
+Password: vMLPwr
+
+accurate:
+@HotDog123

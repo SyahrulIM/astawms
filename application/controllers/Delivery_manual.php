@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Delivery_note extends CI_Controller
+class Delivery_manual extends CI_Controller
 {
     public function __construct()
     {
@@ -14,7 +14,7 @@ class Delivery_note extends CI_Controller
 
     public function index()
     {
-        $title = 'Realisasi Pengiriman';
+        $title = 'Realisasi Pengiriman Manual';
 
         $this->db->where_in('user.idrole', [3, 5]);
         $this->db->where('user.status', 1);
@@ -43,7 +43,7 @@ class Delivery_note extends CI_Controller
             'left'
         );
         $this->db->where('delivery_note.status', 1);
-        $this->db->where('delivery_note.kategori', 1); // filter kategori 1
+        $this->db->where('delivery_note.kategori', 2);
         $delivery = $this->db->get('delivery_note')->result();
 
         $data = [
@@ -53,7 +53,7 @@ class Delivery_note extends CI_Controller
         ];
 
         $this->load->view('theme/v_head', $data);
-        $this->load->view('Delivery_note/v_delivery_note');
+        $this->load->view('Delivery_manual/v_delivery_manual');
     }
 
     public function createDelivery()
@@ -64,15 +64,22 @@ class Delivery_note extends CI_Controller
         $iduser = $this->session->userdata('iduser');
         $now = date("Y-m-d H:i:s");
 
-        $cek = $this->db->get_where('delivery_note', ['no_manual' => $no_manual, 'status' => 1])->row();
+        // Cek duplikasi no_manual
+        $cek = $this->db->get_where('delivery_note', [
+            'no_manual' => $no_manual,
+            'status' => 1,
+            'kategori' => 2
+        ])->row();
+
         if ($cek) {
             $this->session->set_flashdata('error', 'No Surat Jalan sudah terpakai. Gunakan nomor yang berbeda.');
-            redirect('delivery_note');
+            redirect('delivery_manual');
             return;
         }
 
         $foto = '';
 
+        // Upload gambar
         if (!empty($_FILES['inputFoto']['name'])) {
             $config['upload_path'] = './assets/image/surat_jalan/';
             $config['allowed_types'] = 'jpg|jpeg|png';
@@ -86,7 +93,7 @@ class Delivery_note extends CI_Controller
                 $foto = $uploadData['file_name'];
             } else {
                 $this->session->set_flashdata('error', $this->upload->display_errors());
-                redirect('delivery_note');
+                redirect('delivery_manual');
                 return;
             }
         }
@@ -101,7 +108,7 @@ class Delivery_note extends CI_Controller
             'updated_by' => $username,
             'updated_date' => $now,
             'status' => 1,
-            'kategori' => 1 // default kategori 1
+            'kategori' => 2
         ];
 
         $this->db->insert('delivery_note', $data);
@@ -118,7 +125,7 @@ class Delivery_note extends CI_Controller
 
         $this->db->insert('delivery_note_log', $data_log);
 
-        // Kirim pesan WhatsApp via Fonnte
+        // WhatsApp API
         $token = 'EyuhsmTqzeKaDknoxdxt';
         $target = '085156340619';
         $message = 'Surat Jalan dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
@@ -137,12 +144,12 @@ class Delivery_note extends CI_Controller
                 'Authorization: ' . $token
             ),
         ));
-
-        curl_exec($curl);
+        $response = curl_exec($curl);
         curl_close($curl);
+        echo $response;
 
         $this->session->set_flashdata('success', 'Realisasi pengiriman berhasil ditambahkan.');
-        redirect('delivery_note');
+        redirect('delivery_manual');
     }
 
     public function updateDelivery()
@@ -153,14 +160,18 @@ class Delivery_note extends CI_Controller
 
         if (!$id) {
             $this->session->set_flashdata('error', 'ID pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            redirect('delivery_manual');
             return;
         }
 
-        $cek = $this->db->get_where('delivery_note', ['iddelivery_note' => $id])->row();
+        $cek = $this->db->get_where('delivery_note', [
+            'iddelivery_note' => $id,
+            'kategori' => 2
+        ])->row();
+
         if (!$cek) {
             $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            redirect('delivery_manual');
             return;
         }
 
@@ -171,7 +182,7 @@ class Delivery_note extends CI_Controller
 
         if ($exists > 0) {
             $this->session->set_flashdata('warning', 'Progress 2 sudah pernah ditambahkan sebelumnya.');
-            redirect('delivery_note');
+            redirect('delivery_manual');
             return;
         }
 
@@ -186,7 +197,7 @@ class Delivery_note extends CI_Controller
         $this->db->insert('delivery_note_log', $log);
 
         $this->session->set_flashdata('success', 'Progress berhasil ditambahkan.');
-        redirect('delivery_note');
+        redirect('delivery_manual');
     }
 
     public function validasiDelivery()
@@ -197,14 +208,18 @@ class Delivery_note extends CI_Controller
 
         if (!$id) {
             $this->session->set_flashdata('error', 'ID pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            redirect('delivery_manual');
             return;
         }
 
-        $cek = $this->db->get_where('delivery_note', ['iddelivery_note' => $id])->row();
+        $cek = $this->db->get_where('delivery_note', [
+            'iddelivery_note' => $id,
+            'kategori' => 2
+        ])->row();
+
         if (!$cek) {
             $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            redirect('delivery_manual');
             return;
         }
 
@@ -215,7 +230,7 @@ class Delivery_note extends CI_Controller
 
         if ($exists > 0) {
             $this->session->set_flashdata('warning', 'Progress 3 sudah pernah ditambahkan sebelumnya.');
-            redirect('delivery_note');
+            redirect('delivery_manual');
             return;
         }
 
@@ -230,7 +245,7 @@ class Delivery_note extends CI_Controller
         $this->db->insert('delivery_note_log', $log);
 
         $this->session->set_flashdata('success', 'Validasi pengiriman berhasil.');
-        redirect('delivery_note');
+        redirect('delivery_manual');
     }
 
     public function finalDelivery()
@@ -241,14 +256,18 @@ class Delivery_note extends CI_Controller
 
         if (!$id) {
             $this->session->set_flashdata('error', 'ID pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            redirect('delivery_manual');
             return;
         }
 
-        $cek = $this->db->get_where('delivery_note', ['iddelivery_note' => $id])->row();
+        $cek = $this->db->get_where('delivery_note', [
+            'iddelivery_note' => $id,
+            'kategori' => 2
+        ])->row();
+
         if (!$cek) {
             $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            redirect('delivery_manual');
             return;
         }
 
@@ -259,21 +278,21 @@ class Delivery_note extends CI_Controller
 
         if ($exists > 0) {
             $this->session->set_flashdata('warning', 'Progress 4 sudah pernah ditambahkan sebelumnya.');
-            redirect('delivery_note');
+            redirect('delivery_manual');
             return;
         }
 
         $log = [
             'iddelivery_note' => $id,
             'progress' => 4,
-            'description' => 'Pengiriman Selesai',
+            'description' => 'Pengiriman Final',
             'created_by' => $username,
             'created_date' => $now,
             'status' => 1
         ];
         $this->db->insert('delivery_note_log', $log);
 
-        $this->session->set_flashdata('success', 'Pengiriman berhasil diselesaikan.');
-        redirect('delivery_note');
+        $this->session->set_flashdata('success', 'Finalisasi pengiriman berhasil.');
+        redirect('delivery_manual');
     }
 }

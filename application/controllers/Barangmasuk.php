@@ -74,6 +74,32 @@ class Barangmasuk extends CI_Controller
             $this->db->insert('detail_instock', $data_detail_instock);
         }
 
+        // WhatsApp API
+        $token = 'EyuhsmTqzeKaDknoxdxt';
+        $target = '085156340619';
+        $message = 'Transaksi barang masuk dengan kode instock ' . $inputInstockCode .
+            (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
+            ' telah dibuat oleh ' . $this->session->userdata('username') .
+            '. Super Admin dimohon untuk segera melakukan pengecekan verifikasi transaksi.';
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.fonnte.com/send',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => array(
+                'target' => $target,
+                'message' => $message,
+                'countryCode' => '62',
+            ),
+            CURLOPT_HTTPHEADER => array(
+                'Authorization: ' . $token
+            ),
+        ));
+        $response = curl_exec($curl);
+        curl_close($curl);
+        echo $response;
+        // End
+
         redirect('barangmasuk');
     }
 
@@ -105,7 +131,7 @@ class Barangmasuk extends CI_Controller
         $this->load->view('barangMasuk/v_detail_instock');
     }
 
-        public function exportExcel()
+    public function exportExcel()
     {
         $instock_code = $this->input->get('instock_code');
 

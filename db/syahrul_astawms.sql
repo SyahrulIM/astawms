@@ -65,3 +65,25 @@ CREATE TABLE `delivery_note_progress_log` (
     PRIMARY KEY (`idlog`),
     FOREIGN KEY (`iddelivery_note`) REFERENCES `delivery_note`(`iddelivery_note`) ON DELETE CASCADE
 );
+
+ALTER TABLE delivery_note
+ADD COLUMN kategori INT NOT NULL DEFAULT 1;
+
+CREATE TABLE `delivery_note` (
+	`iddelivery_note` INT NOT NULL AUTO_INCREMENT,
+	`no_manual` VARCHAR(200) NOT NULL COLLATE 'armscii8_bin',
+	`foto` VARCHAR(200) NOT NULL COLLATE 'armscii8_bin',
+	`send_date` DATETIME NOT NULL,
+	`iduser` INT NOT NULL,
+	`created_by` VARCHAR(200) NOT NULL COLLATE 'armscii8_bin',
+	`created_date` DATETIME NOT NULL,
+	`updated_by` VARCHAR(200) NOT NULL COLLATE 'armscii8_bin',
+	`updated_date` DATETIME NOT NULL,
+	`kategori` INT NOT NULL DEFAULT '1',
+	`status` INT NOT NULL,
+	PRIMARY KEY (`iddelivery_note`) USING BTREE
+)
+COLLATE='armscii8_bin'
+ENGINE=InnoDB
+AUTO_INCREMENT=41
+;
