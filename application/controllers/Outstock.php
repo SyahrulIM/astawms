@@ -43,6 +43,7 @@ class Outstock extends CI_Controller
         $inputJamTerima = date("H:i:s");
         $inputDatetime = $this->input->post('inputDatetime');
         $inputNo = $this->input->post('inputNo');
+        $inputType = $this->input->post('inputType');
         if (empty($inputDatetime)) {
             $inputDatetime = date("Y-m-d H:i:s");
         }
@@ -59,6 +60,7 @@ class Outstock extends CI_Controller
             'user' => $inputUser,
             'kategori' => $inputKategori,
             'no_manual' => $inputNo,
+            'outstock_type' => $inputType,
             'status_verification' => 0,  // Status verification yang baru
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
