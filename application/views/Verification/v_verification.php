@@ -45,9 +45,13 @@
                             </td>
                             <td>
                                 <?php if ($trx->status_verification == 0) : ?>
-                                    <button type="button" class="btn btn-info btn-verifikasi" data-bs-toggle="modal" data-bs-target="#verifikasiModal" data-id="<?= $trx->kode_transaksi ?>" data-tipe="<?= $trx->tipe ?>">
-                                        Verifikasi
-                                    </button>
+                                    <?php if (in_array($this->session->userdata('idrole'), [1, 3])) : ?>
+                                        <button type="button" class="btn btn-info btn-verifikasi" data-bs-toggle="modal" data-bs-target="#verifikasiModal" data-id="<?= $trx->kode_transaksi ?>" data-tipe="<?= $trx->tipe ?>">
+                                            Verifikasi
+                                        </button>
+                                    <?php else : ?>
+                                        <span class="text-warning">Menunggu admin stock verifikasi</span>
+                                    <?php endif; ?>
                                 <?php else : ?>
                                     <span class="text-muted">Sudah diverifikasi</span>
                                 <?php endif; ?>
