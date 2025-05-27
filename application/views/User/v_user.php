@@ -12,17 +12,17 @@
 
                 <!-- Flash messages -->
                 <?php if ($this->session->flashdata('error')) : ?>
-                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
-                    <?= $this->session->flashdata('error') ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+                    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                        <?= $this->session->flashdata('error') ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 <?php endif; ?>
 
                 <?php if ($this->session->flashdata('success')) : ?>
-                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                    <?= $this->session->flashdata('success') ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+                    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                        <?= $this->session->flashdata('success') ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 <?php endif; ?>
                 <!-- End -->
 
@@ -49,6 +49,10 @@
                                         <input type="email" class="form-control" id="inputEmail" name="inputEmail" required>
                                     </div>
                                     <div class="mb-3">
+                                        <label for="inputHandphone">Handphone</label>
+                                        <input type="text" class="form-control" id="inputHandphone" name="inputHandphone" required>
+                                    </div>
+                                    <div class="mb-3">
                                         <label for="inputPassword" class="form-label">Password</label>
                                         <input type="password" class="form-control" id="inputPassword" name="inputPassword" required>
                                     </div>
@@ -61,7 +65,7 @@
                                         <select class="form-select" id="inputRole" name="inputRole">
                                             <option selected disabled>Pilih Role</option>
                                             <?php foreach ($role as $rkey => $rvalue) { ?>
-                                            <option value="<?php echo $rvalue->idrole; ?>"><?php echo $rvalue->nama_role; ?></option>
+                                                <option value="<?php echo $rvalue->idrole; ?>"><?php echo $rvalue->nama_role; ?></option>
                                             <?php } ?>
                                         </select>
                                     </div>
@@ -98,6 +102,10 @@
                                         <input type="text" class="form-control" id="editEmail" name="editEmail" required>
                                     </div>
                                     <div class="mb-3">
+                                        <label for="editHandphone">Handphone</label>
+                                        <input type="text" class="form-control" id="editHandphone" name="editHandphone" required>
+                                    </div>
+                                    <div class="mb-3">
                                         <label for="editPassword" class="form-label">Password (kosongkan jika tidak ingin diubah)</label>
                                         <input type="password" class="form-control" id="editPassword" name="editPassword">
                                     </div>
@@ -109,7 +117,7 @@
                                         <label for="editRole" class="form-label">Role</label>
                                         <select class="form-select" id="editRole" name="editRole">
                                             <?php foreach ($role as $rkey => $rvalue) { ?>
-                                            <option value="<?php echo $rvalue->idrole; ?>"><?php echo $rvalue->nama_role; ?></option>
+                                                <option value="<?php echo $rvalue->idrole; ?>"><?php echo $rvalue->nama_role; ?></option>
                                             <?php } ?>
                                         </select>
                                     </div>
@@ -138,26 +146,26 @@
                             </thead>
                             <tbody>
                                 <?php foreach ($user as $ukey => $uvalue) { ?>
-                                <tr>
-                                    <td><?php echo $ukey + 1; ?></td>
-                                    <td><?php echo $uvalue->full_name; ?></td>
-                                    <td><?php echo $uvalue->username; ?></td>
-                                    <td><?php echo $uvalue->email; ?></td>
-                                    <td><img src="<?php echo base_url('assets/image/user/' . $uvalue->foto); ?>" alt="<?php echo $uvalue->foto; ?>" width="100px" height="100px" style="border-radius: 50%; object-fit: cover;"></td>
-                                    <td><?php echo $uvalue->nama_role; ?></td>
-                                    <td>
-                                        <?php if ($uvalue->iduser != 4) { ?>
-                                        <button type="button" class="btn btn-warning btnEditUser" data-full_name="<?= $uvalue->full_name ?>" data-username="<?= $uvalue->username ?>" data-email="<?= $uvalue->email ?>" data-foto="<?= $uvalue->foto ?>" data-idrole="<?= $uvalue->idrole ?>" data-bs-toggle="modal" data-bs-target="#editUser">
-                                            <i class="fa fa-edit"></i> Edit
-                                        </button>
-                                        <a href="<?php echo base_url('user/deleteUser?iduser=' . $uvalue->iduser); ?>">
-                                            <button type="button" class="btn btn-danger">
-                                                <i class="fa-solid fa-trash-can"></i> Hapus
-                                            </button>
-                                        </a>
-                                        <?php } ?>
-                                    </td>
-                                </tr>
+                                    <tr>
+                                        <td><?php echo $ukey + 1; ?></td>
+                                        <td><?php echo $uvalue->full_name; ?></td>
+                                        <td><?php echo $uvalue->username; ?></td>
+                                        <td><?php echo $uvalue->email; ?></td>
+                                        <td><img src="<?php echo base_url('assets/image/user/' . $uvalue->foto); ?>" alt="<?php echo $uvalue->foto; ?>" width="100px" height="100px" style="border-radius: 50%; object-fit: cover;"></td>
+                                        <td><?php echo $uvalue->nama_role; ?></td>
+                                        <td>
+                                            <?php if ($uvalue->iduser != 4) { ?>
+                                                <button type="button" class="btn btn-warning btnEditUser" data-full_name="<?= $uvalue->full_name ?>" data-username="<?= $uvalue->username ?>" data-email="<?= $uvalue->email ?>" data-foto="<?= $uvalue->foto ?>" data-idrole="<?= $uvalue->idrole ?>" data-handphone="<?= $uvalue->handphone ?>" data-bs-toggle="modal" data-bs-target="#editUser">
+                                                    <i class="fa fa-edit"></i> Edit
+                                                </button>
+                                                <a href="<?php echo base_url('user/deleteUser?iduser=' . $uvalue->iduser); ?>">
+                                                    <button type="button" class="btn btn-danger">
+                                                        <i class="fa-solid fa-trash-can"></i> Hapus
+                                                    </button>
+                                                </a>
+                                            <?php } ?>
+                                        </td>
+                                    </tr>
                                 <?php } ?>
                             </tbody>
                         </table>
@@ -222,10 +230,12 @@
                             const email = this.getAttribute('data-email');
                             const foto = this.getAttribute('data-foto');
                             const idrole = this.getAttribute('data-idrole');
+                            const handphone = this.getAttribute('data-handphone');
 
                             document.getElementById('editNamaLengkap').value = full_name;
                             document.getElementById('editUsername').value = username;
                             document.getElementById('editEmail').value = email;
+                            document.getElementById('editHandphone').value = handphone;
 
                             // Reset value file karena keamanan browser tidak izinkan isi file input diset via JS
                             document.getElementById('editFoto').value = '';

@@ -25,6 +25,10 @@ class User extends CI_Controller
             'user' => $user,
         ];
 
+        // echo '<pre>';
+        // print_r($data);
+        // die;
+
         $this->load->view('theme/v_head', $data);
         $this->load->view('User/v_user');
     }
@@ -38,6 +42,7 @@ class User extends CI_Controller
         $email = $this->input->post('inputEmail');
         $password = $this->input->post('inputPassword');
         $idrole = $this->input->post('inputRole');
+        $handphone = $this->input->post('inputHandphone');
 
         // Cek apakah username sudah dipakai
         $cekUsername = $this->db->get_where('user', ['username' => $username])->row();
@@ -70,6 +75,7 @@ class User extends CI_Controller
             'password' => password_hash($password, PASSWORD_DEFAULT),
             'foto' => $foto,
             'idrole' => $idrole,
+            'handphone' => $handphone,
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
             'updated_by' => $this->session->userdata('username'),
@@ -90,6 +96,7 @@ class User extends CI_Controller
         $email = $this->input->post('editEmail');
         $password = $this->input->post('editPassword');
         $idrole = $this->input->post('editRole');
+        $handphone = $this->input->post('editHandphone');
 
         // Ambil data user lama
         $oldUser = $this->db->get_where('user', ['username' => $username])->row();
@@ -145,6 +152,7 @@ class User extends CI_Controller
             'password' => $hashedPassword,
             'foto' => $foto,
             'idrole' => $idrole,
+            'handphone' => $handphone,
             'updated_by' => $this->session->userdata('username'),
             'updated_date' => date("Y-m-d H:i:s")
         ];

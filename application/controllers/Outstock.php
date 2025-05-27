@@ -109,8 +109,12 @@ class Outstock extends CI_Controller
         $this->db->insert('outstock', $data_outstock);
 
         // WhatsApp API
+        $this->db->select('user.handphone');
+        $this->db->where('user.idrole', 3);
+        $this->db->where('user.handphone IS NOT NULL');
+        $target = $this->db->get('user')->row()->handphone;
+
         $token = 'EyuhsmTqzeKaDknoxdxt';
-        $target = '085156340619';
         $message = 'Transaksi barang keluar dengan kode outstock ' . $inputOutstockCode .
             (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
             ' telah dibuat oleh ' . $this->session->userdata('username') .

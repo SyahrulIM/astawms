@@ -75,8 +75,12 @@ class Barangmasuk extends CI_Controller
         }
 
         // WhatsApp API
+        $this->db->select('user.handphone');
+        $this->db->where('user.idrole', 1);
+        $this->db->where('user.handphone IS NOT NULL');
+        $target = $this->db->get('user')->row()->handphone;
+
         $token = 'EyuhsmTqzeKaDknoxdxt';
-        $target = '085156340619';
         $message = 'Transaksi barang masuk dengan kode instock ' . $inputInstockCode .
             (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
             ' telah dibuat oleh ' . $this->session->userdata('username') .
