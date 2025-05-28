@@ -144,9 +144,10 @@ class Verification extends CI_Controller
 
 		$details = $this->db
 			->select("$detail_table.*, p.nama_produk")
-			->join('product p', 'p.sku = ' . $detail_table . '.sku', 'left')
-			->where($kode_field, $kode)
-			->get($detail_table)
+			->from($detail_table)
+			->join('product p', "$detail_table.sku = p.sku", 'left')
+			->where("$detail_table.$kode_field", $kode)
+			->get()
 			->result();
 
 		if ($details) {

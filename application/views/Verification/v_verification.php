@@ -107,7 +107,7 @@
 <script src="<?php echo base_url(); ?>js/scripts.js"></script>
 <script>
     let selectedTransactionCode = null;
-    let selectedTipe = null;
+    let selectedTransactionType = null;
 
     $(document).ready(function() {
         new DataTable('#tableproduct', {
@@ -121,48 +121,61 @@
             }
         });
 
-        $('.btn-verifikasi').on('click', function() {
+        $(document).on('click', '.btn-verifikasi', function() {
             selectedTransactionCode = $(this).data('id');
             selectedTransactionType = $(this).data('tipe');
+
+            console.log('Selected Code:', selectedTransactionCode);
+            console.log('Selected Type:', selectedTransactionType);
+
+            if (!selectedTransactionCode || !selectedTransactionType) {
+                console.error('Transaction code or type is missing');
+                return;
+            }
 
             $.ajax({
                 url: '<?= base_url('verification/get_details/') ?>' + selectedTransactionType + '/' + selectedTransactionCode,
                 type: 'GET',
                 dataType: 'json',
                 success: function(response) {
-                    console.log(response);
+                    console.log('AJAX Response:', response);
                     $('#detailStockTable').empty();
                     if (response.details) {
                         response.details.forEach(function(detail) {
                             var row = '<tr>' +
-                                '<td>' + detail.sku + '</td>' +
-                                '<td>' + detail.nama_produk + '</td>' +
-                                '<td>' + detail.jumlah + '</td>' +
+                                '<td>' + (detail.sku || '') + '</td>' +
+                                '<td>' + (detail.nama_produk || '') + '</td>' +
+                                '<td>' + (detail.jumlah || '') + '</td>' +
                                 '</tr>';
                             $('#detailStockTable').append(row);
                         });
                     } else {
-                        $('#detailStockTable').html('<tr><td colspan="4">Tidak ada data</td></tr>');
+                        $('#detailStockTable').html('<tr><td colspan="3">Tidak ada data</td></tr>');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error: ", error);
-                    $('#detailStockTable').html('<tr><td colspan="4">Gagal memuat data</td></tr>');
+                    console.error("AJAX Error: ", error);
+                    $('#detailStockTable').html('<tr><td colspan="3">Gagal memuat data</td></tr>');
                 }
             });
         });
 
         $('#confirmVerifikasi').on('click', function() {
             if (selectedTransactionCode && selectedTransactionType) {
+                console.log('Confirming:', selectedTransactionCode, selectedTransactionType);
                 window.location.href = "<?= base_url('verification/confirm_stock/') ?>" + selectedTransactionType + "/" + selectedTransactionCode;
+            } else {
+                console.error('Cannot confirm - missing transaction data');
             }
         });
 
         $('#rejectVerifikasi').on('click', function() {
             if (selectedTransactionCode && selectedTransactionType) {
+                console.log('Rejecting:', selectedTransactionCode, selectedTransactionType);
                 window.location.href = "<?= base_url('verification/reject/') ?>" + selectedTransactionType + "/" + selectedTransactionCode;
+            } else {
+                console.error('Cannot reject - missing transaction data');
             }
         });
-
     });
 </script>
