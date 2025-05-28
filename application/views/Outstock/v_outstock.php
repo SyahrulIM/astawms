@@ -34,6 +34,7 @@
                                                 <option selected disabled>Pilih Offline/Online</option>
                                                 <option value="OFFLINE">Offline</option>
                                                 <option value="ONLINE">Online</option>
+                                                <option value="TOKO">Toko</option>
                                             </select>                                        </div>
                                         <div class="col">
                                             <select class="form-select" aria-label="Default select example" id="inputGudang" name="inputGudang" required>
