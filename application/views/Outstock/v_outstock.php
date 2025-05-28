@@ -22,21 +22,25 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <div class="row">
+                                    <div class="row align-items-center justify-content-center g-2 text-center">
                                         <div class="col">
                                             <button type="button" class="btn btn-primary btn-tambah-barang" id="btn-tambah-barang"><i class="fa-solid fa-plus"></i> Tambah Barang</button>
                                         </div>
                                         <div class="col">
-                                            <input type="text" class="form-control input-no" id="inputNo" name="inputNo" placeholder="No Manual" required>
+                                            <label for="inputNo" class="form-label">No Manual</label>
+                                            <input type="text" class="form-control input-no" id="inputNo" name="inputNo" placeholder="No Manual">
                                         </div>
                                         <div class="col">
+                                            <label for="inputType" class="form-label">Tipe Pesanan</label>
                                             <select class="form-select" aria-label="Default select example" id="inputType" name="inputType" required>
                                                 <option selected disabled>Pilih Offline/Online</option>
                                                 <option value="OFFLINE">Offline</option>
                                                 <option value="ONLINE">Online</option>
                                                 <option value="TOKO">Toko</option>
-                                            </select>                                        </div>
+                                            </select>
+                                        </div>
                                         <div class="col">
+                                            <label for="inputGudang" class="form-label">Gudang</label>
                                             <select class="form-select" aria-label="Default select example" id="inputGudang" name="inputGudang" required>
                                                 <option value="" selected disabled>Pilih Gudang</option>
                                                 <?php foreach ($gudang as $gkey => $gvalue) { ?>
@@ -45,11 +49,16 @@
                                             </select>
                                         </div>
                                         <div class="col">
+                                            <label for="inputKategori" class="form-label">Kategori</label>
                                             <select class="form-select" aria-label="Default select example" id="inputKategori" name="inputKategori" required>
                                                 <option selected disabled>Pilih Kategori</option>
                                                 <option value="Barang Keluar">Barang Keluar</option>
                                                 <option value="Mutasi">Mutasi</option>
                                             </select>
+                                        </div>
+                                        <div class="col">
+                                            <label for="inputDistribution" class="form-label">Tanggal Distribusi</label>
+                                            <input type="date" class="form-control" id="inputDistribution" name="inputDistribution">
                                         </div>
                                     </div>
                                     <table id="tableTambahBarangMasuk" class="display" style="width:100%">
@@ -98,9 +107,11 @@
                                     <th>No</th>
                                     <th>Kode OutStock</th>
                                     <th>Nomer</th>
-                                    <th>Tanggal</th>
+                                    <th>Tanggal Input</th>
                                     <th>User Penginput</th>
                                     <th>Kategori</th>
+                                    <th>Tipe Outstock</th>
+                                    <th>Tanggal Distribusi</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -113,6 +124,8 @@
                                         <td><?php echo $osvalue->datetime; ?></td>
                                         <td><?php echo $osvalue->user; ?></td>
                                         <td><?php echo $osvalue->kategori; ?></td>
+                                        <td><?php echo $osvalue->outstock_type; ?></td>
+                                        <td><?php echo $osvalue->distribution_date; ?></td>
                                         <td><a href="<?php echo base_url('outstock/detail_outstock?outstock_code=' . $osvalue->outstock_code) ?>"><button type="button" class="btn btn-success"><i class="fas fa-list"></i> Details</button></a></td>
                                     </tr>
                                 <?php } ?>

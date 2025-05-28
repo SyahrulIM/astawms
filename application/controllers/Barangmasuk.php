@@ -41,6 +41,7 @@ class Barangmasuk extends CI_Controller
         $inputJamTerima = date("H:i:s");
         $inputDatetime = $this->input->post('inputDatetime');
         $inputNo = $this->input->post('inputNo');
+        $inputDistribution  = $this->input->post('inputDistribution');
         if (empty($inputDatetime)) {
             $inputDatetime = date("Y-m-d H:i:s");
         }
@@ -56,6 +57,7 @@ class Barangmasuk extends CI_Controller
             'user' => $inputUser,
             'kategori' => $inputKategori,
             'no_manual' => $inputNo,
+            'distribution_date' => $inputDistribution,
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
             'status_verification' => 0, // belum diverifikasi

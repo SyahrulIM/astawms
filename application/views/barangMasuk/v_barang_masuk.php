@@ -7,9 +7,9 @@
                 </div>
                 <!-- Button trigger modal Tambah Produk -->
                 <?php if ($this->session->userdata('idrole') != 4) { ?>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProduct">
-                    <i class="fa-solid fa-plus"></i> Tambah Transaksi Barang Masuk
-                </button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProduct">
+                        <i class="fa-solid fa-plus"></i> Tambah Transaksi Barang Masuk
+                    </button>
                 <?php } ?>
 
                 <!-- Modal Tambah Produk -->
@@ -22,27 +22,34 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <div class="row">
+                                    <div class="row align-items-center justify-content-center g-2 text-center">
                                         <div class="col">
                                             <button type="button" class="btn btn-primary btn-tambah-barang" id="btn-tambah-barang"><i class="fa-solid fa-plus"></i> Tambah Barang</button>
                                         </div>
                                         <div class="col">
-                                            <input type="text" class="form-control input-no" id="inputNo" name="inputNo" placeholder="No Manual" required>
+                                            <label for="inputNo" class="form-label">No Manual</label>
+                                            <input type="text" class="form-control input-no" id="inputNo" name="inputNo" placeholder="No Manual">
                                         </div>
                                         <div class="col">
+                                            <label for="inputGudang" class="form-label">Gudang</label>
                                             <select class="form-select" aria-label="Default select example" id="inputGudang" name="inputGudang" required>
                                                 <option value="" selected disabled>Pilih Gudang</option>
                                                 <?php foreach ($gudang as $gkey => $gvalue) { ?>
-                                                <option value="<?php echo $gvalue->idgudang; ?>"><?php echo $gvalue->nama_gudang; ?></option>
+                                                    <option value="<?php echo $gvalue->idgudang; ?>"><?php echo $gvalue->nama_gudang; ?></option>
                                                 <?php } ?>
                                             </select>
                                         </div>
                                         <div class="col">
+                                            <label for="inputKategori" class="form-label">Kategori</label>
                                             <select class="form-select" aria-label="Default select example" id="inputKategori" name="inputKategori" required>
                                                 <option value="" selected disabled>Pilih Kategori</option>
                                                 <option value="Barang Masuk">Barang Masuk</option>
                                                 <option value="Mutasi">Mutasi</option>
                                             </select>
+                                        </div>
+                                        <div class="col">
+                                            <label for="inputDistribution" class="form-label">Tanggal Distribusi</label>
+                                            <input type="date" class="form-control" id="inputDistribution" name="inputDistribution">
                                         </div>
                                     </div>
                                     <table id="tableTambahBarangMasuk" class="display" style="width:100%">
@@ -63,7 +70,7 @@
                                                     <input list="skuList" class="form-control sku-input" name="inputSKU[]" placeholder="Pilih SKU" required>
                                                     <datalist id="skuList">
                                                         <?php foreach ($product as $pkey => $pvalue) { ?>
-                                                        <option value="<?php echo $pvalue->sku; ?>" data-nama="<?php echo htmlspecialchars($pvalue->nama_produk); ?>">
+                                                            <option value="<?php echo $pvalue->sku; ?>" data-nama="<?php echo htmlspecialchars($pvalue->nama_produk); ?>">
                                                             <?php } ?>
                                                     </datalist>
                                                 </td>
@@ -91,23 +98,25 @@
                                     <th>No</th>
                                     <th>Kode InStock</th>
                                     <th>Nomer</th>
-                                    <th>Tanggal</th>
+                                    <th>Tanggal Input</th>
                                     <th>User Penginput</th>
                                     <th>Kategori</th>
+                                    <th>Tanggal Distribusi</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($instock as $iskey => $isvalue) { ?>
-                                <tr>
-                                    <td><?php echo $iskey + 1; ?></td>
-                                    <td><?php echo $isvalue->instock_code; ?></td>
-                                    <td><?php echo $isvalue->no_manual; ?></td>
-                                    <td><?php echo $isvalue->datetime; ?></td>
-                                    <td><?php echo $isvalue->user; ?></td>
-                                    <td><?php echo $isvalue->kategori; ?></td>
-                                    <td><a href="<?php echo base_url('barangmasuk/detail_instock?instock_code=' . $isvalue->instock_code) ?>"><button type="button" class="btn btn-success"><i class="fas fa-list"></i> Details</button></a></td>
-                                </tr>
+                                    <tr>
+                                        <td><?php echo $iskey + 1; ?></td>
+                                        <td><?php echo $isvalue->instock_code; ?></td>
+                                        <td><?php echo $isvalue->no_manual; ?></td>
+                                        <td><?php echo $isvalue->datetime; ?></td>
+                                        <td><?php echo $isvalue->user; ?></td>
+                                        <td><?php echo $isvalue->kategori; ?></td>
+                                        <td><?php echo $isvalue->distribution_date; ?></td>
+                                        <td><a href="<?php echo base_url('barangmasuk/detail_instock?instock_code=' . $isvalue->instock_code) ?>"><button type="button" class="btn btn-success"><i class="fas fa-list"></i> Details</button></a></td>
+                                    </tr>
                                 <?php } ?>
                             </tbody>
                         </table>
