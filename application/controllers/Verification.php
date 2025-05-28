@@ -48,23 +48,23 @@ class Verification extends CI_Controller
 		if ($type !== 'instock' && $type !== 'outstock') {
 			show_error('Tipe stok tidak valid.');
 		}
-	
+
 		$main_table = $type;
 		$kode_field = $type . '_code';
-	
+
 		$trx = $this->db->where($kode_field, $code)->get($main_table)->row();
 		if (!$trx) {
 			show_error(ucfirst($type) . ' tidak ditemukan.');
 			return;
 		}
-	
+
 		// Ambil tanggal transaksi
 		$tanggal_field = $type === 'instock' ? 'tgl_terima' : 'tgl_keluar';
 		$jam_field = $type === 'instock' ? 'jam_terima' : 'jam_keluar';
-	
+
 		$tanggal = $trx->$tanggal_field;
 		$jam = $trx->$jam_field;
-	
+
 		// Cek apakah ada transaksi sebelumnya yang belum diverifikasi
 		$query_unverified = "
 			SELECT * FROM (
@@ -75,38 +75,38 @@ class Verification extends CI_Controller
 			WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
 			LIMIT 1
 		";
-	
+
 		$older_unverified = $this->db->query($query_unverified)->row();
 		if ($older_unverified) {
 			$this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi. Harap verifikasi berdasarkan urutan waktu.');
 			redirect('verification');
 			return;
 		}
-	
+
 		// Lanjutkan verifikasi jika tidak ada yang lebih lama
 		if ($trx->status_verification != 0) {
 			$this->session->set_flashdata('error', 'Transaksi sudah diverifikasi sebelumnya.');
 			redirect('verification');
 			return;
 		}
-	
+
 		$this->db->set('status_verification', 1)
 			->where($kode_field, $code)
 			->update($main_table);
-	
+
 		$idgudang = $trx->idgudang;
 		$detail_table = 'detail_' . $type;
 		$details = $this->db->where($kode_field, $code)->get($detail_table)->result();
-	
+
 		foreach ($details as $detail) {
 			$sku = $detail->sku;
 			$jumlah = (int)$detail->jumlah;
-	
+
 			$product = $this->db->where('sku', $sku)->get('product')->row();
 			if (!$product) continue;
-	
+
 			$idproduct = $product->idproduct;
-	
+
 			$stock = $this->db->where('idproduct', $idproduct)->where('idgudang', $idgudang)->get('product_stock')->row();
 			if (!$stock) {
 				$this->db->insert('product_stock', [
@@ -115,41 +115,44 @@ class Verification extends CI_Controller
 					'stok' => 0
 				]);
 			}
-	
+
 			if ($type === 'instock') {
 				$this->db->set('stok', "stok + {$jumlah}", false);
 			} else {
 				$this->db->set('stok', "stok - {$jumlah}", false);
 			}
-	
+
 			$this->db->where('idproduct', $idproduct)
 				->where('idgudang', $idgudang)
 				->update('product_stock');
 		}
-	
+
 		$this->session->set_flashdata('success', 'Stok berhasil diverifikasi dan diperbarui.');
 		redirect('verification');
-	}	
+	}
 
 	public function get_details($type, $kode)
 	{
-		$type = strtoupper($type);
-
-		if ($type == 'INSTOCK') {
-			$trx = $this->db->get_where('instock', ['instock_code' => $kode])->row();
-			$details = $this->db->get_where('detail_instock', ['instock_code' => $kode])->result();
-		} elseif ($type == 'OUTSTOCK') {
-			$trx = $this->db->get_where('outstock', ['outstock_code' => $kode])->row();
-			$details = $this->db->get_where('detail_outstock', ['outstock_code' => $kode])->result();
-		} else {
-			echo json_encode(['error' => 'Invalid transaction type']);
+		$type = strtolower($type);
+		if (!in_array($type, ['instock', 'outstock'])) {
+			echo json_encode(['error' => 'Invalid type']);
 			return;
 		}
 
-		if ($trx && $details) {
+		$kode_field = $type . '_code';
+		$detail_table = 'detail_' . $type;
+
+		$details = $this->db
+			->select("$detail_table.*, p.nama_produk")
+			->join('product p', 'p.sku = ' . $detail_table . '.sku', 'left')
+			->where($kode_field, $kode)
+			->get($detail_table)
+			->result();
+
+		if ($details) {
 			echo json_encode(['details' => $details]);
 		} else {
-			echo json_encode(['error' => 'Transaction or details not found']);
+			echo json_encode(['error' => 'Data tidak ditemukan']);
 		}
 	}
 
@@ -159,23 +162,23 @@ class Verification extends CI_Controller
 		if ($type !== 'instock' && $type !== 'outstock') {
 			show_error('Tipe stok tidak valid.');
 		}
-	
+
 		$main_table = $type;
 		$kode_field = $type . '_code';
-	
+
 		$trx = $this->db->where($kode_field, $code)->get($main_table)->row();
 		if (!$trx) {
 			show_error('Transaksi tidak ditemukan.');
 			return;
 		}
-	
+
 		// Ambil tanggal dan jam transaksi
 		$tanggal_field = $type === 'instock' ? 'tgl_terima' : 'tgl_keluar';
 		$jam_field = $type === 'instock' ? 'jam_terima' : 'jam_keluar';
-	
+
 		$tanggal = $trx->$tanggal_field;
 		$jam = $trx->$jam_field;
-	
+
 		// Cek apakah ada transaksi sebelumnya yang belum diverifikasi
 		$query_unverified = "
 			SELECT * FROM (
@@ -186,26 +189,26 @@ class Verification extends CI_Controller
 			WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
 			LIMIT 1
 		";
-	
+
 		$older_unverified = $this->db->query($query_unverified)->row();
 		if ($older_unverified) {
 			$this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi atau ditolak. Harap proses berdasarkan urutan waktu.');
 			redirect('verification');
 			return;
 		}
-	
+
 		// Cegah reject ulang
 		if ($trx->status_verification != 0) {
 			$this->session->set_flashdata('error', 'Transaksi sudah diproses sebelumnya.');
 			redirect('verification');
 			return;
 		}
-	
+
 		$this->db->set('status_verification', 2)
 			->where($kode_field, $code)
 			->update($main_table);
-	
+
 		$this->session->set_flashdata('error', 'Transaksi berhasil ditolak.');
 		redirect('verification');
-	}	
+	}
 }
