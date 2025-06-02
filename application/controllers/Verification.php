@@ -241,39 +241,39 @@ class Verification extends CI_Controller
 
 		// Gabungkan transaksi instock dan outstock
 		$query = "
-		SELECT 
-			'INSTOCK' AS tipe,
-			i.instock_code AS kode_transaksi,
-			i.no_manual AS no_manual,
-			i.tgl_terima AS tanggal,
-			i.jam_terima AS jam,
-			i.distribution_date AS distribution_date,
-			i.kategori,
-			i.user,
-			g.nama_gudang,
-			i.status_verification
-		FROM instock i
-		LEFT JOIN gudang g ON g.idgudang = i.idgudang
-		$whereIn
+	SELECT 
+		'INSTOCK' AS tipe,
+		i.instock_code AS kode_transaksi,
+		i.no_manual AS no_manual,
+		i.tgl_terima AS tanggal,
+		i.jam_terima AS jam,
+		i.distribution_date AS distribution_date,
+		i.kategori,
+		i.user,
+		g.nama_gudang,
+		i.status_verification
+	FROM instock i
+	LEFT JOIN gudang g ON g.idgudang = i.idgudang
+	$whereIn
 
-		UNION ALL
+	UNION ALL
 
-		SELECT 
-			'OUTSTOCK' AS tipe,
-			o.outstock_code AS kode_transaksi,
-			o.no_manual AS no_manual,
-			o.tgl_keluar AS tanggal,
-			o.jam_keluar AS jam,
-			o.distribution_date AS distribution_date,
-			o.kategori,
-			o.user,
-			g.nama_gudang,
-			o.status_verification
-		FROM outstock o
-		LEFT JOIN gudang g ON g.idgudang = o.idgudang
-		$whereOut
+	SELECT 
+		'OUTSTOCK' AS tipe,
+		o.outstock_code AS kode_transaksi,
+		o.no_manual AS no_manual,
+		o.tgl_keluar AS tanggal,
+		o.jam_keluar AS jam,
+		o.distribution_date AS distribution_date,
+		o.kategori,
+		o.user,
+		g.nama_gudang,
+		o.status_verification
+	FROM outstock o
+	LEFT JOIN gudang g ON g.idgudang = o.idgudang
+	$whereOut
 
-		ORDER BY tanggal DESC, jam DESC
+	ORDER BY tanggal DESC, jam DESC
 	";
 
 		$transactions = $this->db->query($query)->result();
@@ -292,7 +292,7 @@ class Verification extends CI_Controller
 			$trx->details = $details;
 		}
 
-		// Mulai generate Excel HTML
+		// Generate HTML Excel
 		$filename = 'Verifikasi Transaksi_' . date('Y-m-d_H-i-s') . '.xls';
 		$content = "<table>";
 		$content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Asta Homeware</td></tr>";
@@ -303,57 +303,55 @@ class Verification extends CI_Controller
 
 		$content .= "<table border='1'>";
 		$content .= "<thead>
-		<tr style='background:#f0f0f0; font-weight:bold;'>
-			<th>No</th>
-			<th>Tipe</th>
-			<th>Kode Transaksi</th>
-			<th>Tanggal Input</th>
-			<th>Jam</th>
-			<th>Tanggal Distribusi</th>
-			<th>Kategori</th>
-			<th>User</th>
-			<th>Gudang</th>
-		</tr>
+	<tr style='background:#f0f0f0; font-weight:bold;'>
+		<th>No</th>
+		<th>Tipe</th>
+		<th>Kode Transaksi</th>
+		<th>Tanggal Input</th>
+		<th>Jam</th>
+		<th>Tanggal Distribusi</th>
+		<th>User</th>
+		<th>Gudang</th>
+		<th>Status</th>
+	</tr>
 	</thead><tbody>";
 
 		$no = 1;
 		foreach ($transactions as $trx) {
 			$content .= "<tr>
-			<td>{$no}</td>
-			<td>{$trx->tipe}</td>
-			<td>{$trx->kode_transaksi}</td>
-			<td>{$trx->tanggal}</td>
-			<td>{$trx->jam}</td>
-			<td>{$trx->distribution_date}</td>
-			<td>{$trx->kategori}</td>
-			<td>{$trx->user}</td>
-			<td>{$trx->nama_gudang}</td>
-		</tr>";
+		<td>{$no}</td>
+		<td>{$trx->tipe}</td>
+		<td>{$trx->kode_transaksi}</td>
+		<td>{$trx->tanggal}</td>
+		<td>{$trx->jam}</td>
+		<td>{$trx->distribution_date}</td>
+		<td>{$trx->user}</td>
+		<td>{$trx->nama_gudang}</td>
+		<td>" . ($trx->status_verification == 1 ? 'Accept' : ($trx->status_verification == 2 ? 'Reject' : 'Pending')) . "</td>
+	</tr>";
 
 			// Detail transaksi per baris
 			if (!empty($trx->details)) {
 				$content .= "<tr>
-				<td colspan='9'>
-					<table border='1' width='100%'>
-						<tr style='background:#d9edf7;'>
-							<th colspan='2'>SKU</th>
-							<th colspan='4'>Nama Produk</th>
-							<th>Jumlah</th>
-							<th>Sisa</th>
-							<th>Keterangan</th>
-						</tr>";
+			<td colspan='9'>
+				<table border='1' width='100%'>
+					<tr style='background:#d9edf7; font-weight:bold;'>
+						<th colspan='2'>SKU</th>
+						<th colspan='4'>Nama Produk</th>
+						<th colspan='2'>Jumlah</th>
+						<th>Keterangan</th>
+					</tr>";
 				foreach ($trx->details as $detail) {
 					$content .= "<tr>
-					<td colspan='2'>{$detail->sku}</td>
-					<td colspan='4'>{$detail->nama_produk}</td>
-					<td>{$detail->jumlah}</td>
-					<td>{$detail->sisa}</td>
-					<td>{$detail->keterangan}</td>
-				</tr>";
+				<td colspan='2'>{$detail->sku}</td>
+				<td colspan='4'>{$detail->nama_produk}</td>
+				<td colspan='2'>{$detail->jumlah}</td>
+				<td>{$detail->keterangan}</td>
+			</tr>";
 				}
 				$content .= "</table>
-				</td>
-			</tr>";
+			</td>
+		</tr>";
 			}
 
 			$no++;
@@ -361,7 +359,7 @@ class Verification extends CI_Controller
 
 		$content .= "</tbody></table>";
 
-		// Header untuk Excel
+		// Output Excel
 		header("Content-type: application/vnd.ms-excel");
 		header("Content-Disposition: attachment; filename={$filename}");
 		header("Pragma: no-cache");
