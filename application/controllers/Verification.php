@@ -228,6 +228,12 @@ class Verification extends CI_Controller
 		$start_date = $this->input->post('filterInputStart');
 		$end_date = $this->input->post('filterInputEnd');
 
+		// Default filter tanggal jika kosong (7 hari terakhir)
+		if (!$start_date && !$end_date) {
+			$start_date = date('Y-m-d', strtotime('-7 days'));
+			$end_date = date('Y-m-d');
+		}
+
 		$whereIn = "";
 		$whereOut = "";
 
@@ -262,44 +268,77 @@ class Verification extends CI_Controller
 
 		$transactions = $this->db->query($query)->result();
 
-		foreach ($transactions as &$trx) {
+		// Ambil semua kode transaksi berdasarkan tipe untuk ambil detail sekaligus
+		$instockCodes = [];
+		$outstockCodes = [];
+
+		foreach ($transactions as $trx) {
 			if ($trx->tipe === 'INSTOCK') {
-				$details = $this->db->get_where('detail_instock', [
-					'instock_code' => $trx->kode_transaksi
-				])->result();
+				$instockCodes[] = $trx->kode_transaksi;
 			} else {
-				$details = $this->db->get_where('detail_outstock', [
-					'outstock_code' => $trx->kode_transaksi
-				])->result();
+				$outstockCodes[] = $trx->kode_transaksi;
 			}
-			$trx->details = $details;
 		}
 
-		// Build spreadsheet
-		$spreadsheet = new Spreadsheet();
+		// Ambil detail_instock sekaligus
+		$detailInstock = [];
+		if (!empty($instockCodes)) {
+			$this->db->where_in('instock_code', $instockCodes);
+			$detailInstock = $this->db->get('detail_instock')->result();
+		}
+
+		// Ambil detail_outstock sekaligus
+		$detailOutstock = [];
+		if (!empty($outstockCodes)) {
+			$this->db->where_in('outstock_code', $outstockCodes);
+			$detailOutstock = $this->db->get('detail_outstock')->result();
+		}
+
+		// Group detail berdasarkan kode transaksi
+		$groupedDetailInstock = [];
+		foreach ($detailInstock as $d) {
+			$groupedDetailInstock[$d->instock_code][] = $d;
+		}
+
+		$groupedDetailOutstock = [];
+		foreach ($detailOutstock as $d) {
+			$groupedDetailOutstock[$d->outstock_code][] = $d;
+		}
+
+		// Pasang detail ke masing-masing transaksi
+		foreach ($transactions as &$trx) {
+			if ($trx->tipe === 'INSTOCK') {
+				$trx->details = $groupedDetailInstock[$trx->kode_transaksi] ?? [];
+			} else {
+				$trx->details = $groupedDetailOutstock[$trx->kode_transaksi] ?? [];
+			}
+		}
+
+		// Buat spreadsheet
+		$spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
 		$sheet = $spreadsheet->getActiveSheet();
 
 		// Styling
 		$styleHeader = [
 			'font' => ['bold' => true],
-			'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+			'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
 		];
 		$styleTableHeader = [
 			'font' => ['bold' => true],
-			'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'f0f0f0']],
-			'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
-			'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+			'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'f0f0f0']],
+			'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+			'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
 		];
 		$styleDetailHeader = [
 			'font' => ['bold' => true],
-			'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'd9edf7']],
-			'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+			'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'd9edf7']],
+			'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
 		];
-		$styleBorder = ['borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]];
+		$styleBorder = ['borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]]];
 
 		$row = 1;
 
-		// Header
+		// Header judul
 		$sheet->mergeCells("A{$row}:I{$row}")->setCellValue("A{$row}", "Asta Homeware");
 		$sheet->getStyle("A{$row}")->applyFromArray($styleHeader);
 		$row++;
@@ -313,13 +352,14 @@ class Verification extends CI_Controller
 
 		$no = 1;
 		foreach ($transactions as $trx) {
-			// Table header
+			// Header tabel
 			$sheet->fromArray([
 				'No', 'Tipe', 'Kode Transaksi', 'Nomer', 'Tanggal Input', 'Tanggal Distribusi', 'User', 'Gudang', 'Status'
 			], null, "A{$row}");
 			$sheet->getStyle("A{$row}:I{$row}")->applyFromArray($styleTableHeader);
 			$row++;
 
+			// Data transaksi
 			$sheet->fromArray([
 				$no,
 				$trx->tipe,
@@ -334,9 +374,9 @@ class Verification extends CI_Controller
 			$sheet->getStyle("A{$row}:I{$row}")->applyFromArray($styleBorder);
 			$row++;
 
-			// Detail Header
+			// Detail produk
 			if (!empty($trx->details)) {
-				$sheet->mergeCells("A{$row}:I{$row}")->setCellValue("A{$row}", "Detail Produk");
+				$sheet->mergeCells("A{$row}:I{$row}")->setCellValue("A{$row}", "Detail Transaksi");
 				$sheet->getStyle("A{$row}:I{$row}")->applyFromArray($styleDetailHeader);
 				$row++;
 
@@ -353,7 +393,6 @@ class Verification extends CI_Controller
 				$sheet->mergeCells("H{$row}:I{$row}");
 
 				$sheet->getStyle("A{$row}:I{$row}")->applyFromArray($styleDetailHeader);
-
 				$row++;
 
 				foreach ($trx->details as $detail) {
@@ -374,22 +413,27 @@ class Verification extends CI_Controller
 				}
 			}
 
-			$row++;
 			$no++;
 		}
 
-		// Auto width
-		foreach (range('A', 'I') as $col) {
-			$sheet->getColumnDimension($col)->setAutoSize(true);
-		}
+		// Set lebar kolom manual (hindari setAutoSize agar lebih cepat)
+		$sheet->getColumnDimension('A')->setWidth(5);
+		$sheet->getColumnDimension('B')->setWidth(10);
+		$sheet->getColumnDimension('C')->setWidth(25);
+		$sheet->getColumnDimension('D')->setWidth(15);
+		$sheet->getColumnDimension('E')->setWidth(15);
+		$sheet->getColumnDimension('F')->setWidth(15);
+		$sheet->getColumnDimension('G')->setWidth(15);
+		$sheet->getColumnDimension('H')->setWidth(20);
+		$sheet->getColumnDimension('I')->setWidth(15);
 
-		// Download response
 		$filename = 'Verifikasi_Transaksi_' . date('Y-m-d_H-i-s') . '.xlsx';
-		$writer = new Xlsx($spreadsheet);
+		$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 
 		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 		header("Content-Disposition: attachment; filename=\"{$filename}\"");
 		header('Cache-Control: max-age=0');
+
 		$writer->save('php://output');
 		exit;
 	}
