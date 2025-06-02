@@ -18,8 +18,8 @@
                         <th>No</th>
                         <th>Tipe</th>
                         <th>Transaction Code</th>
-                        <th>Nomer</th>
-                        <th>Tanggal</th>
+                        <th>Tanggal Input</th>
+                        <th>Tanggal Distribusi</th>
                         <th>User Penginput</th>
                         <th>Status</th>
                         <th>Action</th>
@@ -31,8 +31,8 @@
                             <td><?= $i + 1 ?></td>
                             <td><?= ucfirst($trx->tipe) ?></td>
                             <td><?= $trx->kode_transaksi ?></td>
-                            <td><?= $trx->no_manual ?></td>
                             <td><?= $trx->tanggal . ' ' . $trx->jam ?></td>
+                            <td><?= $trx->distribution_date?></td>
                             <td><?= $trx->user ?></td>
                             <td>
                                 <h5>
