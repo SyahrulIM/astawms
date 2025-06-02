@@ -216,4 +216,157 @@ class Verification extends CI_Controller
 		$this->session->set_flashdata('error', 'Transaksi berhasil ditolak.');
 		redirect('verification');
 	}
+
+	public function exportExcel()
+	{
+		$this->load->helper('download');
+
+		$start_date = $this->input->post('filterInputStart');
+		$end_date = $this->input->post('filterInputEnd');
+
+		$whereIn = "";
+		$whereOut = "";
+
+		// Filter berdasarkan tanggal
+		if ($start_date && $end_date) {
+			$whereIn = "WHERE i.tgl_terima BETWEEN '$start_date' AND '$end_date'";
+			$whereOut = "WHERE o.tgl_keluar BETWEEN '$start_date' AND '$end_date'";
+		} elseif ($start_date) {
+			$whereIn = "WHERE i.tgl_terima >= '$start_date'";
+			$whereOut = "WHERE o.tgl_keluar >= '$start_date'";
+		} elseif ($end_date) {
+			$whereIn = "WHERE i.tgl_terima <= '$end_date'";
+			$whereOut = "WHERE o.tgl_keluar <= '$end_date'";
+		}
+
+		// Gabungkan transaksi instock dan outstock
+		$query = "
+		SELECT 
+			'INSTOCK' AS tipe,
+			i.instock_code AS kode_transaksi,
+			i.no_manual AS no_manual,
+			i.tgl_terima AS tanggal,
+			i.jam_terima AS jam,
+			i.distribution_date AS distribution_date,
+			i.kategori,
+			i.user,
+			g.nama_gudang,
+			i.status_verification
+		FROM instock i
+		LEFT JOIN gudang g ON g.idgudang = i.idgudang
+		$whereIn
+
+		UNION ALL
+
+		SELECT 
+			'OUTSTOCK' AS tipe,
+			o.outstock_code AS kode_transaksi,
+			o.no_manual AS no_manual,
+			o.tgl_keluar AS tanggal,
+			o.jam_keluar AS jam,
+			o.distribution_date AS distribution_date,
+			o.kategori,
+			o.user,
+			g.nama_gudang,
+			o.status_verification
+		FROM outstock o
+		LEFT JOIN gudang g ON g.idgudang = o.idgudang
+		$whereOut
+
+		ORDER BY tanggal DESC, jam DESC
+	";
+
+		$transactions = $this->db->query($query)->result();
+
+		// Ambil detail untuk masing-masing transaksi
+		foreach ($transactions as &$trx) {
+			if ($trx->tipe === 'INSTOCK') {
+				$details = $this->db->get_where('detail_instock', [
+					'instock_code' => $trx->kode_transaksi
+				])->result();
+			} else {
+				$details = $this->db->get_where('detail_outstock', [
+					'outstock_code' => $trx->kode_transaksi
+				])->result();
+			}
+			$trx->details = $details;
+		}
+
+		// Mulai generate Excel HTML
+		$filename = 'Verifikasi Transaksi_' . date('Y-m-d_H-i-s') . '.xls';
+		$content = "<table>";
+		$content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Asta Homeware</td></tr>";
+		$content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Data Verifikasi Transaksi</td></tr>";
+		$content .= "<tr><td colspan='9'>Periode: " . ($start_date ?? '-') . " s/d " . ($end_date ?? '-') . "</td></tr>";
+		$content .= "<tr><td colspan='9'>&nbsp;</td></tr>";
+		$content .= "</table>";
+
+		$content .= "<table border='1'>";
+		$content .= "<thead>
+		<tr style='background:#f0f0f0; font-weight:bold;'>
+			<th>No</th>
+			<th>Tipe</th>
+			<th>Kode Transaksi</th>
+			<th>Tanggal Input</th>
+			<th>Jam</th>
+			<th>Tanggal Distribusi</th>
+			<th>Kategori</th>
+			<th>User</th>
+			<th>Gudang</th>
+		</tr>
+	</thead><tbody>";
+
+		$no = 1;
+		foreach ($transactions as $trx) {
+			$content .= "<tr>
+			<td>{$no}</td>
+			<td>{$trx->tipe}</td>
+			<td>{$trx->kode_transaksi}</td>
+			<td>{$trx->tanggal}</td>
+			<td>{$trx->jam}</td>
+			<td>{$trx->distribution_date}</td>
+			<td>{$trx->kategori}</td>
+			<td>{$trx->user}</td>
+			<td>{$trx->nama_gudang}</td>
+		</tr>";
+
+			// Detail transaksi per baris
+			if (!empty($trx->details)) {
+				$content .= "<tr>
+				<td colspan='9'>
+					<table border='1' width='100%'>
+						<tr style='background:#d9edf7;'>
+							<th colspan='2'>SKU</th>
+							<th colspan='4'>Nama Produk</th>
+							<th>Jumlah</th>
+							<th>Sisa</th>
+							<th>Keterangan</th>
+						</tr>";
+				foreach ($trx->details as $detail) {
+					$content .= "<tr>
+					<td colspan='2'>{$detail->sku}</td>
+					<td colspan='4'>{$detail->nama_produk}</td>
+					<td>{$detail->jumlah}</td>
+					<td>{$detail->sisa}</td>
+					<td>{$detail->keterangan}</td>
+				</tr>";
+				}
+				$content .= "</table>
+				</td>
+			</tr>";
+			}
+
+			$no++;
+		}
+
+		$content .= "</tbody></table>";
+
+		// Header untuk Excel
+		header("Content-type: application/vnd.ms-excel");
+		header("Content-Disposition: attachment; filename={$filename}");
+		header("Pragma: no-cache");
+		header("Expires: 0");
+		echo $content;
+		exit;
+	}
 }
