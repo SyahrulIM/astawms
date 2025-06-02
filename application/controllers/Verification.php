@@ -307,8 +307,8 @@ class Verification extends CI_Controller
 		<th>No</th>
 		<th>Tipe</th>
 		<th>Kode Transaksi</th>
+		<th>Nomer</th>
 		<th>Tanggal Input</th>
-		<th>Jam</th>
 		<th>Tanggal Distribusi</th>
 		<th>User</th>
 		<th>Gudang</th>
@@ -322,8 +322,8 @@ class Verification extends CI_Controller
 		<td>{$no}</td>
 		<td>{$trx->tipe}</td>
 		<td>{$trx->kode_transaksi}</td>
+		<td>{$trx->no_manual}</td>
 		<td>{$trx->tanggal}</td>
-		<td>{$trx->jam}</td>
 		<td>{$trx->distribution_date}</td>
 		<td>{$trx->user}</td>
 		<td>{$trx->nama_gudang}</td>
