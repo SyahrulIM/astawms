@@ -1,6 +1,11 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+
 class Product extends CI_Controller
 {
     public function __construct()
@@ -548,53 +553,61 @@ class Product extends CI_Controller
 
         $transaction_stock = $this->db->query($query, [$sku, $idgudang, $sku, $idgudang])->result();
 
-        $this->load->helper('download');
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-        $filename = 'kartu_stok_' . $sku . '.xls';
+        // Header
+        $sheet->mergeCells('A1:I1');
+        $sheet->setCellValue('A1', 'Kartu Stok - Asta Homeware');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        $content = "<table>";
-        $content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Kartu Stok - Asta Homeware</td></tr>";
-        $content .= "<tr><td colspan='9'>SKU: {$sku}</td></tr>";
-        $content .= "<tr><td colspan='9'>Nama Produk: {$product->nama_produk}</td></tr>";
-        $content .= "<tr><td colspan='9'>&nbsp;</td></tr>";
-        $content .= "</table>";
-        $content .= "<table border='1'>";
-        $content .= "<thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Kode Transaksi</th>
-                            <th>Tanggal Input</th>
-                            <th>Tanggal Distribusi</th>
-                            <th>Kategori</th>
-                            <th>Stock In</th>
-                            <th>Stock Out</th>
-                            <th>Sisa</th>
-                            <th>User</th>
-                        </tr>
-                     </thead><tbody>";
+        $sheet->mergeCells('A2:I2');
+        $sheet->setCellValue('A2', "SKU: {$sku}");
+        $sheet->mergeCells('A3:I3');
+        $sheet->setCellValue('A3', "Nama Produk: {$product->nama_produk}");
 
+        // Table headers
+        $headers = ['No', 'Kode Transaksi', 'Tanggal Input', 'Tanggal Distribusi', 'Kategori', 'Stock In', 'Stock Out', 'Sisa', 'User'];
+        $sheet->fromArray($headers, null, 'A5');
+        $sheet->getStyle('A5:I5')->getFont()->setBold(true);
+        $sheet->getStyle('A5:I5')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A5:I5')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+        // Fill data
+        $rowNum = 6;
         $no = 1;
         foreach ($transaction_stock as $row) {
-            $content .= "<tr>
-                            <td>{$no}</td>
-                            <td>{$row->stock_code}</td>
-                            <td>{$row->datetime}</td>
-                            <td>{$row->distribution_date}</td>
-                            <td>{$row->kategori}</td>
-                            <td>" . ($row->instock !== null ? $row->instock : '-') . "</td>
-                            <td>" . ($row->outstock !== null ? $row->outstock : '-') . "</td>
-                            <td>{$row->sisa}</td>
-                            <td>{$row->user}</td>
-                         </tr>";
+            $sheet->setCellValue("A{$rowNum}", $no);
+            $sheet->setCellValue("B{$rowNum}", $row->stock_code);
+            $sheet->setCellValue("C{$rowNum}", $row->datetime);
+            $sheet->setCellValue("D{$rowNum}", $row->distribution_date);
+            $sheet->setCellValue("E{$rowNum}", $row->kategori);
+            $sheet->setCellValue("F{$rowNum}", $row->instock !== null ? $row->instock : '-');
+            $sheet->setCellValue("G{$rowNum}", $row->outstock !== null ? $row->outstock : '-');
+            $sheet->setCellValue("H{$rowNum}", $row->sisa);
+            $sheet->setCellValue("I{$rowNum}", $row->user);
+
+            $sheet->getStyle("A{$rowNum}:I{$rowNum}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+            $rowNum++;
             $no++;
         }
-        $content .= "</tbody></table>";
 
-        header("Content-type: application/vnd.ms-excel");
-        header("Content-Disposition: attachment; filename={$filename}");
-        header("Pragma: no-cache");
-        header("Expires: 0");
-        echo $content;
+        // Auto size columns
+        foreach (range('A', 'I') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = "kartu_stok_{$sku}.xlsx";
+
+        $writer = new Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"{$filename}\"");
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
         exit;
     }
 }

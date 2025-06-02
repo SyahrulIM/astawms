@@ -1,6 +1,11 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+
 class Outstock extends CI_Controller
 {
     public function __construct()
@@ -157,49 +162,60 @@ class Outstock extends CI_Controller
             ->get()
             ->result();
 
-        $this->load->helper('download');
-
         $no_manual = isset($detail_outstock[0]) ? $detail_outstock[0]->no_manual : '-';
 
-        $filename = 'Barang_Keluar_' . $outstock_code . '.xls';
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-        $content = "<table>";
-        $content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Barang Keluar - Asta Homeware</td></tr>";
-        $content .= "<tr><td colspan='9'>Kode Barang Keluar: {$outstock_code}</td></tr>";
-        $content .= "<tr><td colspan='9'>Nomer: {$no_manual}</td></tr>";
-        $content .= "<tr><td colspan='9'>&nbsp;</td></tr>";
-        $content .= "</table>";
-        $content .= "<table border='1'>";
-        $content .= "<thead>
-                        <tr>
-                            <th>No</th>
-                            <th>SKU</th>
-                            <th>Nama Produk</th>
-                            <th>Gudang</th>
-                            <th>Jumlah</th>
-                            <th>Keterangan</th>
-                        </tr>
-                     </thead><tbody>";
+        // Header
+        $sheet->mergeCells('A1:F1');
+        $sheet->setCellValue('A1', 'Barang Keluar - Asta Homeware');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
+        $sheet->mergeCells('A2:F2');
+        $sheet->setCellValue('A2', "Kode Barang Keluar: {$outstock_code}");
+        $sheet->mergeCells('A3:F3');
+        $sheet->setCellValue('A3', "Nomer: {$no_manual}");
+
+        // Table header
+        $header = ['No', 'SKU', 'Nama Produk', 'Gudang', 'Jumlah', 'Keterangan'];
+        $sheet->fromArray($header, null, 'A5');
+        $sheet->getStyle('A5:F5')->getFont()->setBold(true);
+        $sheet->getStyle('A5:F5')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A5:F5')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+        // Data rows
+        $row = 6;
         $no = 1;
-        foreach ($detail_outstock as $row) {
-            $content .= "<tr>
-                            <td>{$no}</td>
-                            <td>{$row->sku}</td>
-                            <td>{$row->nama_produk}</td>
-                            <td>{$row->nama_gudang}</td>
-                            <td>{$row->jumlah}</td>
-                            <td>{$row->keterangan}</td>
-                         </tr>";
+        foreach ($detail_outstock as $item) {
+            $sheet->setCellValue("A{$row}", $no);
+            $sheet->setCellValue("B{$row}", $item->sku);
+            $sheet->setCellValue("C{$row}", $item->nama_produk);
+            $sheet->setCellValue("D{$row}", $item->nama_gudang);
+            $sheet->setCellValue("E{$row}", $item->jumlah);
+            $sheet->setCellValue("F{$row}", $item->keterangan);
+
+            $sheet->getStyle("A{$row}:F{$row}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+            $row++;
             $no++;
         }
-        $content .= "</tbody></table>";
 
-        header("Content-type: application/vnd.ms-excel");
-        header("Content-Disposition: attachment; filename={$filename}");
-        header("Pragma: no-cache");
-        header("Expires: 0");
-        echo $content;
+        // Auto size columns
+        foreach (range('A', 'F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = "Barang_Keluar_{$outstock_code}.xlsx";
+
+        $writer = new Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"{$filename}\"");
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
         exit;
     }
 }

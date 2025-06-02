@@ -1,6 +1,9 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 class Barangmasuk extends CI_Controller
 {
     public function __construct()
@@ -153,45 +156,63 @@ class Barangmasuk extends CI_Controller
 
         $no_manual = isset($detail_instock[0]) ? $detail_instock[0]->no_manual : '-';
 
-        $filename = 'Barang_Masuk_' . $instock_code . '.xls';
+        // Load PhpSpreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-        $content = "<table>";
-        $content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Barang Masuk - Asta Homeware</td></tr>";
-        $content .= "<tr><td colspan='9'>Kode Barang Mauk: {$instock_code}</td></tr>";
-        $content .= "<tr><td colspan='9'>Nomer: {$no_manual}</td></tr>";
-        $content .= "<tr><td colspan='9'>&nbsp;</td></tr>";
-        $content .= "</table>";
-        $content .= "<table border='1'>";
-        $content .= "<thead>
-                        <tr>
-                            <th>No</th>
-                            <th>SKU</th>
-                            <th>Nama Produk</th>
-                            <th>Gudang</th>
-                            <th>Jumlah</th>
-                            <th>Keterangan</th>
-                        </tr>
-                     </thead><tbody>";
+        // Set Title Header merged and center
+        $sheet->mergeCells('A1:F1');
+        $sheet->setCellValue('A1', 'Barang Masuk - Asta Homeware');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
+        // Kode Barang Masuk & Nomer di bawah
+        $sheet->mergeCells('A2:F2');
+        $sheet->setCellValue('A2', "Kode Barang Masuk: {$instock_code}");
+        $sheet->mergeCells('A3:F3');
+        $sheet->setCellValue('A3', "Nomer: {$no_manual}");
+
+        // Header tabel
+        $header = ['No', 'SKU', 'Nama Produk', 'Gudang', 'Jumlah', 'Keterangan'];
+        $sheet->fromArray($header, null, 'A5');
+
+        // Styling header
+        $sheet->getStyle('A5:F5')->getFont()->setBold(true);
+        $sheet->getStyle('A5:F5')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A5:F5')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+        // Isi data
+        $row = 6;
         $no = 1;
-        foreach ($detail_instock as $row) {
-            $content .= "<tr>
-                            <td>{$no}</td>
-                            <td>{$row->sku}</td>
-                            <td>{$row->nama_produk}</td>
-                            <td>{$row->nama_gudang}</td>
-                            <td>{$row->jumlah}</td>
-                            <td>{$row->keterangan}</td>
-                         </tr>";
+        foreach ($detail_instock as $item) {
+            $sheet->setCellValue("A{$row}", $no);
+            $sheet->setCellValue("B{$row}", $item->sku);
+            $sheet->setCellValue("C{$row}", $item->nama_produk);
+            $sheet->setCellValue("D{$row}", $item->nama_gudang);
+            $sheet->setCellValue("E{$row}", $item->jumlah);
+            $sheet->setCellValue("F{$row}", $item->keterangan);
+
+            // Borders for each row
+            $sheet->getStyle("A{$row}:F{$row}")->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+            $row++;
             $no++;
         }
-        $content .= "</tbody></table>";
 
-        header("Content-type: application/vnd.ms-excel");
-        header("Content-Disposition: attachment; filename={$filename}");
-        header("Pragma: no-cache");
-        header("Expires: 0");
-        echo $content;
+        // Auto size columns
+        foreach (range('A', 'F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Output to browser
+        $filename = "Barang_Masuk_{$instock_code}.xlsx";
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"{$filename}\"");
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
         exit;
     }
 }
