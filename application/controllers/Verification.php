@@ -302,7 +302,9 @@ class Verification extends CI_Controller
 		$content .= "</table>";
 
 		$content .= "<table border='1'>";
-		$content .= "<thead>
+		$no = 1;
+		foreach ($transactions as $trx) {
+			$content .= "<thead>
 	<tr style='background:#f0f0f0; font-weight:bold;'>
 		<th>No</th>
 		<th>Tipe</th>
@@ -316,8 +318,6 @@ class Verification extends CI_Controller
 	</tr>
 	</thead><tbody>";
 
-		$no = 1;
-		foreach ($transactions as $trx) {
 			$content .= "<tr>
 		<td>{$no}</td>
 		<td>{$trx->tipe}</td>
