@@ -1,6 +1,12 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+
 class Verification extends CI_Controller
 {
 	public function index()
@@ -219,15 +225,12 @@ class Verification extends CI_Controller
 
 	public function exportExcel()
 	{
-		$this->load->helper('download');
-
 		$start_date = $this->input->post('filterInputStart');
 		$end_date = $this->input->post('filterInputEnd');
 
 		$whereIn = "";
 		$whereOut = "";
 
-		// Filter berdasarkan tanggal
 		if ($start_date && $end_date) {
 			$whereIn = "WHERE i.tgl_terima BETWEEN '$start_date' AND '$end_date'";
 			$whereOut = "WHERE o.tgl_keluar BETWEEN '$start_date' AND '$end_date'";
@@ -239,46 +242,26 @@ class Verification extends CI_Controller
 			$whereOut = "WHERE o.tgl_keluar <= '$end_date'";
 		}
 
-		// Gabungkan transaksi instock dan outstock
 		$query = "
-	SELECT 
-		'INSTOCK' AS tipe,
-		i.instock_code AS kode_transaksi,
-		i.no_manual AS no_manual,
-		i.tgl_terima AS tanggal,
-		i.jam_terima AS jam,
-		i.distribution_date AS distribution_date,
-		i.kategori,
-		i.user,
-		g.nama_gudang,
-		i.status_verification
-	FROM instock i
-	LEFT JOIN gudang g ON g.idgudang = i.idgudang
-	$whereIn
+        SELECT 'INSTOCK' AS tipe, i.instock_code AS kode_transaksi, i.no_manual, i.tgl_terima AS tanggal,
+               i.jam_terima AS jam, i.distribution_date, i.kategori, i.user, g.nama_gudang, i.status_verification
+        FROM instock i
+        LEFT JOIN gudang g ON g.idgudang = i.idgudang
+        $whereIn
 
-	UNION ALL
+        UNION ALL
 
-	SELECT 
-		'OUTSTOCK' AS tipe,
-		o.outstock_code AS kode_transaksi,
-		o.no_manual AS no_manual,
-		o.tgl_keluar AS tanggal,
-		o.jam_keluar AS jam,
-		o.distribution_date AS distribution_date,
-		o.kategori,
-		o.user,
-		g.nama_gudang,
-		o.status_verification
-	FROM outstock o
-	LEFT JOIN gudang g ON g.idgudang = o.idgudang
-	$whereOut
+        SELECT 'OUTSTOCK' AS tipe, o.outstock_code AS kode_transaksi, o.no_manual, o.tgl_keluar AS tanggal,
+               o.jam_keluar AS jam, o.distribution_date, o.kategori, o.user, g.nama_gudang, o.status_verification
+        FROM outstock o
+        LEFT JOIN gudang g ON g.idgudang = o.idgudang
+        $whereOut
 
-	ORDER BY tanggal DESC, jam DESC
-	";
+        ORDER BY tanggal DESC, jam DESC
+    ";
 
 		$transactions = $this->db->query($query)->result();
 
-		// Ambil detail untuk masing-masing transaksi
 		foreach ($transactions as &$trx) {
 			if ($trx->tipe === 'INSTOCK') {
 				$details = $this->db->get_where('detail_instock', [
@@ -292,79 +275,122 @@ class Verification extends CI_Controller
 			$trx->details = $details;
 		}
 
-		// Generate HTML Excel
-		$filename = 'Verifikasi Transaksi_' . date('Y-m-d_H-i-s') . '.xls';
-		$content = "<table>";
-		$content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Asta Homeware</td></tr>";
-		$content .= "<tr><td colspan='9' style='font-weight:bold; text-align:center;'>Data Verifikasi Transaksi</td></tr>";
-		$content .= "<tr><td colspan='9'>Periode: " . ($start_date ?? '-') . " s/d " . ($end_date ?? '-') . "</td></tr>";
-		$content .= "<tr><td colspan='9'>&nbsp;</td></tr>";
-		$content .= "</table>";
+		// Build spreadsheet
+		$spreadsheet = new Spreadsheet();
+		$sheet = $spreadsheet->getActiveSheet();
 
-		$content .= "<table border='1'>";
+		// Styling
+		$styleHeader = [
+			'font' => ['bold' => true],
+			'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+		];
+		$styleTableHeader = [
+			'font' => ['bold' => true],
+			'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'f0f0f0']],
+			'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+			'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+		];
+		$styleDetailHeader = [
+			'font' => ['bold' => true],
+			'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'd9edf7']],
+			'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+		];
+		$styleBorder = ['borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]];
+
+		$row = 1;
+
+		// Header
+		$sheet->mergeCells("A{$row}:I{$row}")->setCellValue("A{$row}", "Asta Homeware");
+		$sheet->getStyle("A{$row}")->applyFromArray($styleHeader);
+		$row++;
+
+		$sheet->mergeCells("A{$row}:I{$row}")->setCellValue("A{$row}", "Data Verifikasi Transaksi");
+		$sheet->getStyle("A{$row}")->applyFromArray($styleHeader);
+		$row++;
+
+		$sheet->mergeCells("A{$row}:I{$row}")->setCellValue("A{$row}", "Periode: " . ($start_date ?? '-') . " s/d " . ($end_date ?? '-'));
+		$row += 2;
+
 		$no = 1;
 		foreach ($transactions as $trx) {
-			$content .= "<thead>
-	<tr style='background:#f0f0f0; font-weight:bold;'>
-		<th>No</th>
-		<th>Tipe</th>
-		<th>Kode Transaksi</th>
-		<th>Nomer</th>
-		<th>Tanggal Input</th>
-		<th>Tanggal Distribusi</th>
-		<th>User</th>
-		<th>Gudang</th>
-		<th>Status</th>
-	</tr>
-	</thead><tbody>";
+			// Table header
+			$sheet->fromArray([
+				'No', 'Tipe', 'Kode Transaksi', 'Nomer', 'Tanggal Input', 'Tanggal Distribusi', 'User', 'Gudang', 'Status'
+			], null, "A{$row}");
+			$sheet->getStyle("A{$row}:I{$row}")->applyFromArray($styleTableHeader);
+			$row++;
 
-			$content .= "<tr>
-		<td>{$no}</td>
-		<td>{$trx->tipe}</td>
-		<td>{$trx->kode_transaksi}</td>
-		<td>{$trx->no_manual}</td>
-		<td>{$trx->tanggal}</td>
-		<td>{$trx->distribution_date}</td>
-		<td>{$trx->user}</td>
-		<td>{$trx->nama_gudang}</td>
-		<td>" . ($trx->status_verification == 1 ? 'Accept' : ($trx->status_verification == 2 ? 'Reject' : 'Pending')) . "</td>
-	</tr>";
+			$sheet->fromArray([
+				$no,
+				$trx->tipe,
+				$trx->kode_transaksi,
+				$trx->no_manual,
+				$trx->tanggal,
+				$trx->distribution_date,
+				$trx->user,
+				$trx->nama_gudang,
+				$trx->status_verification == 1 ? 'Accept' : ($trx->status_verification == 2 ? 'Reject' : 'Pending')
+			], null, "A{$row}");
+			$sheet->getStyle("A{$row}:I{$row}")->applyFromArray($styleBorder);
+			$row++;
 
-			// Detail transaksi per baris
+			// Detail Header
 			if (!empty($trx->details)) {
-				$content .= "<tr>
-			<td colspan='9'>
-				<table border='1' width='100%'>
-					<tr style='background:#d9edf7; font-weight:bold;'>
-						<th colspan='2'>SKU</th>
-						<th colspan='4'>Nama Produk</th>
-						<th colspan='2'>Jumlah</th>
-						<th>Keterangan</th>
-					</tr>";
+				$sheet->mergeCells("A{$row}:I{$row}")->setCellValue("A{$row}", "Detail Produk");
+				$sheet->getStyle("A{$row}:I{$row}")->applyFromArray($styleDetailHeader);
+				$row++;
+
+				$sheet->setCellValue("A{$row}", 'SKU');
+				$sheet->mergeCells("A{$row}:B{$row}");
+
+				$sheet->setCellValue("C{$row}", 'Nama Produk');
+				$sheet->mergeCells("C{$row}:E{$row}");
+
+				$sheet->setCellValue("F{$row}", 'Jumlah');
+				$sheet->mergeCells("F{$row}:G{$row}");
+
+				$sheet->setCellValue("H{$row}", 'Keterangan');
+				$sheet->mergeCells("H{$row}:I{$row}");
+
+				$sheet->getStyle("A{$row}:I{$row}")->applyFromArray($styleDetailHeader);
+
+				$row++;
+
 				foreach ($trx->details as $detail) {
-					$content .= "<tr>
-				<td colspan='2'>{$detail->sku}</td>
-				<td colspan='4'>{$detail->nama_produk}</td>
-				<td colspan='2'>{$detail->jumlah}</td>
-				<td>{$detail->keterangan}</td>
-			</tr>";
+					$sheet->setCellValue("A{$row}", $detail->sku);
+					$sheet->mergeCells("A{$row}:B{$row}");
+
+					$sheet->setCellValue("C{$row}", $detail->nama_produk);
+					$sheet->mergeCells("C{$row}:E{$row}");
+
+					$sheet->setCellValue("F{$row}", $detail->jumlah);
+					$sheet->mergeCells("F{$row}:G{$row}");
+
+					$sheet->setCellValue("H{$row}", $detail->keterangan);
+					$sheet->mergeCells("H{$row}:I{$row}");
+
+					$sheet->getStyle("A{$row}:I{$row}")->applyFromArray($styleBorder);
+					$row++;
 				}
-				$content .= "</table>
-			</td>
-		</tr>";
 			}
 
+			$row++;
 			$no++;
 		}
 
-		$content .= "</tbody></table>";
+		// Auto width
+		foreach (range('A', 'I') as $col) {
+			$sheet->getColumnDimension($col)->setAutoSize(true);
+		}
 
-		// Output Excel
-		header("Content-type: application/vnd.ms-excel");
-		header("Content-Disposition: attachment; filename={$filename}");
-		header("Pragma: no-cache");
-		header("Expires: 0");
-		echo $content;
+		// Download response
+		$filename = 'Verifikasi_Transaksi_' . date('Y-m-d_H-i-s') . '.xlsx';
+		$writer = new Xlsx($spreadsheet);
+
+		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+		header("Content-Disposition: attachment; filename=\"{$filename}\"");
+		header('Cache-Control: max-age=0');
+		$writer->save('php://output');
 		exit;
 	}
 }
