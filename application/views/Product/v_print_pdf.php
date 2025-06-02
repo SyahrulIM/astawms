@@ -34,12 +34,8 @@
 
         <div class="row">
             <div class="col">
-                <h3>SKU: <?php echo $product->sku ?></h3>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                <h3>Nama Barang: <?php echo $product->nama_produk ?></h3>
+                <h5>SKU: <?php echo $product->sku ?></h5>
+                <h5>Nama Barang: <?php echo $product->nama_produk ?></h5>
             </div>
         </div>
 
@@ -51,12 +47,12 @@
                             <th>No</th>
                             <th>Kategori</th>
                             <th>Kode Transaksi Stock</th>
-                            <th>Tanggal</th>
+                            <th>Tanggal Input</th>
+                            <th>Tanggal Distribusi</th>
                             <th>Masuk</th>
                             <th>Keluar</th>
                             <th>Sisa</th>
                             <th>Penginput</th>
-                            <th>Keterangan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -66,11 +62,11 @@
                                 <td><?php echo $tsvalue->kategori; ?></td>
                                 <td><?php echo $tsvalue->stock_code; ?></td>
                                 <td><?php echo $tsvalue->datetime; ?></td>
+                                <td><?php echo $tsvalue->distribution_date; ?></td>
                                 <td><?php echo $tsvalue->instock; ?></td>
                                 <td><?php echo $tsvalue->outstock; ?></td>
                                 <td><?php echo $tsvalue->sisa; ?></td>
                                 <td><?php echo $tsvalue->user; ?></td>
-                                <td><?php echo $tsvalue->keterangan; ?></td>
                             </tr>
                         <?php } ?>
                     </tbody>

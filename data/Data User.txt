@@ -74,4 +74,8 @@ Password: vMLPwr
 
 accurate pos:
 @HotDog123
-Pin; 313131
+Pin: 313131
+
+Turbo:
+Turbo LT 1 Password : suryaLt1101
+Turbo LT 3 Password : northlt36566

@@ -5,6 +5,11 @@
                         <h1 class="mt-4">Kartu Stok - <?php echo $product->nama_produk ?></h1>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col">
+                        <h4>SKU: <?php echo $product->sku ?></h4>
+                    </div>
+                </div>
 
                 <div class="row">
                     <div class="col" style="text-align: right;">
@@ -14,9 +19,9 @@
                                 <select name="idgudang" class="form-select" onchange="this.form.submit()">
                                     <option value="">Pilih Gudang</option>
                                     <?php foreach ($gudang_list as $gudang) : ?>
-                                    <option value="<?= $gudang->idgudang ?>" <?= ($selected_gudang == $gudang->idgudang) ? 'selected' : '' ?>>
-                                        <?= $gudang->nama_gudang ?>
-                                    </option>
+                                        <option value="<?= $gudang->idgudang ?>" <?= ($selected_gudang == $gudang->idgudang) ? 'selected' : '' ?>>
+                                            <?= $gudang->nama_gudang ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -36,27 +41,27 @@
                                     <th>No</th>
                                     <th>Kategori</th>
                                     <th>Kode Transaksi Stock</th>
-                                    <th>Tanggal</th>
+                                    <th>Tanggal Input</th>
+                                    <th>Tanggal Distribusi</th>
                                     <th>Masuk</th>
                                     <th>Keluar</th>
                                     <th>Sisa</th>
                                     <th>Penginput</th>
-                                    <th>Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($transaction_stock as $tskey => $tsvalue) { ?>
-                                <tr>
-                                    <td><?php echo $tskey + 1; ?></td>
-                                    <td><?php echo $tsvalue->kategori; ?></td>
-                                    <td><?php echo $tsvalue->stock_code; ?></td>
-                                    <td><?php echo $tsvalue->datetime; ?></td>
-                                    <td><?php echo $tsvalue->instock; ?></td>
-                                    <td><?php echo $tsvalue->outstock; ?></td>
-                                    <td><?php echo $tsvalue->sisa; ?></td>
-                                    <td><?php echo $tsvalue->user; ?></td>
-                                    <td><?php echo $tsvalue->keterangan; ?></td>
-                                </tr>
+                                    <tr>
+                                        <td><?php echo $tskey + 1; ?></td>
+                                        <td><?php echo $tsvalue->kategori; ?></td>
+                                        <td><?php echo $tsvalue->stock_code; ?></td>
+                                        <td><?php echo $tsvalue->datetime; ?></td>
+                                        <td><?php echo $tsvalue->distribution_date; ?></td>
+                                        <td><?php echo $tsvalue->instock; ?></td>
+                                        <td><?php echo $tsvalue->outstock; ?></td>
+                                        <td><?php echo $tsvalue->sisa; ?></td>
+                                        <td><?php echo $tsvalue->user; ?></td>
+                                    </tr>
                                 <?php } ?>
                             </tbody>
                         </table>

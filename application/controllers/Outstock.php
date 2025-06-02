@@ -67,50 +67,20 @@ class Outstock extends CI_Controller
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
         ];
+        $this->db->insert('outstock', $data_outstock);
 
         foreach ($inputSKU as $key => $sku) {
-            $jumlah = (int) $inputJumlah[$key];
-
-            // Ambil produk berdasarkan SKU
-            $product = $this->db->where('sku', $sku)->get('product')->row();
-            $idproduct = $product->idproduct;
-
-            // Cek stok awal di gudang tersebut
-            $product_stock = $this->db
-                ->where('idproduct', $idproduct)
-                ->where('idgudang', $inputGudang)
-                ->get('product_stock')
-                ->row();
-
-            if (!$product_stock) {
-                // Kalau belum ada, insert stok awal dengan 0
-                $this->db->insert('product_stock', [
-                    'idproduct' => $idproduct,
-                    'idgudang' => $inputGudang,
-                    'stok' => 0
-                ]);
-                $sisa_stok = 0 - $jumlah;
-            } else {
-                $sisa_stok = $product_stock->stok - $jumlah;
-            }
-
             // Simpan detail outstock
             $data_detail_outstock = [
                 'outstock_code' => $inputOutstockCode,
                 'sku' => $sku,
                 'nama_produk' => $inputNamaProduk[$key],
-                'jumlah' => $jumlah,
-                'sisa' => $sisa_stok,
+                'jumlah' => (int)$inputJumlah[$key],
+                'sisa' => 0,
                 'keterangan' => $inputKeterangan[$key],
             ];
             $this->db->insert('detail_outstock', $data_detail_outstock);
-
-            // Hapus update stok product_stock
-            // Tidak perlu update 'product_stock' lagi di sini
         }
-
-        // Simpan ke tabel outstock utama dengan status_verification = 0
-        $this->db->insert('outstock', $data_outstock);
 
         // WhatsApp API
         $this->db->select('user.handphone');

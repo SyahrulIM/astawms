@@ -9,6 +9,7 @@ class Verification extends CI_Controller
 			SELECT 
 				'INSTOCK' AS tipe,
 				i.instock_code AS kode_transaksi,
+				i.no_manual AS no_manual,
 				i.tgl_terima AS tanggal,
 				i.jam_terima AS jam,
 				i.kategori,
@@ -23,6 +24,7 @@ class Verification extends CI_Controller
 			SELECT 
 				'OUTSTOCK' AS tipe,
 				o.outstock_code AS kode_transaksi,
+				o.no_manual AS no_manual,
 				o.tgl_keluar AS tanggal,
 				o.jam_keluar AS jam,
 				o.kategori,
