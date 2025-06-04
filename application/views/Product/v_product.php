@@ -152,6 +152,7 @@
                                     <?php foreach ($gudang as $g) { ?>
                                         <th>Stock <?= $g->nama_gudang ?></th>
                                     <?php } ?>
+                                    <th>Total Stock</th>
                                     <th>Tanggal Dibuat</th>
                                     <th>Action</th>
                                 </tr>
@@ -171,11 +172,15 @@
                                                 <i class="fa-solid fa-xmark" style="font-size: 40px; color: red;"></i>
                                             <?php } ?>
                                         </td>
-                                        <?php foreach ($gudang as $g) {
+                                        <?php
+                                        $currentProductTotalStock = 0; // Initialize for each product
+                                        foreach ($gudang as $g) {
                                             $stok = isset($stokMap[$pvalue->idproduct][$g->idgudang]) ? $stokMap[$pvalue->idproduct][$g->idgudang] : 0;
+                                            $currentProductTotalStock += $stok; // Add to total
                                         ?>
                                             <td><?= $stok ?></td>
                                         <?php } ?>
+                                        <td><?= $totalStokAllGudang[$pvalue->idproduct] ?? 0 ?></td>
                                         <td><?= $pvalue->created_date ?></td>
                                         <td>
                                             <?php if ($this->session->userdata('idrole') != 4 && $this->session->userdata('idrole') != 2) { ?>

@@ -50,7 +50,7 @@ class Product extends CI_Controller
         $products = $this->db->where('status', 1)->get('product')->result();
         $gudangs = $this->db->get('gudang')->result();
 
-        // Map idproduct => sku and sku => idproduct
+        // Map idproduct to sku and sku to idproduct
         $skuToIdProduct = [];
         foreach ($products as $p) {
             $skuToIdProduct[$p->sku] = $p->idproduct;
@@ -58,14 +58,14 @@ class Product extends CI_Controller
 
         // Get stock movement summary
         $query = "
-        SELECT 
+        SELECT
             sku,
             idgudang,
             SUM(instock) AS total_in,
             SUM(outstock) AS total_out,
             SUM(instock) - SUM(outstock) AS total_stok
         FROM (
-            SELECT 
+            SELECT
                 detail_instock.sku,
                 instock.idgudang,
                 detail_instock.jumlah AS instock,
@@ -76,7 +76,7 @@ class Product extends CI_Controller
 
             UNION ALL
 
-            SELECT 
+            SELECT
                 detail_outstock.sku,
                 outstock.idgudang,
                 0 AS instock,
@@ -92,10 +92,17 @@ class Product extends CI_Controller
 
         // Create stokMap using idproduct instead of sku
         $stokMap = [];
+        $totalStokAllGudang = []; // New array to store total stock across all warehouses
         foreach ($stock_data as $row) {
             if (isset($skuToIdProduct[$row->sku])) {
                 $idproduct = $skuToIdProduct[$row->sku];
                 $stokMap[$idproduct][$row->idgudang] = $row->total_stok;
+
+                // Calculate total stock for each product across all warehouses
+                if (!isset($totalStokAllGudang[$idproduct])) {
+                    $totalStokAllGudang[$idproduct] = 0;
+                }
+                $totalStokAllGudang[$idproduct] += $row->total_stok;
             }
         }
 
@@ -103,7 +110,8 @@ class Product extends CI_Controller
             'title' => $title,
             'product' => $products,
             'gudang' => $gudangs,
-            'stokMap' => $stokMap
+            'stokMap' => $stokMap,
+            'totalStokAllGudang' => $totalStokAllGudang // Pass to the view
         ];
 
         $this->load->view('theme/v_head', $data);
