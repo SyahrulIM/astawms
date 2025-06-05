@@ -11,38 +11,11 @@ class Product extends CI_Controller
     public function __construct()
     {
         parent::__construct();
-        // Check if the user is logged in
         if (!$this->session->userdata('logged_in')) {
-            // Redirect to login with a message
             $this->session->set_flashdata('error', 'Eeettss gak boleh nakal, Login dulu ya kak hehe.');
-            redirect('auth');  // Assuming 'auth' is your login controller
+            redirect('auth');
         }
     }
-
-    // public function index()
-    // {
-    //     $title = 'Product';
-    //     $products = $this->db->where('status', 1)->get('product')->result();
-    //     $gudangs = $this->db->get('gudang')->result();
-    //     $stok = $this->db
-    //         ->select('product_stock.idproduct, product_stock.idgudang, product_stock.stok')
-    //         ->get('product_stock')
-    //         ->result();
-    //     $stokMap = [];
-    //     foreach ($stok as $s) {
-    //         $stokMap[$s->idproduct][$s->idgudang] = $s->stok;
-    //     }
-
-    //     $data = [
-    //         'title' => $title,
-    //         'product' => $products,
-    //         'gudang' => $gudangs,
-    //         'stokMap' => $stokMap
-    //     ];
-
-    //     $this->load->view('theme/v_head', $data);
-    //     $this->load->view('Product/v_product');
-    // }
 
     public function index()
     {
