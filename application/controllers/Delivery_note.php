@@ -339,4 +339,89 @@ class Delivery_note extends CI_Controller
         $this->session->set_flashdata('success', 'Pengiriman berhasil diselesaikan.');
         redirect('delivery_note');
     }
+
+    public function revisionDelivery()
+    {
+        $this->load->library('upload');
+
+        $id = $this->input->post('id');
+        $no_manual = $this->input->post('no_manual');
+        $username = $this->session->userdata('username');
+        $now = date("Y-m-d H:i:s");
+
+        if (empty($id)) {
+            $this->session->set_flashdata('error', 'ID pengiriman wajib diisi.');
+            redirect('delivery_note');
+            return;
+        }
+
+        // Get current delivery data
+        $current_data = $this->db->get_where('delivery_note', ['iddelivery_note' => $id])->row();
+        if (!$current_data) {
+            $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
+            redirect('delivery_note');
+            return;
+        }
+
+        // Get last log entry for description
+        $this->db->where('iddelivery_note', $id);
+        $this->db->order_by('created_date', 'DESC');
+        $last_log = $this->db->get('delivery_note_log')->row();
+        $last_description = $last_log ? $last_log->description : '';
+        $last_progress = $last_log ? $last_log->progress : 1;
+
+        // Prepare update data
+        $delivery_data = [
+            'updated_by' => $username,
+            'updated_date' => $now
+        ];
+
+        // Handle no_manual update
+        if (!empty($no_manual)) {
+            $delivery_data['no_manual'] = $no_manual;
+        } else {
+            $delivery_data['no_manual'] = $current_data->no_manual;
+        }
+
+        // Handle file upload
+        if (!empty($_FILES['foto']['name'])) {
+            $config['upload_path'] = './assets/image/surat_jalan/';
+            $config['allowed_types'] = 'jpg|jpeg|png';
+            $config['max_size'] = 2048;
+            $config['file_name'] = 'SJ_' . time();
+
+            $this->upload->initialize($config);
+
+            if (!$this->upload->do_upload('foto')) {
+                $this->session->set_flashdata('error', $this->upload->display_errors());
+                redirect('delivery_note');
+                return;
+            }
+
+            $upload_data = $this->upload->data();
+            $delivery_data['foto'] = $upload_data['file_name'];
+        } else {
+            $delivery_data['foto'] = $current_data->foto;
+        }
+
+        // Update delivery note
+        $this->db->where('iddelivery_note', $id);
+        $this->db->update('delivery_note', $delivery_data);
+
+        // Create revision log with previous description
+        $log_data = [
+            'iddelivery_note' => $id,
+            'progress' => $last_progress,
+            'description' => $last_description, // Maintain previous description
+            'status' => '1',
+            'status_revision' => '1',
+            'created_by' => $username,
+            'created_date' => $now
+        ];
+
+        $this->db->insert('delivery_note_log', $log_data);
+
+        $this->session->set_flashdata('success', 'Revisi pengiriman berhasil disimpan.');
+        redirect('delivery_note');
+    }
 }

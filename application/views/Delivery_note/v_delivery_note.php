@@ -169,6 +169,88 @@
                     </div>
                 </div>
                 <!-- End -->
+                <!-- Modal Revisi Surat Jalan -->
+                <!-- Modal Revisi Surat Jalan -->
+                <div class="modal fade" id="revisionDeliver" tabindex="-1" aria-labelledby="revisionDeliverLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="revisionDeliverLabel">Revisi Realisasi Pengiriman</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form method="post" enctype="multipart/form-data" action="<?= base_url('Delivery_note/revisionDelivery') ?>">
+                                <input type="hidden" name="id" id="revisionId">
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <!-- Current Data Section -->
+                                            <div class="card mb-3">
+                                                <div class="card-header bg-light">
+                                                    <h6 class="mb-0">Data Saat Ini</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">No Surat Jalan</label>
+                                                        <div class="form-control bg-light" id="currentNoManual"></div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Foto Surat Jalan</label>
+                                                        <div class="text-center border p-2 rounded bg-light">
+                                                            <img id="currentFotoPreview" src="" class="img-fluid" style="max-height: 200px;" oncontextmenu="return false;">
+                                                            <div class="mt-2 text-muted small">Dokumen saat ini</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <!-- Revision Form Section -->
+                                            <div class="card">
+                                                <div class="card-header bg-light">
+                                                    <h6 class="mb-0">Perubahan</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="mb-3">
+                                                        <label for="revisionNo" class="form-label">No Surat Jalan Baru</label>
+                                                        <div class="input-group">
+                                                            <input type="text" class="form-control" id="revisionNo" name="no_manual" placeholder="Isi jika ingin mengubah">
+                                                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#scanBarcodeModal">
+                                                                <i class="fas fa-barcode"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="revisionFoto" class="form-label">Foto Surat Jalan Baru</label>
+                                                        <div class="file-upload-wrapper">
+                                                            <div class="input-group">
+                                                                <input type="file" class="form-control" id="revisionFoto" name="foto" accept="image/*">
+                                                                <button type="button" class="btn btn-outline-secondary" onclick="openPhotoModal()">
+                                                                    <i class="fas fa-camera"></i>
+                                                                </button>
+                                                            </div>
+                                                            <small class="text-muted">Biarkan kosong jika tidak ingin mengubah foto</small>
+                                                        </div>
+                                                        <div id="newFotoPreview" class="mt-3 text-center" style="display: none;">
+                                                            <div class="border p-2 rounded">
+                                                                <img id="newFotoImg" src="#" class="img-fluid" style="max-height: 150px;" oncontextmenu="return false;">
+                                                                <div class="mt-2 text-muted small">Pratinjau dokumen baru</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- End -->
                 <div class="row">
                     <div class="col">
                         <table id="tableproduct" class="display" style="width:100%">
@@ -224,6 +306,9 @@
                                                 <a href="<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>" download class="btn btn-sm btn-outline-secondary">
                                                     <i class="fas fa-download small"></i> Download Surat Jalan
                                                 </a>
+                                                <button type="button" class="btn btn-warning" data-id="<?php echo $dvalue->iddelivery_note; ?>" data-no_manual="<?php echo $dvalue->no_manual; ?>" data-foto="<?php echo $dvalue->foto; ?>" data-bs-toggle="modal" data-bs-target="#revisionDeliver">
+                                                    <i class="fas fa-edit"></i> Revisi
+                                                </button>
                                             <?php } ?>
                                         </td>
                                     </tr>
@@ -379,6 +464,103 @@
                     const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
                     modal.show();
                 }
+
+                // Start Modal Preview Surat Jalan
+                // Handle Revisi button click
+                $(document).on('click', '.btn-warning[data-no_manual]', function() {
+                    const id = $(this).data('id');
+                    const noManual = $(this).data('no_manual');
+                    const foto = $(this).data('foto');
+
+                    // Set values to modal fields
+                    $('#revisionId').val(id);
+                    $('#currentNoManual').text(noManual);
+                    $('#currentFotoPreview').attr('src', '<?= base_url('assets/image/surat_jalan/') ?>' + foto);
+                    $('#revisionNo').val('');
+
+                    // Clear any previous new photo preview
+                    $('#newFotoPreview').hide();
+                    $('#revisionFoto').val('');
+
+                    // Show the revision modal
+                    $('#revisionDeliver').modal('show');
+                });
+
+                // Preview new file when selected
+                $('#revisionFoto').change(function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+
+                        reader.onload = function(e) {
+                            $('#newFotoImg').attr('src', e.target.result);
+                            $('#newFotoPreview').show();
+                        }
+
+                        reader.readAsDataURL(file);
+                    } else {
+                        $('#newFotoPreview').hide();
+                    }
+                });
+
+                // Clear previews when modal is closed
+                $('#revisionDeliver').on('hidden.bs.modal', function() {
+                    $('#existingFotoPreview, #newFotoPreview').remove();
+                });
+                // End
+                // Function to show the image preview modal
+                function showImageModal(src) {
+                    // Set the image source
+                    document.getElementById('modalImage').src = src;
+
+                    // Initialize and show the modal
+                    const previewModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+                    previewModal.show();
+
+                    // Prevent right-click download
+                    document.getElementById('modalImage').oncontextmenu = function(e) {
+                        e.preventDefault();
+                        return false;
+                    };
+                }
+
+                // Close modal when clicking outside the image
+                document.getElementById('imagePreviewModal').addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        const modal = bootstrap.Modal.getInstance(this);
+                        modal.hide();
+                    }
+                });
+
+                // Keyboard controls for the preview modal
+                document.addEventListener('keydown', function(e) {
+                    const previewModal = document.getElementById('imagePreviewModal');
+                    if (previewModal.classList.contains('show')) {
+                        // Close on ESC key
+                        if (e.key === 'Escape') {
+                            const modal = bootstrap.Modal.getInstance(previewModal);
+                            modal.hide();
+                        }
+                    }
+                });
+
+                // Zoom functionality for the image
+                document.getElementById('modalImage').addEventListener('click', function(e) {
+                    if (this.style.transform === 'scale(1.5)') {
+                        this.style.transform = 'scale(1)';
+                        this.style.cursor = 'zoom-in';
+                    } else {
+                        this.style.transform = 'scale(1.5)';
+                        this.style.cursor = 'zoom-out';
+                    }
+                });
+
+                // Reset zoom when modal is hidden
+                document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', function() {
+                    document.getElementById('modalImage').style.transform = 'scale(1)';
+                    document.getElementById('modalImage').style.cursor = 'zoom-in';
+                });
+                // End
             </script>
             </body>
 
