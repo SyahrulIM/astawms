@@ -338,6 +338,9 @@
                 $(document).ready(function() {
                     new DataTable('#tableproduct', {
                         responsive: true,
+                        order: [
+                            [2, 'asc']
+                        ], // Column index 2 = Tanggal Kirim, sorted ascending
                         layout: {
                             bottomEnd: {
                                 paging: {
