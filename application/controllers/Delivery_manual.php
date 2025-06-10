@@ -126,9 +126,13 @@ class Delivery_manual extends CI_Controller
         $this->db->insert('delivery_note_log', $data_log);
 
         // WhatsApp API
+        $this->db->select('user.handphone');
+        $this->db->where('user.idrole', 1);
+        $this->db->where('user.handphone IS NOT NULL');
+        $target = $this->db->get('user')->row()->handphone;
+
         $token = 'EyuhsmTqzeKaDknoxdxt';
-        $target = '085156340619';
-        $message = 'Surat Jalan dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
+        $message = 'Surat Jalan Manual dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
 
         $curl = curl_init();
         curl_setopt_array($curl, array(

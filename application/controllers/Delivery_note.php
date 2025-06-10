@@ -270,7 +270,6 @@ class Delivery_note extends CI_Controller
         $target = $this->db->get('user')->row()->handphone;
 
         $token = 'EyuhsmTqzeKaDknoxdxt';
-        // $target = '085156340619';
         $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' Sudah divalidasi dan sekarang membutuhkan Final Dir dari superadmin di WMS. Mohon segera diproses, terima kasih.';
 
         $curl = curl_init();
