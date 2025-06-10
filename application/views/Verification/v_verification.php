@@ -89,28 +89,53 @@
 
     <!-- Verification Modal -->
     <div class="modal fade" id="verifikasiModal" tabindex="-1" aria-labelledby="verifikasiModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="verifikasiModalLabel">Konfirmasi Verifikasi</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Apakah Anda yakin ingin memverifikasi transaksi ini?</p>
+                    <!-- Transaction Information -->
+                    <div>
+                        <h6>Informasi Transaksi</h6>
+                        <div class="row mb-2">
+                            <div class="col">
+                                <div>Tipe Transaksi:</div>
+                                <div id="modalTipeTransaksi"></div>
+                            </div>
+                            <div class="col">
+                                <div>Kode Transaksi:</div>
+                                <div id="modalKodeTransaksi"></div>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col">
+                                <div>Tanggal Distribusi:</div>
+                                <div id="modalTanggalDistribusi"></div>
+                            </div>
+                            <div class="col">
+                                <div>User Penginput:</div>
+                                <div id="modalUserPenginput"></div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Tabel Detail Stok -->
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>SKU</th>
-                                <th>Nama Produk</th>
-                                <th>Jumlah</th>
-                            </tr>
-                        </thead>
-                        <tbody id="detailStockTable">
-                            <!-- Data detail stok akan ditambahkan di sini dengan JavaScript -->
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Nama Produk</th>
+                                    <th>Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailStockTable">
+                                <!-- Data detail stok akan ditambahkan di sini dengan JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" id="rejectVerifikasi">Reject</button>
@@ -148,20 +173,22 @@
                 selectedTransactionCode = $(this).data('id');
                 selectedTransactionType = $(this).data('tipe');
 
-                console.log('Selected Code:', selectedTransactionCode);
-                console.log('Selected Type:', selectedTransactionType);
+                // Get the row data
+                let row = $(this).closest('tr');
+                let distributionDate = row.find('td:eq(4)').text();
+                let userInput = row.find('td:eq(5)').text();
 
-                if (!selectedTransactionCode || !selectedTransactionType) {
-                    console.error('Transaction code or type is missing');
-                    return;
-                }
+                // Set the modal information
+                $('#modalTipeTransaksi').text(selectedTransactionType.charAt(0).toUpperCase() + selectedTransactionType.slice(1));
+                $('#modalKodeTransaksi').text(selectedTransactionCode);
+                $('#modalTanggalDistribusi').text(distributionDate);
+                $('#modalUserPenginput').text(userInput);
 
                 $.ajax({
                     url: '<?= base_url('verification/get_details/') ?>' + selectedTransactionType + '/' + selectedTransactionCode,
                     type: 'GET',
                     dataType: 'json',
                     success: function(response) {
-                        console.log('AJAX Response:', response);
                         $('#detailStockTable').empty();
                         if (response.details) {
                             response.details.forEach(function(detail) {
