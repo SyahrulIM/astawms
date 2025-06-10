@@ -236,7 +236,7 @@
                             }
                         },
                         order: [
-                            [8, 'dsc']
+                            [9, 'dsc']
                         ] // Index kolom 'created_date', ganti sesuai urutan sebenarnya
                     });
                 });
