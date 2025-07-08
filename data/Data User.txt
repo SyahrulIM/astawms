@@ -33,6 +33,13 @@ FTP Username: it@wms.astahomeware.com
 FTP server: ftp.astahomeware.com
 FTP & explicit FTPS port:  21
 
+FTP acol.astahomeware.com
+User: it@acol.astahomeware.com
+Pass: astawms=d17d09
+FTP Username: it@acol.astahomeware.com
+FTP server: ftp.astahomeware.com
+FTP & explicit FTPS port:  21
+
 Database wms.astahomeware.com:
 hostname = 103.163.138.82
 username = astahome_it,
