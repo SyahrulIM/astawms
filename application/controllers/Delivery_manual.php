@@ -126,31 +126,38 @@ class Delivery_manual extends CI_Controller
         $this->db->insert('delivery_note_log', $data_log);
 
         // WhatsApp API
-        $this->db->select('user.handphone');
-        $this->db->where('user.idrole', 1);
-        $this->db->where('user.handphone IS NOT NULL');
-        $target = $this->db->get('user')->row()->handphone;
+        $this->db->select('handphone');
+        $this->db->from('user');
+        $this->db->where('idrole', 1);
+        $this->db->where('handphone IS NOT NULL');
+        $query = $this->db->get();
+        $results = $query->result();
 
-        $token = 'EyuhsmTqzeKaDknoxdxt';
-        $message = 'Surat Jalan Manual dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
+        $targets = array_column($results, 'handphone');
+        $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://api.fonnte.com/send',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => array(
-                'target' => $target,
-                'message' => $message,
-                'countryCode' => '62',
-            ),
-            CURLOPT_HTTPHEADER => array(
-                'Authorization: ' . $token
-            ),
-        ));
-        $response = curl_exec($curl);
-        curl_close($curl);
-        echo $response;
+        if ($target !== '') {
+            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $message = 'Surat Jalan Manual dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
+
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $target,
+                    'message' => $message,
+                    'countryCode' => '62',
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization: ' . $token
+                ),
+            ));
+            $response = curl_exec($curl);
+            curl_close($curl);
+            echo $response;
+        }
 
         $this->session->set_flashdata('success', 'Realisasi pengiriman berhasil ditambahkan.');
         redirect('delivery_manual');

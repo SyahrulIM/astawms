@@ -1,9 +1,11 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
+
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+
 class Barangmasuk extends CI_Controller
 {
     public function __construct()
@@ -80,33 +82,42 @@ class Barangmasuk extends CI_Controller
         }
 
         // WhatsApp API
-        $this->db->select('user.handphone');
-        $this->db->where('user.idrole', 1);
-        $this->db->where('user.handphone IS NOT NULL');
-        $target = $this->db->get('user')->row()->handphone;
+        $this->db->select('handphone');
+        $this->db->from('user');
+        $this->db->where('idrole', 1);
+        $this->db->where('handphone IS NOT NULL');
+        $query = $this->db->get();
+        $results = $query->result();
 
-        $token = 'EyuhsmTqzeKaDknoxdxt';
-        $message = 'Transaksi barang masuk dengan kode instock ' . $inputInstockCode .
-            (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
-            ' telah dibuat oleh ' . $this->session->userdata('username') .
-            '. Super Admin dimohon untuk segera melakukan pengecekan verifikasi transaksi.';
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://api.fonnte.com/send',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => array(
-                'target' => $target,
-                'message' => $message,
-                'countryCode' => '62',
-            ),
-            CURLOPT_HTTPHEADER => array(
-                'Authorization: ' . $token
-            ),
-        ));
-        $response = curl_exec($curl);
-        curl_close($curl);
-        echo $response;
+        $targets = array_column($results, 'handphone');
+        $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
+
+        if ($target !== '') {
+            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $message = 'Transaksi barang masuk dengan kode instock ' . $inputInstockCode .
+                (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
+                ' telah dibuat oleh ' . $this->session->userdata('username') .
+                '. Super Admin dimohon untuk segera melakukan pengecekan verifikasi transaksi.';
+
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $target,
+                    'message' => $message,
+                    'delay' => '2',
+                    'countryCode' => '62',
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization: ' . $token
+                ),
+            ));
+            $response = curl_exec($curl);
+            curl_close($curl);
+            echo $response;
+        }
         // End
 
         redirect('barangmasuk');

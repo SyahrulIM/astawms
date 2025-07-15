@@ -118,33 +118,40 @@ class Delivery_note extends CI_Controller
 
         $this->db->insert('delivery_note_log', $data_log);
 
-        // Kirim pesan WhatsApp via Fonnte
-        $this->db->select('user.handphone');
-        $this->db->where('user.idrole', 6);
-        $this->db->where('user.handphone IS NOT NULL');
-        $target = $this->db->get('user')->row()->handphone;
+        // Start Kirim pesan WhatsApp via Fonnte
+        $this->db->select('handphone');
+        $this->db->from('user');
+        $this->db->where('idrole', 6);
+        $this->db->where('handphone IS NOT NULL');
+        $query = $this->db->get();
+        $results = $query->result();
 
-        $token = 'EyuhsmTqzeKaDknoxdxt';
-        // $target = '085156340619';
-        $message = 'Surat Jalan dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
+        $targets = array_column($results, 'handphone');
+        $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://api.fonnte.com/send',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => array(
-                'target' => $target,
-                'message' => $message,
-                'countryCode' => '62',
-            ),
-            CURLOPT_HTTPHEADER => array(
-                'Authorization: ' . $token
-            ),
-        ));
+        if ($target !== '') {
+            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $message = 'Surat Jalan dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
 
-        curl_exec($curl);
-        curl_close($curl);
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $target,
+                    'message' => $message,
+                    'countryCode' => '62',
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization: ' . $token
+                ),
+            ));
+
+            curl_exec($curl);
+            curl_close($curl);
+        }
+        // End
 
         $this->session->set_flashdata('success', 'Realisasi pengiriman berhasil ditambahkan.');
         redirect('delivery_note');
@@ -190,34 +197,40 @@ class Delivery_note extends CI_Controller
         ];
         $this->db->insert('delivery_note_log', $log);
 
-        // Kirim pesan WhatsApp via Fonnte
-        $this->db->select('user.handphone');
-        $this->db->where('user.idrole', 5);
-        $this->db->where('user.handphone IS NOT NULL');
-        $target = $this->db->get('user')->row()->handphone;
+        // Start Kirim pesan WhatsApp via Fonnte
+        $this->db->select('handphone');
+        $this->db->from('user');
+        $this->db->where('idrole', 5);
+        $this->db->where('handphone IS NOT NULL');
+        $query = $this->db->get();
+        $results = $query->result();
 
-        $token = 'EyuhsmTqzeKaDknoxdxt';
-        // $target = '085156340619';
-        $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' Sudah diverifikasi dan sekarang membutuhkan validasi dari bagian accounting di WMS. Mohon segera diproses, terima kasih.';
+        $targets = array_column($results, 'handphone');
+        $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://api.fonnte.com/send',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => array(
-                'target' => $target,
-                'message' => $message,
-                'countryCode' => '62',
-            ),
-            CURLOPT_HTTPHEADER => array(
-                'Authorization: ' . $token
-            ),
-        ));
+        if ($target !== '') {
+            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' sudah diverifikasi dan sekarang membutuhkan validasi dari bagian accounting di WMS. Mohon segera diproses, terima kasih.';
 
-        curl_exec($curl);
-        curl_close($curl);
-        //End
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $target,
+                    'message' => $message,
+                    'countryCode' => '62',
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization: ' . $token
+                ),
+            ));
+
+            curl_exec($curl);
+            curl_close($curl);
+        }
+        // End
 
         $this->session->set_flashdata('success', 'Progress berhasil ditambahkan.');
         redirect('delivery_note');
@@ -263,33 +276,40 @@ class Delivery_note extends CI_Controller
         ];
         $this->db->insert('delivery_note_log', $log);
 
-        // Kirim pesan WhatsApp via Fonnte
-        $this->db->select('user.handphone');
-        $this->db->where('user.idrole', 1);
-        $this->db->where('user.handphone IS NOT NULL');
-        $target = $this->db->get('user')->row()->handphone;
+        // Start Kirim pesan WhatsApp via Fonnte
+        $this->db->select('handphone');
+        $this->db->from('user');
+        $this->db->where('idrole', 1);
+        $this->db->where('handphone IS NOT NULL');
+        $query = $this->db->get();
+        $results = $query->result();
 
-        $token = 'EyuhsmTqzeKaDknoxdxt';
-        $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' Sudah divalidasi dan sekarang membutuhkan Final Dir dari superadmin di WMS. Mohon segera diproses, terima kasih.';
+        $targets = array_column($results, 'handphone');
+        $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://api.fonnte.com/send',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => array(
-                'target' => $target,
-                'message' => $message,
-                'countryCode' => '62',
-            ),
-            CURLOPT_HTTPHEADER => array(
-                'Authorization: ' . $token
-            ),
-        ));
+        if ($target !== '') {
+            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' sudah divalidasi dan sekarang membutuhkan Final Dir dari superadmin di WMS. Mohon segera diproses, terima kasih.';
 
-        curl_exec($curl);
-        curl_close($curl);
-        //End
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $target,
+                    'message' => $message,
+                    'countryCode' => '62',
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization: ' . $token
+                ),
+            ));
+
+            curl_exec($curl);
+            curl_close($curl);
+        }
+        // End
 
         $this->session->set_flashdata('success', 'Validasi pengiriman berhasil.');
         redirect('delivery_note');
