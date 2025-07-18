@@ -89,6 +89,7 @@ class Outstock extends CI_Controller
         $this->db->select('handphone');
         $this->db->from('user');
         $this->db->where('idrole', 3);
+        $this->db->where('is_whatsapp', 1);
         $this->db->where('handphone IS NOT NULL');
         $query = $this->db->get();
         $results = $query->result();

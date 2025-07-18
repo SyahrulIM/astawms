@@ -26,7 +26,7 @@ class User extends CI_Controller
         ];
 
         // echo '<pre>';
-        // print_r($data);
+        // print_r($user);
         // die;
 
         $this->load->view('theme/v_head', $data);
@@ -43,11 +43,20 @@ class User extends CI_Controller
         $password = $this->input->post('inputPassword');
         $idrole = $this->input->post('inputRole');
         $handphone = $this->input->post('inputHandphone');
+        $is_whatsapp = $this->input->post('inputWhatsapp');
 
-        // Cek apakah username sudah dipakai
+        // Cek apakah username sudah dipakai oleh user aktif
         $cekUsername = $this->db->get_where('user', ['username' => $username])->row();
-        if ($cekUsername) {
-            $this->session->set_flashdata('error', 'Username sudah dipakai, silakan gunakan yang lain.');
+        if ($cekUsername && $cekUsername->status == 1) {
+            $this->session->set_flashdata('error', 'Username sudah dipakai oleh user aktif, silakan gunakan yang lain.');
+            redirect('user');
+            return;
+        }
+
+        // Cek apakah email sudah dipakai oleh user aktif
+        $cekEmail = $this->db->get_where('user', ['email' => $email])->row();
+        if ($cekEmail && $cekEmail->status == 1) {
+            $this->session->set_flashdata('error', 'Email sudah dipakai oleh user aktif, silakan gunakan yang lain.');
             redirect('user');
             return;
         }
@@ -76,6 +85,7 @@ class User extends CI_Controller
             'foto' => $foto,
             'idrole' => $idrole,
             'handphone' => $handphone,
+            'is_whatsapp' => $is_whatsapp,
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
             'updated_by' => $this->session->userdata('username'),
@@ -97,6 +107,7 @@ class User extends CI_Controller
         $password = $this->input->post('editPassword');
         $idrole = $this->input->post('editRole');
         $handphone = $this->input->post('editHandphone');
+        $is_whatsapp = $this->input->post('inputWhatsapp');
 
         // Ambil data user lama
         $oldUser = $this->db->get_where('user', ['username' => $username])->row();
@@ -153,6 +164,7 @@ class User extends CI_Controller
             'foto' => $foto,
             'idrole' => $idrole,
             'handphone' => $handphone,
+            'is_whatsapp' => $is_whatsapp,
             'updated_by' => $this->session->userdata('username'),
             'updated_date' => date("Y-m-d H:i:s")
         ];
@@ -167,11 +179,11 @@ class User extends CI_Controller
     public function deleteUser()
     {
         $iduser = $this->input->get('iduser');
-    
+
         if ($iduser != 4) {
             $this->db->where('iduser', $iduser)->set('status', 0)->update('user');
         }
-    
+
         redirect('user');
-    }    
+    }
 }
