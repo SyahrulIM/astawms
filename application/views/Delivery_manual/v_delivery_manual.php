@@ -231,6 +231,25 @@
         </div>
     </div>
     <!-- End -->
+    <!-- Modal Konfirmasi Final -->
+    <div class="modal fade" id="confirmFinalModal" tabindex="-1" aria-labelledby="confirmFinalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Konfirmasi Final DIR</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    Apakah Anda yakin ingin memfinal pengiriman ini?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <a id="confirmFinalBtn" href="#" class="btn btn-primary">Ya, Final</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End -->
     <div class="row">
         <div class="col">
             <table id="tableproduct" class="display" style="width:100%">
@@ -270,23 +289,23 @@
                             </td>
                             <td>
                                 <?php if ($dvalue->progress == 1) { ?>
-                                    <a href="#" class="btn btn-sm btn-primary mb-1" onclick="showConfirmModal('<?php echo site_url('delivery_manual/updateDelivery?id=' . $dvalue->iddelivery_note); ?>')">
+                                    <a href="#" class="btn btn-sm btn-primary mb-1" onclick="showConfirmModal(<?= $dvalue->iddelivery_note ?>)">
                                         <i class="fas fa-check"></i> Verifikasi
                                     </a><br>
                                 <?php } else if ($dvalue->progress == 2) { ?>
-                                    <a href="#" class="btn btn-sm btn-info mb-1" onclick="showValidasiModal('<?php echo site_url('delivery_manual/validasiDelivery?id=' . $dvalue->iddelivery_note); ?>')">
+                                    <a href="#" class="btn btn-sm btn-info mb-1" onclick="showValidasiModal(<?= $dvalue->iddelivery_note ?>)">
                                         <i class="fas fa-check-double"></i> Validasi
                                     </a><br>
                                 <?php } else if ($dvalue->progress == 3) { ?>
-                                    <a href="#" class="btn btn-sm btn-success mb-1" onclick="showValidasiModal('<?php echo site_url('delivery_manual/finalDelivery?id=' . $dvalue->iddelivery_note); ?>')">
+                                    <a href="#" class="btn btn-sm btn-success mb-1" onclick="showFinalModal(<?= $dvalue->iddelivery_note ?>)">
                                         <i class="fas fa-check-double"></i> Final DIR
                                     </a><br>
                                 <?php } ?>
                                 <?php if ($this->session->userdata('idrole') == 1) { ?>
-                                    <a href="<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>" download class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-download small"></i> Download Surat Jalan
+                                    <a href="<?= base_url('assets/image/surat_jalan/' . $dvalue->foto) ?>" download class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-download small"></i> Download
                                     </a>
-                                    <button type="button" class="btn btn-warning" data-id="<?php echo $dvalue->iddelivery_note; ?>" data-no_manual="<?php echo $dvalue->no_manual; ?>" data-foto="<?php echo $dvalue->foto; ?>" data-bs-toggle="modal" data-bs-target="#revisionDeliver">
+                                    <button type="button" class="btn btn-warning" data-id="<?= $dvalue->iddelivery_note ?>" data-no_manual="<?= $dvalue->no_manual ?>" data-foto="<?= $dvalue->foto ?>" data-bs-toggle="modal" data-bs-target="#revisionDeliver">
                                         <i class="fas fa-edit"></i> Revisi
                                     </button>
                                 <?php } ?>
@@ -371,15 +390,146 @@
         });
     });
 
-    function showConfirmModal(link) {
-        $('#confirmVerifikasiBtn').attr('href', link);
-        $('#confirmVerifikasiModal').modal('show');
+    // Toast container for notifications
+    $('body').append('<div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1100;"></div>');
+
+    // Function to update table row
+    function updateTableRow(id) {
+        $.ajax({
+            url: '<?= base_url("Delivery_manual/getDeliveryRow/") ?>' + id,
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                const row = $(`tr:has(td:contains(${response.no_manual}))`).first();
+
+                // Update status column
+                row.find('td:nth-child(7)').html(getStatusBadge(response.progress));
+
+                // Update action column
+                row.find('td:nth-child(8)').html(getActionButtons(response));
+            },
+            error: function(xhr, status, error) {
+                showToast('error', 'Gagal memperbarui data: ' + error);
+            }
+        });
     }
 
-    function showValidasiModal(link) {
-        $('#confirmValidasiBtn').attr('href', link);
-        $('#confirmValidasiModal').modal('show');
+    // Helper functions
+    function getStatusBadge(progress) {
+        if (progress == 1) return '<span class="badge rounded-pill text-bg-secondary">Dikirim</span>';
+        if (progress == 2) return '<span class="badge rounded-pill text-bg-primary">Terverifikasi(Diterima)</span>';
+        if (progress == 3) return '<span class="badge rounded-pill text-bg-info">Tervalidasi(Terdata)</span>';
+        if (progress == 4) return '<span class="badge rounded-pill text-bg-success">Final Direksi</span>';
+        return '<span class="badge rounded-pill text-bg-warning">Unknown</span>';
     }
+
+    function getActionButtons(data) {
+        let buttons = '';
+
+        if (data.progress == 1) {
+            buttons += `<a href="#" class="btn btn-sm btn-primary mb-1" onclick="showConfirmModal(${data.iddelivery_note})">
+            <i class="fas fa-check"></i> Verifikasi
+        </a><br>`;
+        } else if (data.progress == 2) {
+            buttons += `<a href="#" class="btn btn-sm btn-info mb-1" onclick="showValidasiModal(${data.iddelivery_note})">
+            <i class="fas fa-check-double"></i> Validasi
+        </a><br>`;
+        } else if (data.progress == 3) {
+            buttons += `<a href="#" class="btn btn-sm btn-success mb-1" onclick="showFinalModal(${data.iddelivery_note})">
+            <i class="fas fa-check-double"></i> Final DIR
+        </a><br>`;
+        }
+
+        if (<?= $this->session->userdata('idrole') == 1 ? 'true' : 'false' ?>) {
+            buttons += `<a href="<?= base_url('assets/image/surat_jalan/') ?>${data.foto}" download class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-download small"></i> Download
+        </a>
+        <button type="button" class="btn btn-warning" data-id="${data.iddelivery_note}" data-no_manual="${data.no_manual}" data-foto="${data.foto}" data-bs-toggle="modal" data-bs-target="#revisionDeliver">
+            <i class="fas fa-edit"></i> Revisi
+        </button>`;
+        }
+
+        return buttons;
+    }
+
+    function showToast(type, message) {
+        const toast = `<div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>`;
+
+        $('#toastContainer').append(toast);
+        $('.toast').toast('show');
+
+        setTimeout(() => {
+            $('.toast').toast('hide').remove();
+        }, 5000);
+    }
+
+    // Modal functions
+    window.showConfirmModal = function(id) {
+        $('#confirmVerifikasiBtn').off('click').on('click', function() {
+            $.get('<?= site_url('delivery_manual/updateDelivery?id=') ?>' + id, function(response) {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+
+                if (result.status === 'success') {
+                    $('#confirmVerifikasiModal').modal('hide');
+                    updateTableRow(id);
+                    showToast('success', result.message);
+                } else {
+                    showToast(result.status, result.message);
+                }
+            });
+        });
+        $('#confirmVerifikasiModal').modal('show');
+    };
+
+    window.showValidasiModal = function(id) {
+        $('#confirmValidasiBtn').off('click').on('click', function() {
+            $.get('<?= site_url('delivery_manual/validasiDelivery?id=') ?>' + id, function(response) {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+
+                if (result.status === 'success') {
+                    $('#confirmValidasiModal').modal('hide');
+                    updateTableRow(id);
+                    showToast('success', result.message);
+                } else {
+                    showToast(result.status, result.message);
+                }
+            });
+        });
+        $('#confirmValidasiModal').modal('show');
+    };
+
+    window.showFinalModal = function(id) {
+        $('#confirmFinalBtn').off('click').on('click', function() {
+            $.get('<?= site_url('delivery_manual/finalDelivery?id=') ?>' + id, function(response) {
+                const result = typeof response === 'string' ? JSON.parse(response) : response;
+
+                if (result.status === 'success') {
+                    $('#confirmFinalModal').modal('hide');
+                    updateTableRow(id); // Update the specific row
+                    showToast('success', result.message);
+                } else {
+                    showToast(result.status, result.message);
+                }
+            }).fail(function(xhr, status, error) {
+                showToast('error', 'Error: ' + error);
+            });
+        });
+        $('#confirmFinalModal').modal('show');
+    };
+
+    // Add this AJAX function to get delivery row data
+    $.fn.dataTable.Api.register('getDeliveryRow()', function(id) {
+        return $.ajax({
+            url: '<?= base_url("Delivery_manual/getDeliveryRow/") ?>' + id,
+            type: 'GET',
+            dataType: 'json'
+        });
+    });
 
     let html5QrcodeScanner;
 
@@ -400,9 +550,7 @@
                         $('#scanBarcodeModal').modal('hide'); // Tutup hanya barcode modal
                         $('#inputNo').focus(); // Optional: fokus ke inputNo
                     },
-                    errorMessage => {
-                        // Bisa diabaikan atau ditampilkan
-                    }
+                    errorMessage => {}
                 );
             }
         }).catch(err => {

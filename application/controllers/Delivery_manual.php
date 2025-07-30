@@ -44,6 +44,7 @@ class Delivery_manual extends CI_Controller
         );
         $this->db->where('delivery_note.status', 1);
         $this->db->where('delivery_note.kategori', 2);
+        $this->db->order_by('delivery_note.send_date', 'DESC');
         $delivery = $this->db->get('delivery_note')->result();
 
         $data = [
@@ -172,8 +173,7 @@ class Delivery_manual extends CI_Controller
         $now = date("Y-m-d H:i:s");
 
         if (!$id) {
-            $this->session->set_flashdata('error', 'ID pengiriman tidak ditemukan.');
-            redirect('delivery_manual');
+            echo json_encode(['status' => 'error', 'message' => 'ID pengiriman tidak ditemukan.']);
             return;
         }
 
@@ -183,8 +183,7 @@ class Delivery_manual extends CI_Controller
         ])->row();
 
         if (!$cek) {
-            $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
-            redirect('delivery_manual');
+            echo json_encode(['status' => 'error', 'message' => 'Data pengiriman tidak ditemukan.']);
             return;
         }
 
@@ -194,8 +193,7 @@ class Delivery_manual extends CI_Controller
         ])->num_rows();
 
         if ($exists > 0) {
-            $this->session->set_flashdata('warning', 'Progress 2 sudah pernah ditambahkan sebelumnya.');
-            redirect('delivery_manual');
+            echo json_encode(['status' => 'warning', 'message' => 'Progress 2 sudah pernah ditambahkan sebelumnya.']);
             return;
         }
 
@@ -209,8 +207,44 @@ class Delivery_manual extends CI_Controller
         ];
         $this->db->insert('delivery_note_log', $log);
 
-        $this->session->set_flashdata('success', 'Progress berhasil ditambahkan.');
-        redirect('delivery_manual');
+        // Start Kirim pesan WhatsApp via Fonnte
+        $this->db->select('handphone');
+        $this->db->from('user');
+        $this->db->where('idrole', 5);
+        $this->db->where('is_whatsapp', 1);
+        $this->db->where('status', 1);
+        $this->db->where('handphone IS NOT NULL');
+        $query = $this->db->get();
+        $results = $query->result();
+
+        $targets = array_column($results, 'handphone');
+        $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
+
+        if ($target !== '') {
+            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' sudah diverifikasi dan sekarang membutuhkan validasi dari bagian accounting di WMS. Mohon segera diproses, terima kasih.';
+
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $target,
+                    'message' => $message,
+                    'countryCode' => '62',
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization: ' . $token
+                ),
+            ));
+
+            curl_exec($curl);
+            curl_close($curl);
+        }
+        // End
+
+        echo json_encode(['status' => 'success', 'message' => 'Progress berhasil ditambahkan.']);
     }
 
     public function validasiDelivery()
@@ -220,8 +254,7 @@ class Delivery_manual extends CI_Controller
         $now = date("Y-m-d H:i:s");
 
         if (!$id) {
-            $this->session->set_flashdata('error', 'ID pengiriman tidak ditemukan.');
-            redirect('delivery_manual');
+            echo json_encode(['status' => 'error', 'message' => 'ID pengiriman tidak ditemukan.']);
             return;
         }
 
@@ -231,8 +264,7 @@ class Delivery_manual extends CI_Controller
         ])->row();
 
         if (!$cek) {
-            $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
-            redirect('delivery_manual');
+            echo json_encode(['status' => 'error', 'message' => 'Data pengiriman tidak ditemukan.']);
             return;
         }
 
@@ -242,8 +274,7 @@ class Delivery_manual extends CI_Controller
         ])->num_rows();
 
         if ($exists > 0) {
-            $this->session->set_flashdata('warning', 'Progress 3 sudah pernah ditambahkan sebelumnya.');
-            redirect('delivery_manual');
+            echo json_encode(['status' => 'warning', 'message' => 'Progress 3 sudah pernah ditambahkan sebelumnya.']);
             return;
         }
 
@@ -257,8 +288,44 @@ class Delivery_manual extends CI_Controller
         ];
         $this->db->insert('delivery_note_log', $log);
 
-        $this->session->set_flashdata('success', 'Validasi pengiriman berhasil.');
-        redirect('delivery_manual');
+        // Start Kirim pesan WhatsApp via Fonnte
+        $this->db->select('handphone');
+        $this->db->from('user');
+        $this->db->where('idrole', 1);
+        $this->db->where('is_whatsapp', 1);
+        $this->db->where('status', 1);
+        $this->db->where('handphone IS NOT NULL');
+        $query = $this->db->get();
+        $results = $query->result();
+
+        $targets = array_column($results, 'handphone');
+        $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
+
+        if ($target !== '') {
+            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' sudah divalidasi dan sekarang membutuhkan Final Dir dari superadmin di WMS. Mohon segera diproses, terima kasih.';
+
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $target,
+                    'message' => $message,
+                    'countryCode' => '62',
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization: ' . $token
+                ),
+            ));
+
+            curl_exec($curl);
+            curl_close($curl);
+        }
+        // End
+
+        echo json_encode(['status' => 'success', 'message' => 'Validasi pengiriman berhasil.']);
     }
 
     public function finalDelivery()
@@ -268,19 +335,17 @@ class Delivery_manual extends CI_Controller
         $now = date("Y-m-d H:i:s");
 
         if (!$id) {
-            $this->session->set_flashdata('error', 'ID pengiriman tidak ditemukan.');
-            redirect('delivery_manual');
+            echo json_encode(['status' => 'error', 'message' => 'ID pengiriman tidak ditemukan.']);
             return;
         }
 
         $cek = $this->db->get_where('delivery_note', [
             'iddelivery_note' => $id,
-            'kategori' => 2
+            'kategori' => 2 // Ensure this is for manual deliveries
         ])->row();
 
         if (!$cek) {
-            $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
-            redirect('delivery_manual');
+            echo json_encode(['status' => 'error', 'message' => 'Data pengiriman tidak ditemukan.']);
             return;
         }
 
@@ -290,8 +355,7 @@ class Delivery_manual extends CI_Controller
         ])->num_rows();
 
         if ($exists > 0) {
-            $this->session->set_flashdata('warning', 'Progress 4 sudah pernah ditambahkan sebelumnya.');
-            redirect('delivery_manual');
+            echo json_encode(['status' => 'warning', 'message' => 'Progress 4 sudah pernah ditambahkan sebelumnya.']);
             return;
         }
 
@@ -305,8 +369,7 @@ class Delivery_manual extends CI_Controller
         ];
         $this->db->insert('delivery_note_log', $log);
 
-        $this->session->set_flashdata('success', 'Finalisasi pengiriman berhasil.');
-        redirect('delivery_manual');
+        echo json_encode(['status' => 'success', 'message' => 'Finalisasi pengiriman berhasil.']);
     }
 
     public function revisionDelivery()
@@ -392,5 +455,34 @@ class Delivery_manual extends CI_Controller
 
         $this->session->set_flashdata('success', 'Revisi pengiriman berhasil disimpan.');
         redirect('delivery_manual');
+    }
+
+    public function getDeliveryRow($id)
+    {
+        $this->db->select('
+        delivery_note.iddelivery_note,
+        delivery_note.no_manual,
+        delivery_note.send_date,
+        user_input.full_name as user_input,
+        delivery_note.created_date,
+        delivery_note_log.progress,
+        delivery_note.foto
+    ');
+        $this->db->join('user as user_input', 'user_input.iduser = delivery_note.iduser', 'left');
+        $this->db->join(
+            '(SELECT t1.* FROM delivery_note_log t1
+          JOIN (
+            SELECT iddelivery_note, MAX(created_date) as max_date
+            FROM delivery_note_log
+            GROUP BY iddelivery_note
+          ) t2 ON t1.iddelivery_note = t2.iddelivery_note AND t1.created_date = t2.max_date
+        ) delivery_note_log',
+            'delivery_note_log.iddelivery_note = delivery_note.iddelivery_note',
+            'left'
+        );
+        $this->db->where('delivery_note.iddelivery_note', $id);
+        $result = $this->db->get('delivery_note')->row();
+
+        echo json_encode($result);
     }
 }

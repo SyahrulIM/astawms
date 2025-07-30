@@ -6,11 +6,9 @@ class User extends CI_Controller
     public function __construct()
     {
         parent::__construct();
-        // Check if the user is logged in
         if (!$this->session->userdata('logged_in')) {
-            // Redirect to login with a message
             $this->session->set_flashdata('error', 'Eeettss gak boleh nakal, Login dulu ya kak hehe.');
-            redirect('auth');  // Assuming 'auth' is your login controller
+            redirect('auth');
         }
     }
 
@@ -24,10 +22,6 @@ class User extends CI_Controller
             'role' => $role,
             'user' => $user,
         ];
-
-        // echo '<pre>';
-        // print_r($user);
-        // die;
 
         $this->load->view('theme/v_head', $data);
         $this->load->view('User/v_user');
@@ -45,7 +39,6 @@ class User extends CI_Controller
         $handphone = $this->input->post('inputHandphone');
         $is_whatsapp = $this->input->post('inputWhatsapp');
 
-        // Cek apakah username sudah dipakai oleh user aktif
         $cekUsername = $this->db->get_where('user', ['username' => $username])->row();
         if ($cekUsername && $cekUsername->status == 1) {
             $this->session->set_flashdata('error', 'Username sudah dipakai oleh user aktif, silakan gunakan yang lain.');
@@ -53,7 +46,6 @@ class User extends CI_Controller
             return;
         }
 
-        // Cek apakah email sudah dipakai oleh user aktif
         $cekEmail = $this->db->get_where('user', ['email' => $email])->row();
         if ($cekEmail && $cekEmail->status == 1) {
             $this->session->set_flashdata('error', 'Email sudah dipakai oleh user aktif, silakan gunakan yang lain.');
@@ -122,10 +114,11 @@ class User extends CI_Controller
         $cekUsername = $this->db
             ->where('username', $username)
             ->where('iduser !=', $userId)
+            ->where('status', 1) // hanya cek ke user yang aktif
             ->get('user')
             ->row();
         if ($cekUsername) {
-            $this->session->set_flashdata('error', 'Username sudah dipakai oleh user lain.');
+            $this->session->set_flashdata('error', 'Username sudah dipakai oleh user aktif lain.');
             redirect('user');
             return;
         }

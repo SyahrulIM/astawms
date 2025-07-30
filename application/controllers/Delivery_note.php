@@ -43,7 +43,8 @@ class Delivery_note extends CI_Controller
             'left'
         );
         $this->db->where('delivery_note.status', 1);
-        $this->db->where('delivery_note.kategori', 1); // filter kategori 1
+        $this->db->where('delivery_note.kategori', 1);
+        $this->db->order_by('delivery_note.send_date', 'DESC');
         $delivery = $this->db->get('delivery_note')->result();
 
         $data = [
@@ -159,6 +160,35 @@ class Delivery_note extends CI_Controller
         redirect('delivery_note');
     }
 
+    public function getDeliveryRow($id)
+    {
+        $this->db->select('
+            delivery_note.iddelivery_note,
+            delivery_note.no_manual,
+            delivery_note.send_date,
+            user_input.full_name as user_input,
+            delivery_note.created_date,
+            delivery_note_log.progress,
+            delivery_note.foto
+        ');
+        $this->db->join('user as user_input', 'user_input.iduser = delivery_note.iduser', 'left');
+        $this->db->join(
+            '(SELECT t1.* FROM delivery_note_log t1
+              JOIN (
+                SELECT iddelivery_note, MAX(created_date) as max_date
+                FROM delivery_note_log
+                GROUP BY iddelivery_note
+              ) t2 ON t1.iddelivery_note = t2.iddelivery_note AND t1.created_date = t2.max_date
+            ) delivery_note_log',
+            'delivery_note_log.iddelivery_note = delivery_note.iddelivery_note',
+            'left'
+        );
+        $this->db->where('delivery_note.iddelivery_note', $id);
+        $result = $this->db->get('delivery_note')->row();
+
+        echo json_encode($result);
+    }
+
     public function updateDelivery()
     {
         $id = $this->input->get('id');
@@ -166,15 +196,13 @@ class Delivery_note extends CI_Controller
         $now = date("Y-m-d H:i:s");
 
         if (!$id) {
-            $this->session->set_flashdata('error', 'ID pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            echo json_encode(['status' => 'error', 'message' => 'ID pengiriman tidak ditemukan.']);
             return;
         }
 
         $cek = $this->db->get_where('delivery_note', ['iddelivery_note' => $id])->row();
         if (!$cek) {
-            $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            echo json_encode(['status' => 'error', 'message' => 'Data pengiriman tidak ditemukan.']);
             return;
         }
 
@@ -184,8 +212,7 @@ class Delivery_note extends CI_Controller
         ])->num_rows();
 
         if ($exists > 0) {
-            $this->session->set_flashdata('warning', 'Progress 2 sudah pernah ditambahkan sebelumnya.');
-            redirect('delivery_note');
+            echo json_encode(['status' => 'warning', 'message' => 'Progress 2 sudah pernah ditambahkan sebelumnya.']);
             return;
         }
 
@@ -236,8 +263,7 @@ class Delivery_note extends CI_Controller
         }
         // End
 
-        $this->session->set_flashdata('success', 'Progress berhasil ditambahkan.');
-        redirect('delivery_note');
+        echo json_encode(['status' => 'success', 'message' => 'Progress berhasil ditambahkan.']);
     }
 
     public function validasiDelivery()
@@ -247,15 +273,13 @@ class Delivery_note extends CI_Controller
         $now = date("Y-m-d H:i:s");
 
         if (!$id) {
-            $this->session->set_flashdata('error', 'ID pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            echo json_encode(['status' => 'error', 'message' => 'ID pengiriman tidak ditemukan.']);
             return;
         }
 
         $cek = $this->db->get_where('delivery_note', ['iddelivery_note' => $id])->row();
         if (!$cek) {
-            $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            echo json_encode(['status' => 'error', 'message' => 'Data pengiriman tidak ditemukan.']);
             return;
         }
 
@@ -265,8 +289,7 @@ class Delivery_note extends CI_Controller
         ])->num_rows();
 
         if ($exists > 0) {
-            $this->session->set_flashdata('warning', 'Progress 3 sudah pernah ditambahkan sebelumnya.');
-            redirect('delivery_note');
+            echo json_encode(['status' => 'warning', 'message' => 'Progress 3 sudah pernah ditambahkan sebelumnya.']);
             return;
         }
 
@@ -317,8 +340,7 @@ class Delivery_note extends CI_Controller
         }
         // End
 
-        $this->session->set_flashdata('success', 'Validasi pengiriman berhasil.');
-        redirect('delivery_note');
+        echo json_encode(['status' => 'success', 'message' => 'Validasi pengiriman berhasil.']);
     }
 
     public function finalDelivery()
@@ -328,15 +350,13 @@ class Delivery_note extends CI_Controller
         $now = date("Y-m-d H:i:s");
 
         if (!$id) {
-            $this->session->set_flashdata('error', 'ID pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            echo json_encode(['status' => 'error', 'message' => 'ID pengiriman tidak ditemukan.']);
             return;
         }
 
         $cek = $this->db->get_where('delivery_note', ['iddelivery_note' => $id])->row();
         if (!$cek) {
-            $this->session->set_flashdata('error', 'Data pengiriman tidak ditemukan.');
-            redirect('delivery_note');
+            echo json_encode(['status' => 'error', 'message' => 'Data pengiriman tidak ditemukan.']);
             return;
         }
 
@@ -346,8 +366,7 @@ class Delivery_note extends CI_Controller
         ])->num_rows();
 
         if ($exists > 0) {
-            $this->session->set_flashdata('warning', 'Progress 4 sudah pernah ditambahkan sebelumnya.');
-            redirect('delivery_note');
+            echo json_encode(['status' => 'warning', 'message' => 'Progress 4 sudah pernah ditambahkan sebelumnya.']);
             return;
         }
 
@@ -361,8 +380,7 @@ class Delivery_note extends CI_Controller
         ];
         $this->db->insert('delivery_note_log', $log);
 
-        $this->session->set_flashdata('success', 'Pengiriman berhasil diselesaikan.');
-        redirect('delivery_note');
+        echo json_encode(['status' => 'success', 'message' => 'Pengiriman berhasil diselesaikan.']);
     }
 
     public function revisionDelivery()
