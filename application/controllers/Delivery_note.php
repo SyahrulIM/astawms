@@ -467,4 +467,12 @@ class Delivery_note extends CI_Controller
         $this->session->set_flashdata('success', 'Revisi pengiriman berhasil disimpan.');
         redirect('delivery_note');
     }
+
+    public function deleteDelivery()
+    {
+        $this->db->set('status',0);
+        $this->db->where('iddelivery_note', $this->input->get('id'));
+        $this->db->update('delivery_note');
+        redirect('delivery_note');
+    }
 }

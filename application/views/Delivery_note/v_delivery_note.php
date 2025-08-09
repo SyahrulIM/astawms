@@ -170,7 +170,6 @@
                 </div>
                 <!-- End -->
                 <!-- Modal Revisi Surat Jalan -->
-                <!-- Modal Revisi Surat Jalan -->
                 <div class="modal fade" id="revisionDeliver" tabindex="-1" aria-labelledby="revisionDeliverLabel" aria-hidden="true">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
@@ -251,6 +250,25 @@
                     </div>
                 </div>
                 <!-- End -->
+                <!-- Modal konfirmasi delete-->
+                <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="deleteModalLabel">Konfirmasi Hapus</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                            </div>
+                            <div class="modal-body">
+                                Apakah kamu yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                                <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Hapus</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End -->
                 <div class="row">
                     <div class="col">
                         <table id="tableproduct" class="display" style="width:100%">
@@ -308,6 +326,9 @@
                                                 </a>
                                                 <button type="button" class="btn btn-warning" data-id="<?= $dvalue->iddelivery_note ?>" data-no_manual="<?= $dvalue->no_manual ?>" data-foto="<?= $dvalue->foto ?>" data-bs-toggle="modal" data-bs-target="#revisionDeliver">
                                                     <i class="fas fa-edit"></i> Revisi
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-delete" data-id="<?= $dvalue->iddelivery_note ?>" data-toggle="modal" data-target="#deleteModal">
+                                                    <i class="fas fa-trash"></i> Delete
                                                 </button>
                                             <?php } ?>
                                         </td>
@@ -731,6 +752,27 @@
                 document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', function() {
                     document.getElementById('modalImage').style.transform = 'scale(1)';
                     document.getElementById('modalImage').style.cursor = 'zoom-in';
+                });
+                // End
+                // Modal konfrim delete
+                document.addEventListener('click', function(e) {
+                    if (e.target.closest('.btn-delete')) {
+                        let btn = e.target.closest('.btn-delete');
+                        let id = btn.getAttribute('data-id');
+                        let deleteUrl = "<?= base_url('delivery_note/deleteDelivery?id=') ?>" + id;
+                        document.getElementById('confirmDeleteBtn').setAttribute('href', deleteUrl);
+
+                        // Tampilkan modal secara manual
+                        let modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                        modal.show();
+                    }
+                });
+
+
+                $(document).on('click', '.btn-delete', function() {
+                    let id = $(this).data('id');
+                    let deleteUrl = "<?= base_url('delivery_note/deleteDelivery?id=') ?>" + id;
+                    $('#confirmDeleteBtn').attr('href', deleteUrl);
                 });
                 // End
             </script>
