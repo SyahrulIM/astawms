@@ -1,6 +1,12 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+
 class Delivery_note extends CI_Controller
 {
     public function __construct()
@@ -470,9 +476,100 @@ class Delivery_note extends CI_Controller
 
     public function deleteDelivery()
     {
-        $this->db->set('status',0);
+        $this->db->set('status', 0);
         $this->db->where('iddelivery_note', $this->input->get('id'));
         $this->db->update('delivery_note');
         redirect('delivery_note');
+    }
+
+    public function exportExcel()
+    {
+        $filterInputStart = $this->input->post('filterInputStart');
+        $filterInputEnd   = $this->input->post('filterInputEnd');
+
+        $this->db->select('
+            delivery_note.iddelivery_note,
+            delivery_note.no_manual,
+            delivery_note.send_date,
+            user_input.full_name as user_input,
+            delivery_note.created_date,
+            delivery_note_log.progress,
+            delivery_note.foto
+        ');
+        $this->db->join('user as user_input', 'user_input.iduser = delivery_note.iduser', 'left');
+        $this->db->join(
+            '(SELECT t1.* FROM delivery_note_log t1
+              JOIN (
+                SELECT iddelivery_note, MAX(created_date) as max_date
+                FROM delivery_note_log
+                GROUP BY iddelivery_note
+              ) t2 ON t1.iddelivery_note = t2.iddelivery_note AND t1.created_date = t2.max_date
+            ) delivery_note_log',
+            'delivery_note_log.iddelivery_note = delivery_note.iddelivery_note',
+            'left'
+        );
+        $this->db->where('delivery_note.status', 1);
+        $this->db->where('delivery_note.kategori', 1);
+
+        // Filter berdasarkan input tanggal
+        if (!empty($filterInputStart) && !empty($filterInputEnd)) {
+            $this->db->where('DATE(delivery_note.created_date) >=', $filterInputStart);
+            $this->db->where('DATE(delivery_note.created_date) <=', $filterInputEnd);
+        }
+
+        $this->db->order_by('delivery_note.send_date', 'DESC');
+        $delivery = $this->db->get('delivery_note')->result();
+
+        // Buat Excel
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header
+        $sheet->setCellValue('A1', 'No Manual');
+        $sheet->setCellValue('B1', 'Tanggal Kirim');
+        $sheet->setCellValue('C1', 'Input By');
+        $sheet->setCellValue('D1', 'Tanggal Input');
+        $sheet->setCellValue('E1', 'Progress');
+        $sheet->setCellValue('F1', 'Foto');
+
+        $row = 2;
+        foreach ($delivery as $d) {
+            $sheet->setCellValue('A' . $row, $d->no_manual);
+            $sheet->setCellValue('B' . $row, $d->send_date);
+            $sheet->setCellValue('C' . $row, $d->user_input);
+            $sheet->setCellValue('D' . $row, $d->created_date);
+
+            // Convert progress number to text
+            $progressText = '';
+            switch ($d->progress) {
+                case 1:
+                    $progressText = 'Verifikasi Pengiriman';
+                    break;
+                case 2:
+                    $progressText = 'Pengiriman Diproses';
+                    break;
+                case 3:
+                    $progressText = 'Pengiriman Divalidasi';
+                    break;
+                case 4:
+                    $progressText = 'Pengiriman Selesai';
+                    break;
+                default:
+                    $progressText = 'Unknown';
+            }
+
+            $sheet->setCellValue('E' . $row, $progressText);
+            $sheet->setCellValue('F' . $row, $d->foto);
+            $row++;
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'Delivery_Note_' . date('YmdHis') . '.xlsx';
+
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+        exit;
     }
 }

@@ -5,6 +5,30 @@
                         <h1>Realisasi Pengiriman</h1>
                     </div>
                 </div>
+
+                <div class="col">
+                    <form action="<?= base_url('delivery_note/exportExcel') ?>" method="post">
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <strong>Filter</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-1">
+                                    <label for="filterInputStart" class="form-label">Tanggal Input (Start)</label>
+                                    <input type="date" id="filterInputStart" class="form-control" name="filterInputStart">
+                                </div>
+                                <div class="mb-1">
+                                    <label for="filterInputEnd" class="form-label">Tanggal Input (End)</label>
+                                    <input type="date" id="filterInputEnd" class="form-control" name="filterInputEnd">
+                                </div>
+                                <div class="mb-3">
+                                    <button type="submit" class="btn btn-success"><i class="fa-solid fa-print"></i> Print Excel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 <?php if ($this->session->userdata('idrole') != 4) { ?>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDeliver">
                         <i class="fa-solid fa-plus"></i> Tambah Realisasi Pengiriman
@@ -775,6 +799,24 @@
                     $('#confirmDeleteBtn').attr('href', deleteUrl);
                 });
                 // End
+                $.fn.dataTable.ext.search.push(
+                    function(settings, data, dataIndex) {
+                        let start = $('#filterInputStart').val();
+                        let end = $('#filterInputEnd').val();
+                        let tanggalInput = data[2].split(' ')[0]; // Kolom ke-4: "Tanggal Input" (format yyyy-mm-dd)
+
+                        if (!start && !end) return true;
+
+                        if (start && tanggalInput < start) return false;
+                        if (end && tanggalInput > end) return false;
+
+                        return true;
+                    }
+                );
+
+                $('#filterInputStart, #filterInputEnd').on('change', function() {
+                    $('#tableproduct').DataTable().draw();
+                });
             </script>
             </body>
 
