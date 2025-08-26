@@ -57,7 +57,7 @@ Url: wms.astahomeware.com
 User: superadmin@gmail.com
 Pass: astawms=d17d09
 
-Website astahomeware.com
+Website wordpress astahomeware.com
 User: hello@astahomeware.com
 Pass: h3LL0@4sT4#!!
 
@@ -79,7 +79,7 @@ Fonnte
 Account Number: 6282245361511
 Password: vMLPwr
 
-accurate pos:
+Accurate pos:
 @HotDog123
 Pin: 313131
 
@@ -89,6 +89,12 @@ Turbo LT 3 Password : northlt36566
 
 Email astahomeware@gmail.com
 Pass: sta@Mail600!%
+
+PC Remote List:
+
+- PC 18-02-2025
+  ID: 117053943
+  PASS: asta3101
 
 fonnte cronjob
 https://script.google.com/u/0/home/projects/16Ns9hnEzGLp3uwF0dqCgLXsb1H78wNcE88TaKk8XTuz8gGKM7EGBjExH/edit
