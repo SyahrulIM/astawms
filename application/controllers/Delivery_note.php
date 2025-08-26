@@ -520,25 +520,69 @@ class Delivery_note extends CI_Controller
         $this->db->order_by('delivery_note.send_date', 'DESC');
         $delivery = $this->db->get('delivery_note')->result();
 
-        // Buat Excel
+        // Buat spreadsheet
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Header
-        $sheet->setCellValue('A1', 'No Manual');
-        $sheet->setCellValue('B1', 'Tanggal Kirim');
-        $sheet->setCellValue('C1', 'Input By');
-        $sheet->setCellValue('D1', 'Tanggal Input');
-        $sheet->setCellValue('E1', 'Progress');
-        $sheet->setCellValue('F1', 'Foto');
+        // Styling
+        $styleHeader = [
+            'font' => ['bold' => true, 'size' => 16],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ];
 
-        $row = 2;
+        $styleSubHeader = [
+            'font' => ['bold' => true, 'size' => 14],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ];
+
+        $styleTableHeader = [
+            'font' => ['bold' => true],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'f0f0f0']],
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ];
+
+        $styleBorder = [
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]]
+        ];
+
+        $row = 1;
+
+        // Header judul
+        $sheet->mergeCells("A{$row}:H{$row}")->setCellValue("A{$row}", "ASTA HOMEWARE");
+        $sheet->getStyle("A{$row}")->applyFromArray($styleHeader);
+        $row++;
+
+        $sheet->mergeCells("A{$row}:H{$row}")->setCellValue("A{$row}", "LAPORAN REALISASI PENGIRIMAN");
+        $sheet->getStyle("A{$row}")->applyFromArray($styleSubHeader);
+        $row++;
+
+        $periodeText = "Periode: " . ($filterInputStart ?? '-') . " s/d " . ($filterInputEnd ?? '-');
+        $sheet->mergeCells("A{$row}:H{$row}")->setCellValue("A{$row}", $periodeText);
+        $sheet->getStyle("A{$row}")->getFont()->setItalic(true);
+        $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $row += 2;
+
+        // Header tabel
+        $headers = ['No', 'No Surat Jalan', 'Tanggal Kirim', 'Input By', 'Tanggal Input', 'Progress', 'Nama File Foto', 'Foto'];
+        $sheet->fromArray($headers, null, "A{$row}");
+        $sheet->getStyle("A{$row}:H{$row}")->applyFromArray($styleTableHeader);
+
+        // Set column widths
+        $sheet->getColumnDimension('A')->setWidth(5);
+        $sheet->getColumnDimension('B')->setWidth(20);
+        $sheet->getColumnDimension('C')->setWidth(20);
+        $sheet->getColumnDimension('D')->setWidth(20);
+        $sheet->getColumnDimension('E')->setWidth(20);
+        $sheet->getColumnDimension('F')->setWidth(25);
+        $sheet->getColumnDimension('G')->setWidth(25);
+        $sheet->getColumnDimension('H')->setWidth(30);
+
+        $row++;
+
+        // Data
+        $no = 1;
         foreach ($delivery as $d) {
-            $sheet->setCellValue('A' . $row, $d->no_manual);
-            $sheet->setCellValue('B' . $row, $d->send_date);
-            $sheet->setCellValue('C' . $row, $d->user_input);
-            $sheet->setCellValue('D' . $row, $d->created_date);
-
             // Convert progress number to text
             $progressText = '';
             switch ($d->progress) {
@@ -558,17 +602,73 @@ class Delivery_note extends CI_Controller
                     $progressText = 'Unknown';
             }
 
-            $sheet->setCellValue('E' . $row, $progressText);
-            $sheet->setCellValue('F' . $row, $d->foto);
+            // Set data for each row
+            $sheet->setCellValue("A{$row}", $no++);
+            $sheet->setCellValue("B{$row}", $d->no_manual);
+            $sheet->setCellValue("C{$row}", $d->send_date);
+            $sheet->setCellValue("D{$row}", $d->user_input);
+            $sheet->setCellValue("E{$row}", $d->created_date);
+            $sheet->setCellValue("F{$row}", $progressText);
+            $sheet->setCellValue("G{$row}", $d->foto);
+
+            // Insert image if exists
+            if (!empty($d->foto)) {
+                $imagePath = FCPATH . 'assets/image/surat_jalan/' . $d->foto;
+
+                if (file_exists($imagePath)) {
+                    try {
+                        $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                        $drawing->setName('Surat Jalan');
+                        $drawing->setDescription('Surat Jalan');
+                        $drawing->setPath($imagePath);
+                        $drawing->setHeight(100);
+                        $drawing->setWidth(100);
+                        $drawing->setCoordinates("H{$row}");
+                        $drawing->setOffsetX(10);
+                        $drawing->setOffsetY(10);
+                        $drawing->setWorksheet($sheet);
+
+                        // Set row height to accommodate image
+                        $sheet->getRowDimension($row)->setRowHeight(80);
+                    } catch (Exception $e) {
+                        $sheet->setCellValue("H{$row}", 'Gagal memuat gambar: ' . $e->getMessage());
+                    }
+                } else {
+                    $sheet->setCellValue("H{$row}", 'File tidak ditemukan');
+                }
+            } else {
+                $sheet->setCellValue("H{$row}", 'Tidak ada foto');
+            }
+
+            // Apply border to the entire row
+            $sheet->getStyle("A{$row}:H{$row}")->applyFromArray($styleBorder);
             $row++;
         }
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $filename = 'Delivery_Note_' . date('YmdHis') . '.xlsx';
+        // Set alignment for data cells
+        $lastRow = $row - 1;
+        $sheet->getStyle("A6:H{$lastRow}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+        $sheet->getStyle("A6:A{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("F6:F{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        // Set auto filter
+        $sheet->setAutoFilter("A5:H5");
+
+        // Set judul worksheet
+        $sheet->setTitle('Realisasi Pengiriman');
+
+        $filename = 'Realisasi_Pengiriman_' . date('Y-m-d_H-i-s') . '.xlsx';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"{$filename}\"");
         header('Cache-Control: max-age=0');
+        header('Cache-Control: max-age=1');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+        header('Cache-Control: cache, must-revalidate');
+        header('Pragma: public');
+
         $writer->save('php://output');
         exit;
     }
