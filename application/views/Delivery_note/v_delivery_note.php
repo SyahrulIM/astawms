@@ -30,7 +30,7 @@
                 </div>
 
                 <?php if ($this->session->userdata('idrole') != 4) { ?>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDeliver">
+                    <button type="button" class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#addDeliver">
                         <i class="fa-solid fa-plus"></i> Tambah Realisasi Pengiriman
                     </button>
                 <?php } ?>

@@ -5,8 +5,33 @@
             <h1>Realisasi Pengiriman</h1>
         </div>
     </div>
+
+    <!-- Add this after the flash messages section -->
+    <div class="col">
+        <form action="<?= base_url('delivery_manual/exportExcel') ?>" method="post">
+            <div class="card mt-3">
+                <div class="card-header">
+                    <strong>Filter</strong>
+                </div>
+                <div class="card-body">
+                    <div class="mb-1">
+                        <label for="filterInputStart" class="form-label">Tanggal Input (Start)</label>
+                        <input type="date" id="filterInputStart" class="form-control" name="filterInputStart">
+                    </div>
+                    <div class="mb-1">
+                        <label for="filterInputEnd" class="form-label">Tanggal Input (End)</label>
+                        <input type="date" id="filterInputEnd" class="form-control" name="filterInputEnd">
+                    </div>
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-success"><i class="fa-solid fa-print"></i> Print Excel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <?php if ($this->session->userdata('idrole') != 4) { ?>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDeliver">
+        <button type="button" class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#addDeliver">
             <i class="fa-solid fa-plus"></i> Tambah Realisasi Pengiriman
         </button>
     <?php } ?>
@@ -685,6 +710,26 @@
     document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', function() {
         document.getElementById('modalImage').style.transform = 'scale(1)';
         document.getElementById('modalImage').style.cursor = 'zoom-in';
+    });
+
+    // Add this to your existing JavaScript
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            let start = $('#filterInputStart').val();
+            let end = $('#filterInputEnd').val();
+            let tanggalInput = data[4].split(' ')[0]; // Kolom ke-5: "Tanggal Input" (format yyyy-mm-dd)
+
+            if (!start && !end) return true;
+
+            if (start && tanggalInput < start) return false;
+            if (end && tanggalInput > end) return false;
+
+            return true;
+        }
+    );
+
+    $('#filterInputStart, #filterInputEnd').on('change', function() {
+        $('#tableproduct').DataTable().draw();
     });
 </script>
 </body>
