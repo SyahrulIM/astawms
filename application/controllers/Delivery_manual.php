@@ -580,7 +580,7 @@ class Delivery_manual extends CI_Controller
         $sheet->getColumnDimension('E')->setWidth(20);
         $sheet->getColumnDimension('F')->setWidth(25);
         $sheet->getColumnDimension('G')->setWidth(25);
-        $sheet->getColumnDimension('H')->setWidth(30);
+        $sheet->getColumnDimension('H')->setWidth(40); // Increased width for better image display
 
         $row++;
 
@@ -615,25 +615,40 @@ class Delivery_manual extends CI_Controller
             $sheet->setCellValue("F{$row}", $progressText);
             $sheet->setCellValue("G{$row}", $d->foto);
 
-            // Insert image if exists
+            // Insert image if exists - WITH ORIGINAL RESOLUTION
             if (!empty($d->foto)) {
                 $imagePath = FCPATH . 'assets/image/surat_jalan/' . $d->foto;
 
                 if (file_exists($imagePath)) {
                     try {
+                        // Get original image dimensions
+                        list($width, $height) = getimagesize($imagePath);
+
+                        // Calculate aspect ratio for display
+                        $maxDisplayWidth = 400;  // Maximum display width in pixels
+                        $maxDisplayHeight = 300; // Maximum display height in pixels
+
+                        $ratio = min($maxDisplayWidth / $width, $maxDisplayHeight / $height);
+                        $displayWidth = (int)($width * $ratio);
+                        $displayHeight = (int)($height * $ratio);
+
                         $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                         $drawing->setName('Surat Jalan');
                         $drawing->setDescription('Surat Jalan');
                         $drawing->setPath($imagePath);
-                        $drawing->setHeight(100);
-                        $drawing->setWidth(100);
+                        $drawing->setResizeProportional(true); // Maintain aspect ratio
+                        $drawing->setWidth($displayWidth);
+                        $drawing->setHeight($displayHeight);
                         $drawing->setCoordinates("H{$row}");
-                        $drawing->setOffsetX(10);
-                        $drawing->setOffsetY(10);
+                        $drawing->setOffsetX(5);
+                        $drawing->setOffsetY(5);
                         $drawing->setWorksheet($sheet);
 
                         // Set row height to accommodate image
-                        $sheet->getRowDimension($row)->setRowHeight(80);
+                        $sheet->getRowDimension($row)->setRowHeight($displayHeight + 10);
+
+                        // Add a note with the original dimensions
+                        $sheet->getComment("H{$row}")->getText()->createTextRun("Original resolution: {$width}x{$height}px");
                     } catch (Exception $e) {
                         $sheet->setCellValue("H{$row}", 'Gagal memuat gambar: ' . $e->getMessage());
                     }
