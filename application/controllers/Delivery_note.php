@@ -488,23 +488,23 @@ class Delivery_note extends CI_Controller
         $filterInputEnd   = $this->input->post('filterInputEnd');
 
         $this->db->select('
-            delivery_note.iddelivery_note,
-            delivery_note.no_manual,
-            delivery_note.send_date,
-            user_input.full_name as user_input,
-            delivery_note.created_date,
-            delivery_note_log.progress,
-            delivery_note.foto
-        ');
+        delivery_note.iddelivery_note,
+        delivery_note.no_manual,
+        delivery_note.send_date,
+        user_input.full_name as user_input,
+        delivery_note.created_date,
+        delivery_note_log.progress,
+        delivery_note.foto
+    ');
         $this->db->join('user as user_input', 'user_input.iduser = delivery_note.iduser', 'left');
         $this->db->join(
             '(SELECT t1.* FROM delivery_note_log t1
-              JOIN (
-                SELECT iddelivery_note, MAX(created_date) as max_date
-                FROM delivery_note_log
-                GROUP BY iddelivery_note
-              ) t2 ON t1.iddelivery_note = t2.iddelivery_note AND t1.created_date = t2.max_date
-            ) delivery_note_log',
+          JOIN (
+            SELECT iddelivery_note, MAX(created_date) as max_date
+            FROM delivery_note_log
+            GROUP BY iddelivery_note
+          ) t2 ON t1.iddelivery_note = t2.iddelivery_note AND t1.created_date = t2.max_date
+        ) delivery_note_log',
             'delivery_note_log.iddelivery_note = delivery_note.iddelivery_note',
             'left'
         );
@@ -546,27 +546,52 @@ class Delivery_note extends CI_Controller
             'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]]
         ];
 
+        // Style untuk status progress
+        $styleProgress1 = [
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '6C757D']],
+            'font' => ['color' => ['rgb' => 'FFFFFF'], 'bold' => true],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ];
+
+        $styleProgress2 = [
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '0D6EFD']],
+            'font' => ['color' => ['rgb' => 'FFFFFF'], 'bold' => true],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ];
+
+        $styleProgress3 = [
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '0DCAF0']],
+            'font' => ['color' => ['rgb' => '000000'], 'bold' => true],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ];
+
+        $styleProgress4 = [
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '198754']],
+            'font' => ['color' => ['rgb' => 'FFFFFF'], 'bold' => true],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ];
+
         $row = 1;
 
         // Header judul
-        $sheet->mergeCells("A{$row}:H{$row}")->setCellValue("A{$row}", "ASTA HOMEWARE");
+        $sheet->mergeCells("A{$row}:G{$row}")->setCellValue("A{$row}", "ASTA HOMEWARE");
         $sheet->getStyle("A{$row}")->applyFromArray($styleHeader);
         $row++;
 
-        $sheet->mergeCells("A{$row}:H{$row}")->setCellValue("A{$row}", "LAPORAN REALISASI PENGIRIMAN");
+        $sheet->mergeCells("A{$row}:G{$row}")->setCellValue("A{$row}", "LAPORAN REALISASI PENGIRIMAN");
         $sheet->getStyle("A{$row}")->applyFromArray($styleSubHeader);
         $row++;
 
         $periodeText = "Periode: " . ($filterInputStart ?? '-') . " s/d " . ($filterInputEnd ?? '-');
-        $sheet->mergeCells("A{$row}:H{$row}")->setCellValue("A{$row}", $periodeText);
+        $sheet->mergeCells("A{$row}:G{$row}")->setCellValue("A{$row}", $periodeText);
         $sheet->getStyle("A{$row}")->getFont()->setItalic(true);
         $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         $row += 2;
 
         // Header tabel
-        $headers = ['No', 'No Surat Jalan', 'Tanggal Kirim', 'Input By', 'Tanggal Input', 'Progress', 'Nama File Foto', 'Foto'];
+        $headers = ['No', 'No Surat Jalan', 'Tanggal Kirim', 'Input By', 'Tanggal Input', 'Progress', 'Foto'];
         $sheet->fromArray($headers, null, "A{$row}");
-        $sheet->getStyle("A{$row}:H{$row}")->applyFromArray($styleTableHeader);
+        $sheet->getStyle("A{$row}:G{$row}")->applyFromArray($styleTableHeader);
 
         // Set column widths
         $sheet->getColumnDimension('A')->setWidth(5);
@@ -575,28 +600,38 @@ class Delivery_note extends CI_Controller
         $sheet->getColumnDimension('D')->setWidth(20);
         $sheet->getColumnDimension('E')->setWidth(20);
         $sheet->getColumnDimension('F')->setWidth(25);
-        $sheet->getColumnDimension('G')->setWidth(25);
-        $sheet->getColumnDimension('H')->setWidth(30);
+        $sheet->getColumnDimension('G')->setWidth(40); // Increased width for better image display
 
         $row++;
+
+        // Track maximum photo width for column sizing
+        $maxPhotoWidth = 0;
+        $maxPhotoHeight = 0;
+        $photoDimensions = [];
 
         // Data
         $no = 1;
         foreach ($delivery as $d) {
-            // Convert progress number to text
+            // Convert progress number to text dan tentukan style
             $progressText = '';
+            $progressStyle = null;
+
             switch ($d->progress) {
                 case 1:
-                    $progressText = 'Verifikasi Pengiriman';
+                    $progressText = 'Dikirim';
+                    $progressStyle = $styleProgress1;
                     break;
                 case 2:
-                    $progressText = 'Pengiriman Diproses';
+                    $progressText = 'Terverifikasi(Diterima)';
+                    $progressStyle = $styleProgress2;
                     break;
                 case 3:
-                    $progressText = 'Pengiriman Divalidasi';
+                    $progressText = 'Tervalidasi(Terdata)';
+                    $progressStyle = $styleProgress3;
                     break;
                 case 4:
-                    $progressText = 'Pengiriman Selesai';
+                    $progressText = 'Final Direksi';
+                    $progressStyle = $styleProgress4;
                     break;
                 default:
                     $progressText = 'Unknown';
@@ -609,7 +644,11 @@ class Delivery_note extends CI_Controller
             $sheet->setCellValue("D{$row}", $d->user_input);
             $sheet->setCellValue("E{$row}", $d->created_date);
             $sheet->setCellValue("F{$row}", $progressText);
-            $sheet->setCellValue("G{$row}", $d->foto);
+
+            // Apply progress style
+            if ($progressStyle) {
+                $sheet->getStyle("F{$row}")->applyFromArray($progressStyle);
+            }
 
             // Insert image if exists
             if (!empty($d->foto)) {
@@ -617,42 +656,87 @@ class Delivery_note extends CI_Controller
 
                 if (file_exists($imagePath)) {
                     try {
+                        // Get original image dimensions
+                        list($width, $height) = getimagesize($imagePath);
+
+                        // Store dimensions for later column width calculation
+                        $photoDimensions[] = [
+                            'width' => $width,
+                            'height' => $height,
+                            'row' => $row
+                        ];
+
+                        // Calculate display size while maintaining aspect ratio
+                        $maxDisplayWidth = 400;
+                        $maxDisplayHeight = 300;
+
+                        $ratio = min($maxDisplayWidth / $width, $maxDisplayHeight / $height);
+                        $displayWidth = (int)($width * $ratio);
+                        $displayHeight = (int)($height * $ratio);
+
+                        // Track maximum dimensions for column sizing
+                        $maxPhotoWidth = max($maxPhotoWidth, $displayWidth);
+                        $maxPhotoHeight = max($maxPhotoHeight, $displayHeight);
+
                         $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                         $drawing->setName('Surat Jalan');
                         $drawing->setDescription('Surat Jalan');
                         $drawing->setPath($imagePath);
-                        $drawing->setHeight(100);
-                        $drawing->setWidth(100);
-                        $drawing->setCoordinates("H{$row}");
-                        $drawing->setOffsetX(10);
-                        $drawing->setOffsetY(10);
+                        $drawing->setResizeProportional(true); // Maintain aspect ratio
+                        $drawing->setWidth($displayWidth);
+                        $drawing->setHeight($displayHeight);
+                        $drawing->setCoordinates("G{$row}");
+                        $drawing->setOffsetX(5);
+                        $drawing->setOffsetY(5);
                         $drawing->setWorksheet($sheet);
 
                         // Set row height to accommodate image
-                        $sheet->getRowDimension($row)->setRowHeight(80);
+                        $sheet->getRowDimension($row)->setRowHeight($displayHeight + 10);
                     } catch (Exception $e) {
-                        $sheet->setCellValue("H{$row}", 'Gagal memuat gambar: ' . $e->getMessage());
+                        $sheet->setCellValue("G{$row}", 'Gagal memuat gambar');
                     }
                 } else {
-                    $sheet->setCellValue("H{$row}", 'File tidak ditemukan');
+                    $sheet->setCellValue("G{$row}", 'File tidak ditemukan');
                 }
             } else {
-                $sheet->setCellValue("H{$row}", 'Tidak ada foto');
+                $sheet->setCellValue("G{$row}", 'Tidak ada foto');
             }
 
             // Apply border to the entire row
-            $sheet->getStyle("A{$row}:H{$row}")->applyFromArray($styleBorder);
+            $sheet->getStyle("A{$row}:G{$row}")->applyFromArray($styleBorder);
             $row++;
+        }
+
+        // Calculate optimal column width based on all photos
+        if (!empty($photoDimensions)) {
+            // Find the maximum display width needed
+            $maxDisplayWidth = 0;
+            foreach ($photoDimensions as $dimension) {
+                $maxDisplayWidth = max($maxDisplayWidth, $dimension['width']);
+            }
+
+            // Convert to Excel column width (pixels to Excel width units)
+            $pixelsToExcelWidth = 0.14; // Approximate conversion factor
+            $excelWidth = min(50, max(15, round($maxDisplayWidth * $pixelsToExcelWidth)));
+
+            $sheet->getColumnDimension('G')->setWidth($excelWidth);
+
+            // Also adjust row heights if needed for very tall images
+            foreach ($photoDimensions as $dimension) {
+                $ratio = min(400 / $dimension['width'], 300 / $dimension['height']);
+                $displayHeight = (int)($dimension['height'] * $ratio);
+                $sheet->getRowDimension($dimension['row'])->setRowHeight($displayHeight + 10);
+            }
         }
 
         // Set alignment for data cells
         $lastRow = $row - 1;
-        $sheet->getStyle("A6:H{$lastRow}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+        $sheet->getStyle("A6:G{$lastRow}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
         $sheet->getStyle("A6:A{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle("F6:F{$lastRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
         // Set auto filter
-        $sheet->setAutoFilter("A5:H5");
+        $sheet->setAutoFilter("A5:G5");
 
         // Set judul worksheet
         $sheet->setTitle('Realisasi Pengiriman');
