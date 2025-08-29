@@ -91,9 +91,12 @@ Email astahomeware@gmail.com
 Pass: sta@Mail600!%
 
 PC Remote List:
-
-- PC 18-02-2025
+- PC MSI Penjualan 18-02-2025
   ID: 117053943
+  PASS: asta3101
+
+- Laptop HP 14S-CF2XXX 09-04-2021
+  ID: 114126529
   PASS: asta3101
 
 fonnte cronjob
