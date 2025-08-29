@@ -74,10 +74,43 @@
                         <div class="mb-3">
                             <label for="inputFoto">Foto Surat Jalan</label>
                             <div class="input-group">
-                                <input type="file" class="form-control" id="inputFoto" name="inputFoto" accept="image/*" capture="environment" required>
+                                <input type="file" class="form-control" id="inputFoto" name="inputFoto" accept="image/*" capture="environment" required onchange="previewImage(this)">
                                 <button type="button" class="btn btn-secondary" onclick="openPhotoModal()">
                                     <i class="fa-solid fa-camera"></i>
                                 </button>
+                            </div>
+                            <!-- Image preview container -->
+                            <div id="imagePreviewContainer" class="mt-2" style="display: none;">
+                                <p class="mb-1 small">Pratinjau Foto:</p>
+                                <div class="d-flex align-items-center">
+                                    <img id="imagePreview" src="#" alt="Preview" class="img-thumbnail me-2" style="max-height: 120px; cursor: pointer;" onclick="showLargePreview()">
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-primary mb-1" onclick="showLargePreview()">
+                                            <i class="fa-solid fa-expand"></i> Perbesar
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="removeImagePreview()">
+                                            <i class="fa-solid fa-times"></i> Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Large Preview Modal -->
+                        <div class="modal fade" id="largePreviewModal" tabindex="-1" aria-labelledby="largePreviewModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="largePreviewModalLabel">Pratinjau Foto Surat Jalan</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img id="largePreview" src="#" alt="Large Preview" class="img-fluid" style="max-height: 70vh;">
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -730,6 +763,74 @@
 
     $('#filterInputStart, #filterInputEnd').on('change', function() {
         $('#tableproduct').DataTable().draw();
+    });
+
+    function previewImage(input) {
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        const preview = document.getElementById('imagePreview');
+        const largePreview = document.getElementById('largePreview');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                largePreview.src = e.target.result;
+                previewContainer.style.display = 'block';
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            previewContainer.style.display = 'none';
+        }
+    }
+
+    function showLargePreview() {
+        // Only show if there's an image selected
+        if (document.getElementById('inputFoto').files.length > 0) {
+            const modal = new bootstrap.Modal(document.getElementById('largePreviewModal'));
+            modal.show();
+        }
+    }
+
+    function removeImagePreview() {
+        const input = document.getElementById('inputFoto');
+        const previewContainer = document.getElementById('imagePreviewContainer');
+
+        input.value = ''; // Clear the file input
+        previewContainer.style.display = 'none'; // Hide the preview
+
+        // Also close the large preview modal if it's open
+        const modal = bootstrap.Modal.getInstance(document.getElementById('largePreviewModal'));
+        if (modal) {
+            modal.hide();
+        }
+    }
+
+    // Update the submitPhoto function to also show the preview
+    function submitPhoto() {
+        const canvas = document.getElementById('photo-canvas');
+        canvas.toBlob(function(blob) {
+            const file = new File([blob], "foto_suratjalan.png", {
+                type: 'image/png'
+            });
+
+            // Simulasi input file
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            const input = document.getElementById('inputFoto');
+            input.files = dataTransfer.files;
+
+            // Trigger preview
+            previewImage(input);
+
+            closePhotoModal();
+        }, 'image/png');
+    }
+
+    // Add event listener to clear preview when modal is closed
+    document.getElementById('largePreviewModal').addEventListener('hidden.bs.modal', function() {
+        // Don't clear the selection, just close the modal
     });
 </script>
 </body>
