@@ -99,6 +99,10 @@ PC Remote List:
   ID: 114126529
   PASS: asta3101
 
+SMTP Gmail:
+Username: chalung.izha@gmail.com
+Password: apls xytd rkek nxqr
+
 fonnte cronjob
 https://script.google.com/u/0/home/projects/16Ns9hnEzGLp3uwF0dqCgLXsb1H78wNcE88TaKk8XTuz8gGKM7EGBjExH/edit
 https://docs.google.com/spreadsheets/d/1JoGzx2IrNF9ns0PbarzkzQrphhHLomXz7K_Ppp-rmjE/edit?usp=sharing

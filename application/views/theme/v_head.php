@@ -43,8 +43,8 @@
                         <?php
                         $this->load->helper('transaction');
                         if (number_pending_verification() > 0) {
-                        ?>
-                            <span class="badge rounded-pill text-bg-danger">Butuh Verifikasi</span>
+                            ?>
+                        <span class="badge rounded-pill text-bg-danger">Butuh Verifikasi</span>
                         <?php } ?>
                         <i class="fas fa-chevron-down small"></i>
                     </a>
@@ -99,19 +99,19 @@
                             $this->load->helper('transaction');
                             $pending_verification = number_pending_verification_delivery_note();
                             if ($pending_verification > 0) : ?>
-                                <span class="badge rounded-pill text-bg-primary"><?= $pending_verification; ?></span>
+                            <span class="badge rounded-pill text-bg-primary"><?= $pending_verification; ?></span>
                             <?php endif; ?>
                             <?php
                             $this->load->helper('transaction');
                             $pending_validasi = number_pending_validasi_delivery_note();
                             if ($pending_validasi > 0) : ?>
-                                <span class="badge rounded-pill text-bg-info"><?= $pending_validasi; ?></span>
+                            <span class="badge rounded-pill text-bg-info"><?= $pending_validasi; ?></span>
                             <?php endif; ?>
                             <?php
                             $this->load->helper('transaction');
                             $pending_final = number_pending_final_delivery_note();
                             if ($pending_final > 0) : ?>
-                                <span class="badge rounded-pill text-bg-success"><?= $pending_final; ?></span>
+                            <span class="badge rounded-pill text-bg-success"><?= $pending_final; ?></span>
                             <?php endif; ?>
                         </a>
                         <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_manual') ? 'active' : ''; ?>" href="<?= base_url('delivery_manual'); ?>">
@@ -120,23 +120,26 @@
                             $this->load->helper('transaction');
                             $manual_pending_verification = number_pending_verification_delivery_manual();
                             if ($manual_pending_verification > 0) : ?>
-                                <span class="badge rounded-pill text-bg-primary"><?= $manual_pending_verification; ?></span>
+                            <span class="badge rounded-pill text-bg-primary"><?= $manual_pending_verification; ?></span>
                             <?php endif; ?>
                             <?php
                             $manual_pending_validasi = number_pending_validasi_delivery_manual();
                             if ($manual_pending_validasi > 0) : ?>
-                                <span class="badge rounded-pill text-bg-info"><?= $manual_pending_validasi; ?></span>
+                            <span class="badge rounded-pill text-bg-info"><?= $manual_pending_validasi; ?></span>
                             <?php endif; ?>
                             <?php
                             $manual_pending_final = number_pending_final_delivery_manual();
                             if ($manual_pending_final > 0) : ?>
-                                <span class="badge rounded-pill text-bg-success"><?= $manual_pending_final; ?></span>
+                            <span class="badge rounded-pill text-bg-success"><?= $manual_pending_final; ?></span>
                             <?php endif; ?>
+                        </a>
+                        <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_file') ? 'active' : ''; ?>" href="<?= base_url('delivery_file'); ?>">
+                            File Surat Jalan Supplier
                         </a>
                     </div>
                 </div>
                 <?php if ($this->session->userdata('idrole') == 1) { ?>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>">Pengguna</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>">Pengguna</a>
                 <?php } ?>
             </div>
         </div>
@@ -152,25 +155,25 @@
                     $this->load->helper('transaction');
                     $pending_all = total_pending_verification_all();
                     if ($pending_all > 0) {
-                    ?>
-                        <marquee class="d-inline d-lg-none ms-2" style="font-weight: bold; color: white;
+                        ?>
+                    <marquee class="d-inline d-lg-none ms-2" style="font-weight: bold; color: white;
     background-color: #dc3545;
     border-radius: 10px;">
 
-                            <?php
+                        <?php
                             $this->load->helper('transaction');
                             $pending = number_pending_verification();
                             if ($pending > 0) {
                                 echo "Ada " . $pending . " Pending Verifikasi Transaksi";
                             }
                             ?> <?php
-                                $this->load->helper('transaction');
-                                $pending = total_pending_delivery();
-                                if ($pending > 0) {
-                                    echo "| ada " . $pending . " Dikirim Surat Jalan";
-                                }
-                                ?>
-                        </marquee>
+                                    $this->load->helper('transaction');
+                                    $pending = total_pending_delivery();
+                                    if ($pending > 0) {
+                                        echo "| ada " . $pending . " Dikirim Surat Jalan";
+                                    }
+                                    ?>
+                    </marquee>
                     <?php } ?>
 
                     <!-- Marquee untuk desktop: posisi absolute di tengah, hanya tampil di desktop -->
