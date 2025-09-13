@@ -99,7 +99,7 @@ class Delivery_file extends CI_Controller
 
         if ($target !== '') {
             $token = 'EyuhsmTqzeKaDknoxdxt';
-            $message = 'File Surat Jalan dengan nama supplier ' . $inputNameSupplier . ' Tanggal diterima ' . $inputDateReceived . ' dibuat oleh ' . $username . ' sudah ditambahkan di File Surat Jalan';
+            $message = 'File Surat Jalan Barang Masuk dengan nama supplier ' . $inputNameSupplier . ' Tanggal diterima ' . $inputDateReceived . ' dibuat oleh ' . $username . ' sudah ditambahkan di File Surat Jalan';
 
             $curl = curl_init();
             curl_setopt_array($curl, array(

@@ -35,7 +35,6 @@
             <div class="list-group list-group-flush">
                 <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'dashboard') ? 'active' : ''; ?>" href="<?php echo base_url('dashboard/'); ?>">Dashboard</a>
                 <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'product') ? 'active' : ''; ?>" href="<?php echo base_url('product/'); ?>">Database Product</a>
-                <!-- <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'customer') ? 'active' : ''; ?>" href="<?php echo base_url('customer/'); ?>">Database Customer</a> -->
                 <!-- Transaksi Dropdown -->
                 <div class="list-group-item p-0">
                     <a class="list-group-item list-group-item-action list-group-item-light p-3 d-flex justify-content-between align-items-center <?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#transaksiSubmenu" role="button" aria-expanded="<?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'true' : 'false'; ?>" aria-controls="transaksiSubmenu">
@@ -92,7 +91,6 @@
                         </div>
                     </a>
                     <div class="collapse <?= in_array($current, ['delivery_note', 'delivery_manual']) ? 'show' : ''; ?>" id="suratjalanSubmenu">
-                        <!-- <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'customer') ? 'active' : ''; ?>" href="<?= base_url('customer'); ?>">Database Pelanggan</a> -->
                         <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_note') ? 'active' : ''; ?>" href="<?= base_url('delivery_note'); ?>">
                             Realisasi Pengiriman
                             <?php
@@ -134,7 +132,7 @@
                             <?php endif; ?>
                         </a>
                         <a class="list-group-item list-group-item-action list-group-item-light ps-5 <?= ($current == 'delivery_file') ? 'active' : ''; ?>" href="<?= base_url('delivery_file'); ?>">
-                            File Surat Jalan Supplier
+                            File Surat Jalan Supplier Barang Masuk
                         </a>
                     </div>
                 </div>
@@ -157,8 +155,8 @@
                     if ($pending_all > 0) {
                         ?>
                     <marquee class="d-inline d-lg-none ms-2" style="font-weight: bold; color: white;
-    background-color: #dc3545;
-    border-radius: 10px;">
+                                    background-color: #dc3545;
+                                    border-radius: 10px;">
 
                         <?php
                             $this->load->helper('transaction');
@@ -178,8 +176,8 @@
 
                     <!-- Marquee untuk desktop: posisi absolute di tengah, hanya tampil di desktop -->
                     <marquee class="d-none d-lg-block position-absolute" style="left: 50%; transform: translateX(-50%); width: 50%; font-weight: bold; color: white;
-    background-color: #dc3545;
-    border-radius: 10px;">
+                                    background-color: #dc3545;
+                                    border-radius: 10px;">
                         <?php
                         $this->load->helper('transaction');
                         $pending = number_pending_verification();
