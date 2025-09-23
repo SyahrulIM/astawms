@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <div class="row mt-4">
         <div class="col">
-            <h1>File Surat Jalan Supplier Barang Masuk</h1>
+            <h1>File Surat Jalan Supplier</h1>
         </div>
     </div>
 

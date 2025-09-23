@@ -63,7 +63,7 @@ Pass: h3LL0@4sT4#!!
 
 http://member.jagoanhosting.com/
 username: schiannger@gmail.com
-password: Fl1pfl0p@#
+password: @Asta123
 PHP Version 7.4
 
 Fingerspot Asta Homeware
@@ -106,3 +106,11 @@ Password: apls xytd rkek nxqr
 fonnte cronjob
 https://script.google.com/u/0/home/projects/16Ns9hnEzGLp3uwF0dqCgLXsb1H78wNcE88TaKk8XTuz8gGKM7EGBjExH/edit
 https://docs.google.com/spreadsheets/d/1JoGzx2IrNF9ns0PbarzkzQrphhHLomXz7K_Ppp-rmjE/edit?usp=sharing
+
+Data User CCTV D17:
+Username: admin
+Password: @Asta321
+
+Data User CCTV D09:
+Username: admin
+Password: @Asta123
