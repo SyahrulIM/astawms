@@ -8,9 +8,9 @@
     <div class="row">
         <div class="col">
             <?php if ($this->session->flashdata('success')) : ?>
-                <div class="alert alert-success"><?= $this->session->flashdata('success') ?></div>
+            <div class="alert alert-success"><?= $this->session->flashdata('success') ?></div>
             <?php elseif ($this->session->flashdata('error')) : ?>
-                <div class="alert alert-danger"><?= $this->session->flashdata('error') ?></div>
+            <div class="alert alert-danger"><?= $this->session->flashdata('error') ?></div>
             <?php endif; ?>
             <form action="<?= base_url('verification/exportExcel') ?>" method="post">
                 <div class="card mt-3">
@@ -48,38 +48,38 @@
                     </thead>
                     <tbody>
                         <?php foreach ($transactions as $i => $trx) : ?>
-                            <tr>
-                                <td><?= $i + 1 ?></td>
-                                <td><?= ucfirst($trx->tipe) ?></td>
-                                <td><?= $trx->kode_transaksi ?></td>
-                                <td><?= $trx->tanggal . ' ' . $trx->jam ?></td>
-                                <td><?= $trx->distribution_date ?></td>
-                                <td><?= $trx->user ?></td>
-                                <td>
-                                    <h5>
-                                        <?php if ($trx->status_verification == 1) : ?>
-                                            <span class="badge bg-success">Accept</span>
-                                        <?php elseif ($trx->status_verification == 2) : ?>
-                                            <span class="badge bg-danger">Reject</span>
-                                        <?php else : ?>
-                                            <span class="badge bg-warning text-dark">Pending</span>
-                                        <?php endif; ?>
-                                    </h5>
-                                </td>
-                                <td>
-                                    <?php if ($trx->status_verification == 0) : ?>
-                                        <?php if (in_array($this->session->userdata('idrole'), [1, 3])) : ?>
-                                            <button type="button" class="btn btn-info btn-verifikasi" data-bs-toggle="modal" data-bs-target="#verifikasiModal" data-id="<?= $trx->kode_transaksi ?>" data-tipe="<?= $trx->tipe ?>">
-                                                Verifikasi
-                                            </button>
-                                        <?php else : ?>
-                                            <span class="text-warning">Menunggu admin stock verifikasi</span>
-                                        <?php endif; ?>
+                        <tr>
+                            <td><?= $i + 1 ?></td>
+                            <td><?= ucfirst($trx->tipe) ?></td>
+                            <td><?= $trx->kode_transaksi ?></td>
+                            <td><?= $trx->tanggal . ' ' . $trx->jam ?></td>
+                            <td><?= $trx->distribution_date ?></td>
+                            <td><?= $trx->user ?></td>
+                            <td>
+                                <h5>
+                                    <?php if ($trx->status_verification == 1) : ?>
+                                    <span class="badge bg-success">Accept</span>
+                                    <?php elseif ($trx->status_verification == 2) : ?>
+                                    <span class="badge bg-danger">Reject</span>
                                     <?php else : ?>
-                                        <span class="text-muted">Sudah diverifikasi</span>
+                                    <span class="badge bg-warning text-dark">Pending</span>
                                     <?php endif; ?>
-                                </td>
-                            </tr>
+                                </h5>
+                            </td>
+                            <td>
+                                <?php if ($trx->status_verification == 0) : ?>
+                                <?php if (in_array($this->session->userdata('idrole'), [1, 3, 5])) : ?>
+                                <button type="button" class="btn btn-info btn-verifikasi" data-bs-toggle="modal" data-bs-target="#verifikasiModal" data-id="<?= $trx->kode_transaksi ?>" data-tipe="<?= $trx->tipe ?>">
+                                    Verifikasi
+                                </button>
+                                <?php else : ?>
+                                <span class="text-warning">Menunggu admin stock verifikasi</span>
+                                <?php endif; ?>
+                                <?php else : ?>
+                                <span class="text-muted">Sudah diverifikasi</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>

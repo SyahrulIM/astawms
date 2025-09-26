@@ -30,24 +30,24 @@
                 </div>
 
                 <?php if ($this->session->userdata('idrole') != 4) { ?>
-                    <button type="button" class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#addDeliver">
-                        <i class="fa-solid fa-plus"></i> Tambah Realisasi Pengiriman
-                    </button>
+                <button type="button" class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#addDeliver">
+                    <i class="fa-solid fa-plus"></i> Tambah Realisasi Pengiriman
+                </button>
                 <?php } ?>
 
                 <!-- Flash messages -->
                 <?php if ($this->session->flashdata('error')) : ?>
-                    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
-                        <?= $this->session->flashdata('error') ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    <?= $this->session->flashdata('error') ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
                 <?php endif; ?>
 
                 <?php if ($this->session->flashdata('success')) : ?>
-                    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                        <?= $this->session->flashdata('success') ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    <?= $this->session->flashdata('success') ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
                 <?php endif; ?>
                 <!-- End -->
 
@@ -343,53 +343,60 @@
                             </thead>
                             <tbody>
                                 <?php foreach ($delivery as $dkey => $dvalue) { ?>
-                                    <tr>
-                                        <td><?php echo $dkey + 1; ?></td>
-                                        <td><?php echo $dvalue->no_manual; ?></td>
-                                        <td><?php echo $dvalue->send_date; ?></td>
-                                        <td><?php echo $dvalue->user_input; ?></td>
-                                        <td><?php echo $dvalue->created_date; ?></td>
-                                        <td>
-                                            <img src="<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>" alt="<?php echo $dvalue->foto; ?>" width="100px" height="100px" style="cursor:pointer;" onclick="showImageModal('<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>')" oncontextmenu="return false;">
-                                        </td>
-                                        <td>
-                                            <?php if ($dvalue->progress == 1) { ?>
-                                                <span class="badge rounded-pill text-bg-secondary">Dikirim</span>
-                                            <?php } else if ($dvalue->progress == 2) { ?>
-                                                <span class="badge rounded-pill text-bg-primary">Terverifikasi(Diterima)</span>
-                                            <?php } else if ($dvalue->progress == 3) { ?>
-                                                <span class="badge rounded-pill text-bg-info">Tervalidasi(Terdata)</span>
-                                            <?php } else { ?>
-                                                <span class="badge rounded-pill text-bg-success">Final Direksi</span>
-                                            <?php } ?>
-                                        </td>
-                                        <td>
-                                            <?php if ($dvalue->progress == 1) { ?>
-                                                <a href="#" class="btn btn-sm btn-primary mb-1" onclick="showConfirmModal(<?= $dvalue->iddelivery_note ?>)">
-                                                    <i class="fas fa-check"></i> Verifikasi
-                                                </a><br>
-                                            <?php } else if ($dvalue->progress == 2) { ?>
-                                                <a href="#" class="btn btn-sm btn-info mb-1" onclick="showValidasiModal(<?= $dvalue->iddelivery_note ?>)">
-                                                    <i class="fas fa-check-double"></i> Validasi
-                                                </a><br>
-                                            <?php } else if ($dvalue->progress == 3) { ?>
-                                                <a href="#" class="btn btn-sm btn-success mb-1" onclick="showFinalModal(<?= $dvalue->iddelivery_note ?>)">
-                                                    <i class="fas fa-check-double"></i> Final DIR
-                                                </a><br>
-                                            <?php } ?>
-                                            <?php if ($this->session->userdata('idrole') == 1) { ?>
-                                                <a href="<?= base_url('assets/image/surat_jalan/' . $dvalue->foto) ?>" download class="btn btn-sm btn-outline-secondary">
-                                                    <i class="fas fa-download small"></i> Download
-                                                </a>
-                                                <button type="button" class="btn btn-warning" data-id="<?= $dvalue->iddelivery_note ?>" data-no_manual="<?= $dvalue->no_manual ?>" data-foto="<?= $dvalue->foto ?>" data-bs-toggle="modal" data-bs-target="#revisionDeliver">
-                                                    <i class="fas fa-edit"></i> Revisi
-                                                </button>
-                                                <button type="button" class="btn btn-danger btn-delete" data-id="<?= $dvalue->iddelivery_note ?>" data-toggle="modal" data-target="#deleteModal">
-                                                    <i class="fas fa-trash"></i> Delete
-                                                </button>
-                                            <?php } ?>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td><?php echo $dkey + 1; ?></td>
+                                    <td><?php echo $dvalue->no_manual; ?></td>
+                                    <td><?php echo $dvalue->send_date; ?></td>
+                                    <td><?php echo $dvalue->user_input; ?></td>
+                                    <td><?php echo $dvalue->created_date; ?></td>
+                                    <td>
+                                        <img src="<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>" alt="<?php echo $dvalue->foto; ?>" width="100px" height="100px" style="cursor:pointer;" onclick="showImageModal('<?php echo base_url('assets/image/surat_jalan/' . $dvalue->foto); ?>')" oncontextmenu="return false;">
+                                    </td>
+                                    <td>
+                                        <?php if ($dvalue->progress == 1) { ?>
+                                        <span class="badge rounded-pill text-bg-secondary">Dikirim</span>
+                                        <?php } else if ($dvalue->progress == 2) { ?>
+                                        <span class="badge rounded-pill text-bg-primary">Terverifikasi(Diterima)</span>
+                                        <?php } else if ($dvalue->progress == 3) { ?>
+                                        <span class="badge rounded-pill text-bg-info">Tervalidasi(Terdata)</span>
+                                        <?php } else { ?>
+                                        <span class="badge rounded-pill text-bg-success">Final Direksi</span>
+                                        <?php } ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($dvalue->progress == 1 && $this->session->userdata('idrole') == 6) { ?>
+                                        <a href="#" class="btn btn-sm btn-primary mb-1" onclick="showConfirmModal(<?= $dvalue->iddelivery_note ?>)">
+                                            <i class="fas fa-check"></i> Verifikasi
+                                        </a><br>
+                                        <?php } else if ($dvalue->progress == 2 && $this->session->userdata('idrole') == 5) { ?>
+                                        <a href="#" class="btn btn-sm btn-info mb-1" onclick="showValidasiModal(<?= $dvalue->iddelivery_note ?>)">
+                                            <i class="fas fa-check-double"></i> Validasi
+                                        </a><br>
+                                        <?php } else if ($dvalue->progress == 3 && $this->session->userdata('idrole') == 1) { ?>
+                                        <a href="#" class="btn btn-sm btn-success mb-1" onclick="showFinalModal(<?= $dvalue->iddelivery_note ?>)">
+                                            <i class="fas fa-check-double"></i> Final DIR
+                                        </a><br>
+                                        <?php } ?>
+                                        <?php if ($dvalue->progress == 2 && $this->session->userdata('idrole') == 6 || $dvalue->progress == 2 && $this->session->userdata('idrole') == 1) { ?>
+                                        <span class="badge text-bg-info">Menunggu Validasi</span>
+                                        <?php } else if ($dvalue->progress == 1 && $this->session->userdata('idrole') == 5 || $dvalue->progress == 2 && $this->session->userdata('idrole') == 1) { ?>
+                                        <span class="badge text-bg-primary">Menunggu Verifikasi</span>
+                                        <?php } else if ($dvalue->progress == 3 && $this->session->userdata('idrole') == 6 || $dvalue->progress == 3 && $this->session->userdata('idrole') == 5) { ?>
+                                        <span class="badge text-bg-success">Menunggu Final Dir dari Direktur</span>
+                                        <?php } ?>
+                                        <?php if ($this->session->userdata('idrole') == 1) { ?>
+                                        <a href="<?= base_url('assets/image/surat_jalan/' . $dvalue->foto) ?>" download class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-download small"></i> Download
+                                        </a>
+                                        <button type="button" class="btn btn-warning" data-id="<?= $dvalue->iddelivery_note ?>" data-no_manual="<?= $dvalue->no_manual ?>" data-foto="<?= $dvalue->foto ?>" data-bs-toggle="modal" data-bs-target="#revisionDeliver">
+                                            <i class="fas fa-edit"></i> Revisi
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-delete" data-id="<?= $dvalue->iddelivery_note ?>" data-toggle="modal" data-target="#deleteModal">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                        <?php } ?>
+                                    </td>
+                                </tr>
                                 <?php } ?>
                             </tbody>
                         </table>

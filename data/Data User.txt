@@ -99,6 +99,10 @@ PC Remote List:
   ID: 114126529
   PASS: asta3101
 
+- PC Gudang Alfi
+  ID: 118912152
+  PASS: 3rtk1a
+
 SMTP Gmail:
 Username: chalung.izha@gmail.com
 Password: apls xytd rkek nxqr
