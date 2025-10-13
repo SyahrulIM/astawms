@@ -91,8 +91,12 @@ Email astahomeware@gmail.com
 Pass: sta@Mail600!%
 
 PC Remote List:
-- PC MSI Penjualan 18-02-2025
+- PC MSI Penjualan Mbak Dinda 18-02-2025
   ID: 117053943
+  PASS: asta3101
+
+- PC MSI Penjualan Mbak Dwi
+  ID: 121982935
   PASS: asta3101
 
 - Laptop HP 14S-CF2XXX 09-04-2021
@@ -101,7 +105,11 @@ PC Remote List:
 
 - PC Gudang Alfi
   ID: 118912152
-  PASS: 3rtk1a
+  PASS: asta3101
+
+- PC Marketing Nisa
+  ID: 118912117
+  PASS: asta3101
 
 SMTP Gmail:
 Username: chalung.izha@gmail.com
@@ -126,3 +134,8 @@ PASS:3101
 Gajihub:
 Email: izha.chalung@gmail.com
 Pass: HotDog123
+
+Shopee ID:
+333026876
+
+=SUM('Happy Mart'!F5,'Nike Jaya Abadi'!F5,'Jaya bintang'!F5)
