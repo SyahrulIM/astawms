@@ -7,16 +7,16 @@
                 </div>
                 <!-- Button trigger modal Tambah Produk -->
                 <?php if ($this->session->userdata('idrole') != 4 && $this->session->userdata('idrole') != 2) { ?>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProduct">
-                        <i class="fa-solid fa-plus"></i> Tambah Produk
-                    </button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProduct">
+                    <i class="fa-solid fa-plus"></i> Tambah Produk
+                </button>
                 <?php } ?>
 
                 <?php if ($this->session->flashdata('error')) : ?>
-                    <div class="alert alert-danger"><?= $this->session->flashdata('error') ?></div>
+                <div class="alert alert-danger"><?= $this->session->flashdata('error') ?></div>
                 <?php endif; ?>
                 <?php if ($this->session->flashdata('success')) : ?>
-                    <div class="alert alert-success"><?= $this->session->flashdata('success') ?></div>
+                <div class="alert alert-success"><?= $this->session->flashdata('success') ?></div>
                 <?php endif; ?>
 
                 <!-- Modal Tambah Produk -->
@@ -70,7 +70,7 @@
                                 <div class="modal-body">
                                     <div class="mb-3">
                                         <label for="editSku" class="form-label">SKU</label>
-                                        <input type="text" class="form-control" id="editSku" name="inputSku" required readonly>
+                                        <input type="text" class="form-control" id="editSku" name="inputSku" required>
                                     </div>
                                     <div class="mb-3">
                                         <label for="editNamaProduk" class="form-label">Nama Produk</label>
@@ -150,7 +150,7 @@
                                     <th>Barcode</th>
                                     <th>SNI</th>
                                     <?php foreach ($gudang as $g) { ?>
-                                        <th>Stock <?= $g->nama_gudang ?></th>
+                                    <th>Stock <?= $g->nama_gudang ?></th>
                                     <?php } ?>
                                     <th>Total Stock</th>
                                     <th>Tanggal Dibuat</th>
@@ -159,48 +159,48 @@
                             </thead>
                             <tbody>
                                 <?php foreach ($product as $pkey => $pvalue) { ?>
-                                    <tr>
-                                        <td><?= $pkey + 1 ?></td>
-                                        <td><?= $pvalue->sku ?></td>
-                                        <td><?= $pvalue->nama_produk ?></td>
-                                        <td><img src="<?= base_url('assets/image/' . $pvalue->gambar) ?>" style="width: 100px; height: 100px;"></td>
-                                        <td><canvas id="barcode-<?= $pvalue->idproduct ?>" width="150" height="70"></canvas></td>
-                                        <td>
-                                            <?php if (!empty($pvalue->sni)) { ?>
-                                                <img src="<?= base_url('assets/image/' . $pvalue->sni) ?>" style="width: 100px; height: 100px;">
-                                            <?php } else { ?>
-                                                <i class="fa-solid fa-xmark" style="font-size: 40px; color: red;"></i>
-                                            <?php } ?>
-                                        </td>
-                                        <?php
+                                <tr>
+                                    <td><?= $pkey + 1 ?></td>
+                                    <td><?= $pvalue->sku ?></td>
+                                    <td><?= $pvalue->nama_produk ?></td>
+                                    <td><img src="<?= base_url('assets/image/' . $pvalue->gambar) ?>" style="width: 100px; height: 100px;"></td>
+                                    <td><canvas id="barcode-<?= $pvalue->idproduct ?>" width="150" height="70"></canvas></td>
+                                    <td>
+                                        <?php if (!empty($pvalue->sni)) { ?>
+                                        <img src="<?= base_url('assets/image/' . $pvalue->sni) ?>" style="width: 100px; height: 100px;">
+                                        <?php } else { ?>
+                                        <i class="fa-solid fa-xmark" style="font-size: 40px; color: red;"></i>
+                                        <?php } ?>
+                                    </td>
+                                    <?php
                                         $currentProductTotalStock = 0; // Initialize for each product
                                         foreach ($gudang as $g) {
                                             $stok = isset($stokMap[$pvalue->idproduct][$g->idgudang]) ? $stokMap[$pvalue->idproduct][$g->idgudang] : 0;
                                             $currentProductTotalStock += $stok; // Add to total
-                                        ?>
-                                            <td><?= $stok ?></td>
+                                            ?>
+                                    <td><?= $stok ?></td>
+                                    <?php } ?>
+                                    <td><?= $totalStokAllGudang[$pvalue->idproduct] ?? 0 ?></td>
+                                    <td><?= $pvalue->created_date ?></td>
+                                    <td>
+                                        <?php if ($this->session->userdata('idrole') != 4 && $this->session->userdata('idrole') != 2) { ?>
+                                        <button type="button" class="btn btn-warning btnEditProduk" data-sku="<?= $pvalue->sku ?>" data-nama="<?= $pvalue->nama_produk ?>" data-barcode="<?= $pvalue->barcode ?>" data-gambar="<?= $pvalue->gambar ?>" data-sni="<?= $pvalue->sni ?>" data-bs-toggle="modal" data-bs-target="#editProduct">
+                                            <i class="fa fa-edit"></i> Edit
+                                        </button>
+                                        <button type="button" class="btn btn-danger btnDelete" data-url="<?= base_url('product/deleteProduct?idproduct=' . $pvalue->idproduct); ?>" data-nama="<?= $pvalue->nama_produk ?>" data-sku="<?= $pvalue->sku ?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                                            <i class="fa-solid fa-trash-can"></i> Hapus
+                                        </button>
                                         <?php } ?>
-                                        <td><?= $totalStokAllGudang[$pvalue->idproduct] ?? 0 ?></td>
-                                        <td><?= $pvalue->created_date ?></td>
-                                        <td>
-                                            <?php if ($this->session->userdata('idrole') != 4 && $this->session->userdata('idrole') != 2) { ?>
-                                                <button type="button" class="btn btn-warning btnEditProduk" data-sku="<?= $pvalue->sku ?>" data-nama="<?= $pvalue->nama_produk ?>" data-barcode="<?= $pvalue->barcode ?>" data-gambar="<?= $pvalue->gambar ?>" data-sni="<?= $pvalue->sni ?>" data-bs-toggle="modal" data-bs-target="#editProduct">
-                                                    <i class="fa fa-edit"></i> Edit
-                                                </button>
-                                                <button type="button" class="btn btn-danger btnDelete" data-url="<?= base_url('product/deleteProduct?idproduct=' . $pvalue->idproduct); ?>" data-nama="<?= $pvalue->nama_produk ?>" data-sku="<?= $pvalue->sku ?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
-                                                    <i class="fa-solid fa-trash-can"></i> Hapus
-                                                </button>
-                                            <?php } ?>
-                                            <a href="<?= base_url('product/stockCard?sku=' . $pvalue->sku); ?>">
-                                                <button type="button" class="btn btn-success">
-                                                    <i class="fa-solid fa-print"></i> Kartu Stock
-                                                </button>
-                                            </a>
-                                            <button class="btn btn-sm btn-primary" onclick="downloadCanvasAsJpeg('barcode-<?= $pvalue->idproduct ?>', 'barcode_<?= $pvalue->sku ?>', '<?= $pvalue->barcode ?>')">
-                                                <i class="fa fa-download"></i> Download Barcode
+                                        <a href="<?= base_url('product/stockCard?sku=' . $pvalue->sku); ?>">
+                                            <button type="button" class="btn btn-success">
+                                                <i class="fa-solid fa-print"></i> Kartu Stock
                                             </button>
-                                        </td>
-                                    </tr>
+                                        </a>
+                                        <button class="btn btn-sm btn-primary" onclick="downloadCanvasAsJpeg('barcode-<?= $pvalue->idproduct ?>', 'barcode_<?= $pvalue->sku ?>', '<?= $pvalue->barcode ?>')">
+                                            <i class="fa fa-download"></i> Download Barcode
+                                        </button>
+                                    </td>
+                                </tr>
                                 <?php } ?>
                             </tbody>
                         </table>
@@ -337,20 +337,20 @@
 
                 document.addEventListener("DOMContentLoaded", function() {
                     <?php foreach ($product as $pvalue) { ?>
-                        try {
-                            bwipjs.toCanvas("barcode-<?= $pvalue->idproduct ?>", {
-                                bcid: "code128",
-                                text: "<?= $pvalue->barcode ?>",
-                                scaleX: 1,
-                                scaleY: 1,
-                                height: 5,
-                                includetext: true,
-                                textxalign: "center",
-                                textsize: 6
-                            });
-                        } catch (e) {
-                            console.error("Barcode generation failed for ID <?= $pvalue->idproduct ?>", e);
-                        }
+                    try {
+                        bwipjs.toCanvas("barcode-<?= $pvalue->idproduct ?>", {
+                            bcid: "code128",
+                            text: "<?= $pvalue->barcode ?>",
+                            scaleX: 1,
+                            scaleY: 1,
+                            height: 5,
+                            includetext: true,
+                            textxalign: "center",
+                            textsize: 6
+                        });
+                    } catch (e) {
+                        console.error("Barcode generation failed for ID <?= $pvalue->idproduct ?>", e);
+                    }
                     <?php } ?>
                 });
 
