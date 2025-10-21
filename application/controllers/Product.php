@@ -176,13 +176,12 @@ class Product extends CI_Controller
     public function editProduct()
     {
         $this->load->library('upload');
-
+        $idproduct = $this->input->post('inputIdProduct');
         $sku = $this->input->post('inputSku');
         $namaProduk = $this->input->post('inputNamaProduk');
         $barcode = $this->input->post('inputBarcode');
 
-        // Ambil data produk saat ini
-        $produkLama = $this->db->get_where('product', ['sku' => $sku])->row();
+        $produkLama = $this->db->get_where('product', ['idproduct' => $idproduct])->row();
 
         if (!$produkLama) {
             $this->session->set_flashdata('error', 'Produk tidak ditemukan.');
@@ -190,9 +189,8 @@ class Product extends CI_Controller
             return;
         }
 
-        // Cek duplikasi barcode (selain milik produk ini)
         $cekBarcode = $this->db->where('barcode', $barcode)
-            ->where('sku !=', $sku)
+            ->where('idproduct !=', $idproduct)
             ->get('product')->row();
         if ($cekBarcode) {
             $this->session->set_flashdata('error', 'Barcode sudah digunakan oleh produk lain.');
@@ -200,7 +198,6 @@ class Product extends CI_Controller
             return;
         }
 
-        // Upload gambar
         $gambar = $produkLama->gambar;
         if (!empty($_FILES['inputGambar']['name'])) {
             $config['upload_path'] = './assets/image/';
@@ -209,7 +206,6 @@ class Product extends CI_Controller
 
             $this->upload->initialize($config);
             if ($this->upload->do_upload('inputGambar')) {
-                // Hapus gambar lama kalau ada
                 if ($gambar && file_exists('./assets/image/' . $gambar)) {
                     unlink('./assets/image/' . $gambar);
                 }
@@ -221,7 +217,6 @@ class Product extends CI_Controller
             }
         }
 
-        // Upload SNI
         $sni = $produkLama->sni;
         if (!empty($_FILES['inputSni']['name'])) {
             $config['upload_path'] = './assets/image/';
@@ -230,7 +225,6 @@ class Product extends CI_Controller
 
             $this->upload->initialize($config);
             if ($this->upload->do_upload('inputSni')) {
-                // Hapus SNI lama kalau ada
                 if ($sni && file_exists('./assets/image/' . $sni)) {
                     unlink('./assets/image/' . $sni);
                 }
@@ -242,8 +236,8 @@ class Product extends CI_Controller
             }
         }
 
-        // Siapkan data yang akan diupdate
         $data = [
+            'sku' => $sku,
             'nama_produk' => $namaProduk,
             'barcode' => $barcode,
             'gambar' => $gambar,
@@ -252,8 +246,7 @@ class Product extends CI_Controller
             'updated_date' => date("Y-m-d H:i:s")
         ];
 
-        // Update data berdasarkan SKU
-        $this->db->where('sku', $sku);
+        $this->db->where('idproduct', $idproduct);
         $this->db->update('product', $data);
 
         $this->session->set_flashdata('success', 'Produk berhasil diupdate.');

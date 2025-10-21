@@ -68,6 +68,9 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
+                                    <!-- Hidden input for idproduct -->
+                                    <input type="hidden" id="editIdProduct" name="inputIdProduct">
+
                                     <div class="mb-3">
                                         <label for="editSku" class="form-label">SKU</label>
                                         <input type="text" class="form-control" id="editSku" name="inputSku" required>
@@ -184,7 +187,7 @@
                                     <td><?= $pvalue->created_date ?></td>
                                     <td>
                                         <?php if ($this->session->userdata('idrole') != 4 && $this->session->userdata('idrole') != 2) { ?>
-                                        <button type="button" class="btn btn-warning btnEditProduk" data-sku="<?= $pvalue->sku ?>" data-nama="<?= $pvalue->nama_produk ?>" data-barcode="<?= $pvalue->barcode ?>" data-gambar="<?= $pvalue->gambar ?>" data-sni="<?= $pvalue->sni ?>" data-bs-toggle="modal" data-bs-target="#editProduct">
+                                        <button type="button" class="btn btn-warning btnEditProduk" data-idproduct="<?= $pvalue->idproduct ?>" data-sku="<?= $pvalue->sku ?>" data-nama="<?= $pvalue->nama_produk ?>" data-barcode="<?= $pvalue->barcode ?>" data-gambar="<?= $pvalue->gambar ?>" data-sni="<?= $pvalue->sni ?>" data-bs-toggle="modal" data-bs-target="#editProduct">
                                             <i class="fa fa-edit"></i> Edit
                                         </button>
                                         <button type="button" class="btn btn-danger btnDelete" data-url="<?= base_url('product/deleteProduct?idproduct=' . $pvalue->idproduct); ?>" data-nama="<?= $pvalue->nama_produk ?>" data-sku="<?= $pvalue->sku ?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
@@ -312,6 +315,7 @@
 
                     editButtons.forEach(button => {
                         button.addEventListener('click', function() {
+                            const idproduct = this.getAttribute('data-idproduct'); // Add this attribute
                             const sku = this.getAttribute('data-sku');
                             const nama = this.getAttribute('data-nama');
                             const barcode = this.getAttribute('data-barcode');
@@ -319,11 +323,11 @@
                             const sni = this.getAttribute('data-sni');
 
                             // Populate edit modal inputs
+                            document.getElementById('editIdProduct').value = idproduct; // Set the hidden idproduct
                             document.getElementById('editSku').value = sku;
                             document.getElementById('editNamaProduk').value = nama;
                             document.getElementById('editBarcode').value = barcode;
-                            document.getElementById('editGambar').value = gambar;
-                            document.getElementById('editSni').value = sni;
+
                             // Extract filename from image path
                             const gambarFile = gambar.split('/').pop();
                             const sniFile = sni.split('/').pop();
