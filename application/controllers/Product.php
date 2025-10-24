@@ -100,10 +100,9 @@ class Product extends CI_Controller
         $barcode = $this->input->post('inputBarcode');
 
         // Cek duplikasi SKU atau Barcode
-        $cek = $this->db->get_where('product', [
-            'sku' => $sku
-        ])->row();
-
+        $this->db->where('sku', $sku);
+        $this->db->where('status', 1);
+        $cek = $this->db->get('product')->row();
 
         if ($cek) {
             $this->session->set_flashdata('error', 'Produk dengan SKU atau Barcode tersebut sudah ada.');
