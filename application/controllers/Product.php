@@ -104,7 +104,8 @@ class Product extends CI_Controller
             'sku' => $sku
         ])->row();
 
-        if ($cek || $this->db->get_where('product', ['barcode' => $barcode])->row()) {
+
+        if ($cek) {
             $this->session->set_flashdata('error', 'Produk dengan SKU atau Barcode tersebut sudah ada.');
             redirect('product');
             return;
