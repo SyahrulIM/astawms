@@ -131,63 +131,28 @@
                 </div>
                 <!-- End -->
 
-                <!-- Start Modal Detail PO -->
-                <div class="modal fade modal-xl" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-xl modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="detailModalLabel">Detail Produk PO</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div id="detailContent">Memuat data...</div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- End -->
-
                 <div class="row">
                     <div class="col">
                         <ul class="nav nav-tabs mt-4" id="listTabs" role="tablist">
-                            <?php
-                            $current = $this->uri->segment(1);
-                            $current_po = '';
-                            $current_qty = '';
-                            $current_order = '';
-                            $current_finish = '';
-                            if ($current == 'po') {
-                                $current_po = 'active';
-                            } else if ($current == 'qty') {
-                                $current_qty = 'active';
-                            } else if ($current == 'order') {
-                                $current_order = 'active';
-                            } else if ($current == 'finish') {
-                                $current_finish = 'active';
-                            }
-                            ?>
-                            <li class="nav-item">
+                            <li class="nav-item" role="presentation">
+                                <?php
+                                $current = $this->uri->segment(1);
+                                $current_po = '';
+                                $current_qty = '';
+                                if ($current == 'po') {
+                                    $current_po = 'active';
+                                } else if ($current == 'qty_order') {
+                                    $current_qty = 'active';
+                                }
+                                ?>
                                 <a class="nav-link <?php echo $current_po; ?>" id="list-tab" type="button" href="<?php echo base_url('po/'); ?>">
-                                    Daftar Penjualan
+                                    Data Penjualan
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link <?php echo $current_qty; ?>" id="list-tab" type="button" href="<?php echo base_url('qty/'); ?>">
+                            <li class="nav-item <?php echo $current_qty; ?>" role="presentation">
+                                <button class="nav-link" id="all-tab" type="button">
                                     Qty Order
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link <?php echo $current_order; ?>" id="list-tab" type="button" href="<?php echo base_url('order/'); ?>">
-                                    Pre-Order
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link <?php echo $current_finish; ?>" id="list-tab" type="button" href="<?php echo base_url('finish/'); ?>">
-                                    Finish
-                                </a>
+                                </button>
                             </li>
                         </ul>
                         <table id="tableproduct" class="display" style="width:100%">
@@ -198,7 +163,6 @@
                                     <th>Tanggal Pesan</th>
                                     <th>User Pembuat</th>
                                     <th>Tanggal Pembuat</th>
-                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -212,19 +176,7 @@
                                     <td><?php echo $trx->order_date ?></td>
                                     <td><?php echo $trx->created_by ?></td>
                                     <td><?php echo $trx->created_date ?></td>
-                                    <td>
-                                        <?php if ($trx->status_progress == 'Listing') { ?>
-                                        <?php echo '<span class="badge text-bg-info">Terlisting</span>'; ?>
-                                        <?php } ?>
-                                    </td>
-                                    <td>
-                                        <button type="button" class="btn btn-info btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
-                                            Detail
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm">
-                                            <i class="fa-solid fa-trash"></i> Batal Pemesanan
-                                        </button>
-                                    </td>
+                                    <td></td>
                                 </tr>
                                 <?php } ?>
                             </tbody>
@@ -261,14 +213,7 @@
                         }
                     });
                 });
-                // Pantau setiap perubahan pilihan produk
-                document.addEventListener('change', function(e) {
-                    if (e.target && e.target.name === 'createIdProduct[]') {
-                        disableDuplicateProducts();
-                    }
-                });
 
-                // Jalankan setiap kali tambah baris juga
                 function addInputRow() {
                     const tableBody = document.getElementById('tableBodyPO');
                     const rowCount = tableBody.rows.length;
@@ -306,26 +251,7 @@
                     <td><input type="number" class="form-control form-control-sm" name="createSaleWeekFour[]" max="10000"></td>
                     <td><input type="number" class="form-control form-control-sm" name="createBalancePerToday[]" max="10000"></td>
                     <td><button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(this)"><i class="fa-solid fa-trash-can"></i></button></td>
-                    `;
-                    disableDuplicateProducts();
-                }
-
-                // Update disabled state untuk produk duplikat
-                function disableDuplicateProducts() {
-                    const selects = document.querySelectorAll('select[name="createIdProduct[]"]');
-                    const selectedValues = Array.from(selects)
-                        .map(s => s.value)
-                        .filter(v => v !== 'Pilih Kode Produk' && v !== '');
-
-                    selects.forEach(select => {
-                        Array.from(select.options).forEach(option => {
-                            if (selectedValues.includes(option.value) && select.value !== option.value) {
-                                option.disabled = true;
-                            } else {
-                                option.disabled = false;
-                            }
-                        });
-                    });
+                `;
                 }
 
                 // Fungsi hapus baris
@@ -333,7 +259,6 @@
                     const row = button.closest('tr');
                     row.remove();
                     updateRowNumbers();
-                    disableDuplicateProducts(); // Refresh disable setelah hapus baris
                 }
 
                 // Update nomor setelah hapus baris
@@ -342,26 +267,6 @@
                     rows.forEach((row, index) => {
                         row.cells[0].textContent = index + 1;
                     });
-                }
-
-                // Jalankan saat halaman pertama kali load
-                document.addEventListener('DOMContentLoaded', disableDuplicateProducts);
-
-                function showDetail(idanalisys_po) {
-                    // tampilkan modal dan loading
-                    document.getElementById('detailContent').innerHTML = 'Memuat data...';
-                    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
-                    modal.show();
-
-                    // ambil data dari controller
-                    fetch(`<?= base_url('po/get_detail_analisys_po/') ?>${idanalisys_po}`)
-                        .then(response => response.text())
-                        .then(html => {
-                            document.getElementById('detailContent').innerHTML = html;
-                        })
-                        .catch(() => {
-                            document.getElementById('detailContent').innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
-                        });
                 }
             </script>
             </body>

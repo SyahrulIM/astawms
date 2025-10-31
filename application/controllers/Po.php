@@ -52,6 +52,7 @@ class Po extends CI_Controller
         $data = [
             'number_po' => $createNumberPo,
             'order_date' => $createOrderDate,
+            'status_progress' => 'Listing',
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
             'updated_by' => $this->session->userdata('username'),
@@ -82,5 +83,54 @@ class Po extends CI_Controller
 
         $this->session->set_flashdata('success', 'Data PO berhasil disimpan.');
         redirect('po');
+    }
+
+    public function get_detail_analisys_po($idanalisys_po)
+    {
+        $this->db->select('p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
+                       d.sale_last_mouth, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
+                       d.sale_week_four, d.balance_per_today');
+        $this->db->from('detail_analisys_po d');
+        $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
+        $this->db->where('d.idanalisys_po', $idanalisys_po);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            echo '<table class="table table-bordered table-striped table-xl align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nama Produk</th>
+                        <th>SKU</th>
+                        <th>SGS/Non-SGS</th>
+                        <th>Tipe Satuan</th>
+                        <th>Stock Masuk Terakhir</th>
+                        <th>Penjualan Bulan Lalu</th>
+                        <th>Minggu 1</th>
+                        <th>Minggu 2</th>
+                        <th>Minggu 3</th>
+                        <th>Minggu 4</th>
+                        <th>Saldo Hari Ini</th>
+                    </tr>
+                </thead>
+                <tbody>';
+            foreach ($query->result() as $row) {
+                echo '<tr>
+                    <td>' . htmlspecialchars($row->nama_produk) . '</td>
+                    <td>' . htmlspecialchars($row->sku) . '</td>
+                    <td>' . htmlspecialchars($row->type_sgs) . '</td>
+                    <td>' . htmlspecialchars($row->type_unit) . '</td>
+                    <td>' . htmlspecialchars($row->latest_incoming_stock) . '</td>
+                    <td>' . htmlspecialchars($row->sale_last_mouth) . '</td>
+                    <td>' . htmlspecialchars($row->sale_week_one) . '</td>
+                    <td>' . htmlspecialchars($row->sale_week_two) . '</td>
+                    <td>' . htmlspecialchars($row->sale_week_three) . '</td>
+                    <td>' . htmlspecialchars($row->sale_week_four) . '</td>
+                    <td>' . htmlspecialchars($row->balance_per_today) . '</td>
+                  </tr>';
+            }
+            echo '</tbody></table>';
+        } else {
+            echo '<div class="text-center text-muted py-3">Tidak ada produk dalam analisis PO ini.</div>';
+        }
     }
 }

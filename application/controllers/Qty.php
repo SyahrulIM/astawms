@@ -21,6 +21,7 @@ class Qty extends CI_Controller
         // End
 
         // Start Data Transaksi
+        $this->db->where('status_progress', 'Listing');
         $data_trx = $this->db->get('analisys_po');
         // End
 
