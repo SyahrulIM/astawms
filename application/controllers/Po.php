@@ -133,4 +133,14 @@ class Po extends CI_Controller
             echo '<div class="text-center text-muted py-3">Tidak ada produk dalam analisis PO ini.</div>';
         }
     }
+
+    public function cancel($idanalisys_po)
+    {
+        $this->db->set('status_progress', 'Cancel');
+        $this->db->where('idanalisys_po', $idanalisys_po);
+        $this->db->update('analisys_po');
+
+        $this->session->set_flashdata('success', 'Pemesanan berhasil dibatalkan.');
+        redirect('po');
+    }
 }

@@ -6,12 +6,6 @@
                     </div>
                 </div>
 
-                <!-- Button trigger modal Tambah PO-->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddPo">
-                    <i class="fa-solid fa-plus"></i> Tambah PO
-                </button>
-                <!-- End -->
-
                 <!-- Flash messages -->
                 <?php if ($this->session->flashdata('error')) : ?>
                 <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
@@ -131,28 +125,84 @@
                 </div>
                 <!-- End -->
 
+                <!-- Start Modal Detail PO -->
+                <div class="modal fade modal-xl" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="detailModalLabel">Detail Produk PO</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="detailContent">Memuat data...</div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End -->
+
+                <!-- Start Modal Batal Pemesanan -->
+                <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="cancelModalLabel">Konfirmasi Pembatalan</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Apakah Anda yakin ingin membatalkan pemesanan ini?</p>
+                                <input type="hidden" id="cancelIdPo">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tidak</button>
+                                <button type="button" class="btn btn-danger" id="confirmCancelBtn">Ya, Batalkan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End -->
+
                 <div class="row">
                     <div class="col">
                         <ul class="nav nav-tabs mt-4" id="listTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <?php
-                                $current = $this->uri->segment(1);
-                                $current_po = '';
-                                $current_qty = '';
-                                if ($current == 'po') {
-                                    $current_po = 'active';
-                                } else if ($current == 'qty_order') {
-                                    $current_qty = 'active';
-                                }
-                                ?>
+                            <?php
+                            $current = $this->uri->segment(1);
+                            $current_po = '';
+                            $current_qty = '';
+                            $current_order = '';
+                            $current_finish = '';
+                            if ($current == 'po') {
+                                $current_po = 'active';
+                            } else if ($current == 'qty') {
+                                $current_qty = 'active';
+                            } else if ($current == 'order') {
+                                $current_order = 'active';
+                            } else if ($current == 'finish') {
+                                $current_finish = 'active';
+                            }
+                            ?>
+                            <li class="nav-item">
                                 <a class="nav-link <?php echo $current_po; ?>" id="list-tab" type="button" href="<?php echo base_url('po/'); ?>">
-                                    Data Penjualan
+                                    Daftar Penjualan
                                 </a>
                             </li>
-                            <li class="nav-item <?php echo $current_qty; ?>" role="presentation">
-                                <button class="nav-link" id="all-tab" type="button">
+                            <li class="nav-item">
+                                <a class="nav-link <?php echo $current_qty; ?>" id="list-tab" type="button" href="<?php echo base_url('qty/'); ?>">
                                     Qty Order
-                                </button>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link <?php echo $current_order; ?>" id="list-tab" type="button" href="<?php echo base_url('order/'); ?>">
+                                    Pre-Order
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link <?php echo $current_finish; ?>" id="list-tab" type="button" href="<?php echo base_url('finish/'); ?>">
+                                    Finish
+                                </a>
                             </li>
                         </ul>
                         <table id="tableproduct" class="display" style="width:100%">
@@ -163,6 +213,7 @@
                                     <th>Tanggal Pesan</th>
                                     <th>User Pembuat</th>
                                     <th>Tanggal Pembuat</th>
+                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -176,7 +227,23 @@
                                     <td><?php echo $trx->order_date ?></td>
                                     <td><?php echo $trx->created_by ?></td>
                                     <td><?php echo $trx->created_date ?></td>
-                                    <td></td>
+                                    <td>
+                                        <?php if ($trx->status_progress == 'Listing') { ?>
+                                        <?php echo '<span class="badge text-bg-info">Terlisting</span>'; ?>
+                                        <?php } elseif ($trx->status_progress == 'Cancel') { ?>
+                                        <?php echo '<span class="badge text-bg-danger">Tercancel</span>'; ?>
+                                        <?php } ?>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-success btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
+                                            Proces
+                                        </button>
+                                        <?php if ($trx->status_progress == 'Listing') { ?>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="showCancelModal(<?= $trx->idanalisys_po ?>)">
+                                            Batal Pemesanan
+                                        </button>
+                                        <?php } ?>
+                                    </td>
                                 </tr>
                                 <?php } ?>
                             </tbody>
@@ -214,6 +281,7 @@
                     });
                 });
 
+                // Jalankan setiap kali tambah baris juga
                 function addInputRow() {
                     const tableBody = document.getElementById('tableBodyPO');
                     const rowCount = tableBody.rows.length;
@@ -251,23 +319,37 @@
                     <td><input type="number" class="form-control form-control-sm" name="createSaleWeekFour[]" max="10000"></td>
                     <td><input type="number" class="form-control form-control-sm" name="createBalancePerToday[]" max="10000"></td>
                     <td><button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(this)"><i class="fa-solid fa-trash-can"></i></button></td>
-                `;
+                    `;
+                    disableDuplicateProducts();
                 }
 
-                // Fungsi hapus baris
-                function deleteRow(button) {
-                    const row = button.closest('tr');
-                    row.remove();
-                    updateRowNumbers();
+                function showDetail(idanalisys_po) {
+                    // tampilkan modal dan loading
+                    document.getElementById('detailContent').innerHTML = 'Memuat data...';
+                    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+                    modal.show();
+
+                    // ambil data dari controller
+                    fetch(`<?= base_url('qty/get_detail_analisys_po/') ?>${idanalisys_po}`)
+                        .then(response => response.text())
+                        .then(html => {
+                            document.getElementById('detailContent').innerHTML = html;
+                        })
+                        .catch(() => {
+                            document.getElementById('detailContent').innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
+                        });
                 }
 
-                // Update nomor setelah hapus baris
-                function updateRowNumbers() {
-                    const rows = document.querySelectorAll('#tableBodyPO tr');
-                    rows.forEach((row, index) => {
-                        row.cells[0].textContent = index + 1;
-                    });
+                function showCancelModal(id) {
+                    document.getElementById('cancelIdPo').value = id;
+                    const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+                    modal.show();
                 }
+
+                document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+                    const id = document.getElementById('cancelIdPo').value;
+                    window.location.href = `<?= base_url('po/cancel/') ?>${id}`;
+                });
             </script>
             </body>
 

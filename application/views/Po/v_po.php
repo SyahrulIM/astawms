@@ -150,6 +150,27 @@
                 </div>
                 <!-- End -->
 
+                <!-- Start Modal Batal Pemesanan -->
+                <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="cancelModalLabel">Konfirmasi Pembatalan</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Apakah Anda yakin ingin membatalkan pemesanan ini?</p>
+                                <input type="hidden" id="cancelIdPo">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tidak</button>
+                                <button type="button" class="btn btn-danger" id="confirmCancelBtn">Ya, Batalkan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End -->
+
                 <div class="row">
                     <div class="col">
                         <ul class="nav nav-tabs mt-4" id="listTabs" role="tablist">
@@ -215,15 +236,19 @@
                                     <td>
                                         <?php if ($trx->status_progress == 'Listing') { ?>
                                         <?php echo '<span class="badge text-bg-info">Terlisting</span>'; ?>
+                                        <?php } elseif ($trx->status_progress == 'Cancel') { ?>
+                                        <?php echo '<span class="badge text-bg-danger">Tercancel</span>'; ?>
                                         <?php } ?>
                                     </td>
                                     <td>
                                         <button type="button" class="btn btn-info btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
                                             Detail
                                         </button>
-                                        <button type="button" class="btn btn-danger btn-sm">
-                                            <i class="fa-solid fa-trash"></i> Batal Pemesanan
+                                        <?php if ($trx->status_progress == 'Listing') { ?>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="showCancelModal(<?= $trx->idanalisys_po ?>)">
+                                            Batal Pemesanan
                                         </button>
+                                        <?php } ?>
                                     </td>
                                 </tr>
                                 <?php } ?>
@@ -363,6 +388,17 @@
                             document.getElementById('detailContent').innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
                         });
                 }
+
+                function showCancelModal(id) {
+                    document.getElementById('cancelIdPo').value = id;
+                    const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+                    modal.show();
+                }
+
+                document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+                    const id = document.getElementById('cancelIdPo').value;
+                    window.location.href = `<?= base_url('po/cancel/') ?>${id}`;
+                });
             </script>
             </body>
 
