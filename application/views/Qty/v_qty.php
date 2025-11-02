@@ -138,7 +138,7 @@
                                     </td>
                                     <td>
                                         <button type="button" class="btn btn-info btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
-                                            <i class="fa-solid fa-bars"></i> Proces
+                                            <i class="fa-solid fa-bars"></i> Process
                                         </button>
                                         <?php if ($trx->status_progress == 'Listing' || $trx->status_progress == 'Qty') { ?>
                                         <button type="button" class="btn btn-danger btn-sm" onclick="showCancelModal(<?= $trx->idanalisys_po ?>)">

@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Pre extends CI_Controller
+class Finish extends CI_Controller
 {
     public function __construct()
     {
@@ -21,7 +21,7 @@ class Pre extends CI_Controller
         // End
 
         // Start Data Transaksi
-        $this->db->where('status_progress', 'Qty');
+        $this->db->where('status_progress', 'PO');
         $data_trx = $this->db->get('analisys_po');
         // End
 
@@ -32,7 +32,7 @@ class Pre extends CI_Controller
         ];
 
         $this->load->view('theme/v_head', $data);
-        $this->load->view('Pre/v_pre');
+        $this->load->view('finish/v_finish');
     }
 
     public function preorder()
@@ -80,7 +80,7 @@ class Pre extends CI_Controller
     {
         $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
                        d.sale_last_mouth, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
-                       d.sale_week_four, d.balance_per_today, d.qty_order');
+                       d.sale_week_four, d.balance_per_today, d.qty_order, d.price');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $idanalisys_po);
@@ -135,8 +135,7 @@ class Pre extends CI_Controller
                 <td>' . htmlspecialchars($row->balance_per_today) . '</td>
                 <td>' . $avg_vs_stock . '</td>
                 <td>' . htmlspecialchars($row->qty_order) . '</td>
-                <td><input type="number" class="form-control form-control-sm" name="editPrice[]" required></td>
-                <input type="hidden" class="form-control form-control-sm" name="id" value="' . htmlspecialchars($row->idanalisys_po) . '">
+                <td>' . htmlspecialchars($row->price) . '</td>
             </tr>';
             }
 
@@ -154,5 +153,29 @@ class Pre extends CI_Controller
 
         $this->session->set_flashdata('success', 'Pemesanan berhasil dibatalkan.');
         redirect('Pre');
+    }
+
+    public function exportPdf()
+    {
+        $id = $this->input->get('id');
+
+        $this->db->where('idanalisys_po', $id);
+        $data_po = $this->db->get('analisys_po');
+
+        $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
+                       d.sale_last_mouth, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
+                       d.sale_week_four, d.balance_per_today, d.qty_order, d.price');
+        $this->db->from('detail_analisys_po d');
+        $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
+        $this->db->where('d.idanalisys_po', $id);
+        $data_detail_po = $this->db->get();
+
+        $data = [
+            'title' => 'Export Pre-Order',
+            'po' => $data_po->row(),
+            'detail_po' => $data_detail_po->result()
+        ];
+
+        $this->load->view('finish/v_pdf', $data);
     }
 }

@@ -35,8 +35,7 @@
                                     <div id="detailContent">Memuat data...</div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal">Pro-Order</button>
+                                    <a type="button" class="btn btn-success" id="pdfButton" href="#"><i class="fa-solid fa-file-pdf"></i> PDF</a>
                                 </div>
                             </div>
                         </div>
@@ -134,17 +133,14 @@
                                         <?php echo '<span class="badge text-bg-danger">Tercancel</span>'; ?>
                                         <?php } elseif ($trx->status_progress == 'Qty') { ?>
                                         <?php echo '<span class="badge text-bg-info">Terqty</span>'; ?>
+                                        <?php } elseif ($trx->status_progress == 'PO') { ?>
+                                        <?php echo '<span class="badge text-bg-success">Finish</span>'; ?>
                                         <?php } ?>
                                     </td>
                                     <td>
                                         <button type="button" class="btn btn-success btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
-                                            <i class="fa-solid fa-bars"></i> Pre-Order
+                                            <i class="fa-solid fa-bars"></i> File
                                         </button>
-                                        <?php if ($trx->status_progress == 'Listing' || $trx->status_progress == 'Qty') { ?>
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="showCancelModal(<?= $trx->idanalisys_po ?>)">
-                                            <i class="fa-solid fa-trash-can"></i> Batal Pemesanan
-                                        </button>
-                                        <?php } ?>
                                     </td>
                                 </tr>
                                 <?php } ?>
@@ -189,8 +185,11 @@
                     const modal = new bootstrap.Modal(document.getElementById('detailModal'));
                     modal.show();
 
+                    // ubah link tombol PDF
+                    document.getElementById('pdfButton').href = `<?= base_url('finish/exportPdf?id=') ?>${idanalisys_po}`;
+
                     // ambil data dari controller
-                    fetch(`<?= base_url('pre/get_detail_analisys_po/') ?>${idanalisys_po}`)
+                    fetch(`<?= base_url('finish/get_detail_analisys_po/') ?>${idanalisys_po}`)
                         .then(response => response.text())
                         .then(html => {
                             document.getElementById('detailContent').innerHTML = html;
@@ -199,6 +198,7 @@
                             document.getElementById('detailContent').innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
                         });
                 }
+
 
                 function showCancelModal(id) {
                     document.getElementById('cancelIdPo').value = id;
