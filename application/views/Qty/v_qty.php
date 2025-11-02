@@ -24,7 +24,7 @@
 
                 <!-- Modal Tambal PO-->
                 <div class="modal fade modal-xl" id="modalAddPo" tabindex="-1" aria-labelledby="modalAddPoLabel" aria-hidden="true">
-                    <form id="formAddPO" action="<?php echo base_url('po/insert') ?>" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan data PO ini? Pastikan semua data sudah benar.');">
+                    <form id="formAddPO" action="<?php echo base_url('qty/process') ?>" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan data PO ini? Pastikan semua data sudah benar.');">
                         <div class="modal-dialog modal-dialog-centered modal-fullscreen-md-down">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -127,20 +127,23 @@
 
                 <!-- Start Modal Detail PO -->
                 <div class="modal fade modal-xl" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-xl modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="detailModalLabel">Detail Produk PO</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div id="detailContent">Memuat data...</div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <form action="<?php echo base_url('qty/process'); ?>" method="post" onsubmit="return confirm(' Pastikan semua data sudah benar. Apakah Anda yakin ingin meproses data PO ini?');">
+                        <div class="modal-dialog modal-xl modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="detailModalLabel">Process Produk PO</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div id="detailContent">Memuat data...</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal">Simpan</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
                 <!-- End -->
 
@@ -236,11 +239,11 @@
                                     </td>
                                     <td>
                                         <button type="button" class="btn btn-success btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
-                                            Proces
+                                            <i class="fa-solid fa-bars"></i> Proces
                                         </button>
                                         <?php if ($trx->status_progress == 'Listing') { ?>
                                         <button type="button" class="btn btn-danger btn-sm" onclick="showCancelModal(<?= $trx->idanalisys_po ?>)">
-                                            Batal Pemesanan
+                                            <i class="fa-solid fa-trash-can"></i> Batal Pemesanan
                                         </button>
                                         <?php } ?>
                                     </td>
@@ -348,7 +351,7 @@
 
                 document.getElementById('confirmCancelBtn').addEventListener('click', function() {
                     const id = document.getElementById('cancelIdPo').value;
-                    window.location.href = `<?= base_url('po/cancel/') ?>${id}`;
+                    window.location.href = `<?= base_url('qty/cancel/') ?>${id}`;
                 });
             </script>
             </body>

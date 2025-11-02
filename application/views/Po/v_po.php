@@ -242,11 +242,11 @@
                                     </td>
                                     <td>
                                         <button type="button" class="btn btn-info btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
-                                            Detail
+                                            <i class="fa-solid fa-bars"></i> Detail
                                         </button>
                                         <?php if ($trx->status_progress == 'Listing') { ?>
                                         <button type="button" class="btn btn-danger btn-sm" onclick="showCancelModal(<?= $trx->idanalisys_po ?>)">
-                                            Batal Pemesanan
+                                            <i class="fa-solid fa-trash-can"></i> Batal Pemesanan
                                         </button>
                                         <?php } ?>
                                     </td>

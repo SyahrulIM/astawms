@@ -35,59 +35,18 @@ class Qty extends CI_Controller
         $this->load->view('Qty/v_qty');
     }
 
-    public function insert()
+    public function process()
     {
-        $createNumberPo = $this->input->post('createNumberPo');
-        $createOrderDate = $this->input->post('createOrderDate');
-        $createIdProduct = $this->input->post('createIdProduct');
-        $createTypeSgs = $this->input->post('createTypeSgs');
-        $createTypeUnit = $this->input->post('createTypeUnit');
-        $createLatestIncomingStock = $this->input->post('createLatestIncomingStock');
-        $createSaleLastMouth = $this->input->post('createSaleLastMouth');
-        $createSaleWeekOne = $this->input->post('createSaleWeekOne');
-        $createSaleWeekTwo = $this->input->post('createSaleWeekTwo');
-        $createSaleWeekThree = $this->input->post('createSaleWeekThree');
-        $createSaleWeekFour = $this->input->post('createSaleWeekFour');
-        $createBalancePerToday = $this->input->post('createBalancePerToday');
-
-        $data = [
-            'number_po' => $createNumberPo,
-            'order_date' => $createOrderDate,
-            'created_by' => $this->session->userdata('username'),
-            'created_date' => date("Y-m-d H:i:s"),
-            'updated_by' => $this->session->userdata('username'),
-            'updated_date' => date("Y-m-d H:i:s"),
-            'status' => 1
-        ];
-
-        $this->db->insert('analisys_po', $data);
-        $insert_id = $this->db->insert_id();
-
-        foreach ($createIdProduct as $key => $id) {
-            $data_detail = [
-                'idproduct' => $id,
-                'idanalisys_po' => $insert_id,
-                'type_sgs' => $createTypeSgs[$key],
-                'type_unit' => $createTypeUnit[$key],
-                'latest_incoming_stock' => $createLatestIncomingStock[$key],
-                'sale_last_mouth' => $createSaleLastMouth[$key],
-                'sale_week_one' => $createSaleWeekOne[$key],
-                'sale_week_two' => $createSaleWeekTwo[$key],
-                'sale_week_three' => $createSaleWeekThree[$key],
-                'sale_week_four' => $createSaleWeekFour[$key],
-                'balance_per_today' => $createBalancePerToday[$key],
-            ];
-
-            $this->db->insert('detail_analisys_po', $data_detail);
-        }
-
-        $this->session->set_flashdata('success', 'Data PO berhasil disimpan.');
-        redirect('po');
+        $id = $this->input->post('id');
+        $qty = $this->input->post('editQty');
+        echo '<pre>';
+        print_r($qty);
+        die;
     }
 
     public function get_detail_analisys_po($idanalisys_po)
     {
-        $this->db->select('p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
+        $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
                        d.sale_last_mouth, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
                        d.sale_week_four, d.balance_per_today');
         $this->db->from('detail_analisys_po d');
@@ -127,6 +86,7 @@ class Qty extends CI_Controller
             <td>' . htmlspecialchars($row->sale_week_three) . '</td>
             <td>' . htmlspecialchars($row->sale_week_four) . '</td>
             <td>' . htmlspecialchars($row->balance_per_today) . '</td>
+            <td><input type="hidden" class="form-control form-control-sm" name="id" value="' . htmlspecialchars($row->idanalisys_po) . '"></td>
             <td><input type="number" class="form-control form-control-sm" name="editQty[]" placeholder="0" max="10000"></td>
           </tr>';
             }
@@ -134,5 +94,15 @@ class Qty extends CI_Controller
         } else {
             echo '<div class="text-center text-muted py-3">Tidak ada produk dalam analisis PO ini.</div>';
         }
+    }
+
+    public function cancel($idanalisys_po)
+    {
+        $this->db->set('status_progress', 'Cancel');
+        $this->db->where('idanalisys_po', $idanalisys_po);
+        $this->db->update('analisys_po');
+
+        $this->session->set_flashdata('success', 'Pemesanan berhasil dibatalkan.');
+        redirect('qty');
     }
 }
