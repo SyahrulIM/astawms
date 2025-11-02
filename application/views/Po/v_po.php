@@ -178,14 +178,14 @@
                             $current = $this->uri->segment(1);
                             $current_po = '';
                             $current_qty = '';
-                            $current_order = '';
+                            $current_pre = '';
                             $current_finish = '';
                             if ($current == 'po') {
                                 $current_po = 'active';
                             } else if ($current == 'qty') {
                                 $current_qty = 'active';
-                            } else if ($current == 'order') {
-                                $current_order = 'active';
+                            } else if ($current == 'pre') {
+                                $current_pre = 'active';
                             } else if ($current == 'finish') {
                                 $current_finish = 'active';
                             }
@@ -201,7 +201,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link <?php echo $current_order; ?>" id="list-tab" type="button" href="<?php echo base_url('order/'); ?>">
+                                <a class="nav-link <?php echo $current_pre; ?>" id="list-tab" type="button" href="<?php echo base_url('pre/'); ?>">
                                     Pre-Order
                                 </a>
                             </li>
@@ -235,16 +235,18 @@
                                     <td><?php echo $trx->created_date ?></td>
                                     <td>
                                         <?php if ($trx->status_progress == 'Listing') { ?>
-                                        <?php echo '<span class="badge text-bg-info">Terlisting</span>'; ?>
+                                        <?php echo '<span class="badge text-bg-primary">Terlisting</span>'; ?>
                                         <?php } elseif ($trx->status_progress == 'Cancel') { ?>
                                         <?php echo '<span class="badge text-bg-danger">Tercancel</span>'; ?>
+                                        <?php } elseif ($trx->status_progress == 'Qty') { ?>
+                                        <?php echo '<span class="badge text-bg-info">Terqty</span>'; ?>
                                         <?php } ?>
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-info btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
                                             <i class="fa-solid fa-bars"></i> Detail
                                         </button>
-                                        <?php if ($trx->status_progress == 'Listing') { ?>
+                                        <?php if ($trx->status_progress == 'Listing' || $trx->status_progress == 'Qty') { ?>
                                         <button type="button" class="btn btn-danger btn-sm" onclick="showCancelModal(<?= $trx->idanalisys_po ?>)">
                                             <i class="fa-solid fa-trash-can"></i> Batal Pemesanan
                                         </button>

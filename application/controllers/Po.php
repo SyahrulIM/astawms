@@ -89,7 +89,7 @@ class Po extends CI_Controller
     {
         $this->db->select('p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
                        d.sale_last_mouth, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
-                       d.sale_week_four, d.balance_per_today');
+                       d.sale_week_four, d.balance_per_today, d.qty_order');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $idanalisys_po);
@@ -110,6 +110,7 @@ class Po extends CI_Controller
                         <th>Minggu 3</th>
                         <th>Minggu 4</th>
                         <th>Saldo Hari Ini</th>
+                        <th>Qty</th>
                     </tr>
                 </thead>
                 <tbody>';
@@ -126,7 +127,8 @@ class Po extends CI_Controller
                     <td>' . htmlspecialchars($row->sale_week_three) . '</td>
                     <td>' . htmlspecialchars($row->sale_week_four) . '</td>
                     <td>' . htmlspecialchars($row->balance_per_today) . '</td>
-                  </tr>';
+                    <td>' . ($row->qty_order > 0 ? htmlspecialchars($row->qty_order) : '<span class="text-muted">Qty Order belum diproses</span>') . '</td>
+                        </tr>';
             }
             echo '</tbody></table>';
         } else {

@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Qty extends CI_Controller
+class Pre extends CI_Controller
 {
     public function __construct()
     {
@@ -21,7 +21,7 @@ class Qty extends CI_Controller
         // End
 
         // Start Data Transaksi
-        $this->db->where('status_progress', 'Listing');
+        $this->db->where('status_progress', 'Qty');
         $data_trx = $this->db->get('analisys_po');
         // End
 
@@ -32,7 +32,7 @@ class Qty extends CI_Controller
         ];
 
         $this->load->view('theme/v_head', $data);
-        $this->load->view('Qty/v_qty');
+        $this->load->view('Pre/v_pre');
     }
 
     public function process()
@@ -78,9 +78,9 @@ class Qty extends CI_Controller
 
     public function get_detail_analisys_po($idanalisys_po)
     {
-        $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
+        $this->db->select('p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
                        d.sale_last_mouth, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
-                       d.sale_week_four, d.balance_per_today');
+                       d.sale_week_four, d.balance_per_today, d.qty_order');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $idanalisys_po);
@@ -88,39 +88,38 @@ class Qty extends CI_Controller
 
         if ($query->num_rows() > 0) {
             echo '<table class="table table-bordered table-striped table-xl align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Nama Produk</th>
-                <th>SKU</th>
-                <th>SGS/Non-SGS</th>
-                <th>Tipe Satuan</th>
-                <th>Stock Masuk Terakhir</th>
-                <th>Penjualan Bulan Lalu</th>
-                <th>Minggu 1</th>
-                <th>Minggu 2</th>
-                <th>Minggu 3</th>
-                <th>Minggu 4</th>
-                <th>Saldo Hari Ini</th>
-                <th>QTY</th>
-            </tr>
-        </thead>
-        <tbody>';
+                <thead class="table-light">
+                    <tr>
+                        <th>Nama Produk</th>
+                        <th>SKU</th>
+                        <th>SGS/Non-SGS</th>
+                        <th>Tipe Satuan</th>
+                        <th>Stock Masuk Terakhir</th>
+                        <th>Penjualan Bulan Lalu</th>
+                        <th>Minggu 1</th>
+                        <th>Minggu 2</th>
+                        <th>Minggu 3</th>
+                        <th>Minggu 4</th>
+                        <th>Saldo Hari Ini</th>
+                        <th>Qty</th>
+                    </tr>
+                </thead>
+                <tbody>';
             foreach ($query->result() as $row) {
                 echo '<tr>
-            <td>' . htmlspecialchars($row->nama_produk) . '</td>
-            <td>' . htmlspecialchars($row->sku) . '</td>
-            <td>' . htmlspecialchars($row->type_sgs) . '</td>
-            <td>' . htmlspecialchars($row->type_unit) . '</td>
-            <td>' . htmlspecialchars($row->latest_incoming_stock) . '</td>
-            <td>' . htmlspecialchars($row->sale_last_mouth) . '</td>
-            <td>' . htmlspecialchars($row->sale_week_one) . '</td>
-            <td>' . htmlspecialchars($row->sale_week_two) . '</td>
-            <td>' . htmlspecialchars($row->sale_week_three) . '</td>
-            <td>' . htmlspecialchars($row->sale_week_four) . '</td>
-            <td>' . htmlspecialchars($row->balance_per_today) . '</td>
-            <td><input type="number" class="form-control form-control-sm" name="editQty[]" required></td>
-            <input type="hidden" class="form-control form-control-sm" name="id" value="' . htmlspecialchars($row->idanalisys_po) . '">
-          </tr>';
+                    <td>' . htmlspecialchars($row->nama_produk) . '</td>
+                    <td>' . htmlspecialchars($row->sku) . '</td>
+                    <td>' . htmlspecialchars($row->type_sgs) . '</td>
+                    <td>' . htmlspecialchars($row->type_unit) . '</td>
+                    <td>' . htmlspecialchars($row->latest_incoming_stock) . '</td>
+                    <td>' . htmlspecialchars($row->sale_last_mouth) . '</td>
+                    <td>' . htmlspecialchars($row->sale_week_one) . '</td>
+                    <td>' . htmlspecialchars($row->sale_week_two) . '</td>
+                    <td>' . htmlspecialchars($row->sale_week_three) . '</td>
+                    <td>' . htmlspecialchars($row->sale_week_four) . '</td>
+                    <td>' . htmlspecialchars($row->balance_per_today) . '</td>
+                    <td>' . ($row->qty_order > 0 ? htmlspecialchars($row->qty_order) : '<span class="text-muted">Qty Order belum diproses</span>') . '</td>
+                        </tr>';
             }
             echo '</tbody></table>';
         } else {
