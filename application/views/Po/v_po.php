@@ -80,7 +80,6 @@
                                                 <th>III</th>
                                                 <th>IV</th>
                                                 <th></th>
-                                                <th></th>
                                             </tr>
                                         </thead>
                                         <tbody id="tableBodyPO">
@@ -240,12 +239,16 @@
                                         <?php echo '<span class="badge text-bg-danger">Tercancel</span>'; ?>
                                         <?php } elseif ($trx->status_progress == 'Qty') { ?>
                                         <?php echo '<span class="badge text-bg-info">Terqty</span>'; ?>
+                                        <?php } elseif ($trx->status_progress == 'PO') { ?>
+                                        <?php echo '<span class="badge text-bg-success">Finish</span>'; ?>
                                         <?php } ?>
                                     </td>
                                     <td>
+                                        <?php if ($trx->status_progress == 'Listing' || $trx->status_progress == 'Qty') { ?>
                                         <button type="button" class="btn btn-primary btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
                                             <i class="fa-solid fa-bars"></i> Detail
                                         </button>
+                                        <?php } ?>
                                         <?php if ($trx->status_progress == 'Listing' || $trx->status_progress == 'Qty') { ?>
                                         <button type="button" class="btn btn-danger btn-sm" onclick="showCancelModal(<?= $trx->idanalisys_po ?>)">
                                             <i class="fa-solid fa-trash-can"></i> Batal Pemesanan

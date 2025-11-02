@@ -72,7 +72,7 @@ class Qty extends CI_Controller
             'updated_date' => date('Y-m-d H:i:s')
         ]);
 
-        $this->session->set_flashdata('success', 'QTY berhasil disimpan dan menunggu persetujuan.');
+        $this->session->set_flashdata('success', 'QTY berhasil disimpan dan silakan lanjut ke tahap Pre-Order.');
         redirect('qty');
     }
 
@@ -101,11 +101,24 @@ class Qty extends CI_Controller
                 <th>Minggu 3</th>
                 <th>Minggu 4</th>
                 <th>Saldo Hari Ini</th>
-                <th>QTY</th>
+                <th>Avg Sales vs Stock (Bulan)</th>
+                <th>QTY Order</th>
             </tr>
         </thead>
         <tbody>';
             foreach ($query->result() as $row) {
+                // Hitung rata-rata penjualan per minggu
+                $total_sales = floatval($row->sale_week_one) + floatval($row->sale_week_two) + floatval($row->sale_week_three) + floatval($row->sale_week_four);
+                $avg_sales = $total_sales / 4;
+
+                // Hindari pembagian nol
+                if ($avg_sales > 0) {
+                    $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
+                    $avg_vs_stock = number_format($avg_vs_stock, 2); // tampilkan 2 angka desimal
+                } else {
+                    $avg_vs_stock = '<span class="text-muted">N/A</span>';
+                }
+
                 echo '<tr>
             <td>' . htmlspecialchars($row->nama_produk) . '</td>
             <td>' . htmlspecialchars($row->sku) . '</td>
@@ -118,6 +131,7 @@ class Qty extends CI_Controller
             <td>' . htmlspecialchars($row->sale_week_three) . '</td>
             <td>' . htmlspecialchars($row->sale_week_four) . '</td>
             <td>' . htmlspecialchars($row->balance_per_today) . '</td>
+            <td>' . $avg_vs_stock . '</td>
             <td><input type="number" class="form-control form-control-sm" name="editQty[]" required></td>
             <input type="hidden" class="form-control form-control-sm" name="id" value="' . htmlspecialchars($row->idanalisys_po) . '">
           </tr>';

@@ -81,7 +81,7 @@ class Po extends CI_Controller
             $this->db->insert('detail_analisys_po', $data_detail);
         }
 
-        $this->session->set_flashdata('success', 'Data PO berhasil disimpan.');
+        $this->session->set_flashdata('success', 'Data PO berhasil disimpan, Silakan lanjut ke tahap Qty Order.');
         redirect('po');
     }
 
@@ -89,7 +89,7 @@ class Po extends CI_Controller
     {
         $this->db->select('p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
                        d.sale_last_mouth, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
-                       d.sale_week_four, d.balance_per_today, d.qty_order');
+                       d.sale_week_four, d.balance_per_today, d.qty_order, d.price');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $idanalisys_po);
@@ -110,11 +110,25 @@ class Po extends CI_Controller
                         <th>Minggu 3</th>
                         <th>Minggu 4</th>
                         <th>Saldo Hari Ini</th>
-                        <th>Qty</th>
+                        <th>Avg Sales vs Stock (Bulan)</th>
+                        <th>Qty Order</th>
+                        <th>Price per Unit</th>
                     </tr>
                 </thead>
                 <tbody>';
             foreach ($query->result() as $row) {
+                // Hitung rata-rata penjualan per minggu
+                $total_sales = floatval($row->sale_week_one) + floatval($row->sale_week_two) + floatval($row->sale_week_three) + floatval($row->sale_week_four);
+                $avg_sales = $total_sales / 4;
+
+                // Hindari pembagian nol
+                if ($avg_sales > 0) {
+                    $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
+                    $avg_vs_stock = number_format($avg_vs_stock, 2); // tampilkan 2 angka desimal
+                } else {
+                    $avg_vs_stock = '<span class="text-muted">N/A</span>';
+                }
+
                 echo '<tr>
                     <td>' . htmlspecialchars($row->nama_produk) . '</td>
                     <td>' . htmlspecialchars($row->sku) . '</td>
@@ -127,7 +141,9 @@ class Po extends CI_Controller
                     <td>' . htmlspecialchars($row->sale_week_three) . '</td>
                     <td>' . htmlspecialchars($row->sale_week_four) . '</td>
                     <td>' . htmlspecialchars($row->balance_per_today) . '</td>
+                    <td>' . $avg_vs_stock . '</td>
                     <td>' . ($row->qty_order > 0 ? htmlspecialchars($row->qty_order) : '<span class="text-muted">Qty Order belum diproses</span>') . '</td>
+                    <td>' . ($row->price > 0 ? htmlspecialchars($row->price) : '<span class="text-muted">Pre-Order belum diproses</span>') . '</td>
                         </tr>';
             }
             echo '</tbody></table>';
