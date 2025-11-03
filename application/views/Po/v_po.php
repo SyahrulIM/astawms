@@ -46,6 +46,12 @@
                                     </div>
                                     <div class="row mb-3">
                                         <div class="col">
+                                            <label for="createNameContainer" class="form-label">Nama Container</label>
+                                            <input type="text" class="form-control" id="createNameContainer" name="createNameContainer" required>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col">
                                             <label for="createOrderDate" class="form-label">Tanggal Pemesanan</label>
                                             <input type="date" class="form-control" id="createOrderDate" name="createOrderDate">
                                         </div>
@@ -175,36 +181,53 @@
                         <ul class="nav nav-tabs mt-4" id="listTabs" role="tablist">
                             <?php
                             $current = $this->uri->segment(1);
-                            $current_po = '';
-                            $current_qty = '';
-                            $current_pre = '';
-                            $current_finish = '';
+                            $current_po = $current_qty = $current_pre = $current_finish = '';
+
                             if ($current == 'po') {
                                 $current_po = 'active';
-                            } else if ($current == 'qty') {
+                            } elseif ($current == 'qty') {
                                 $current_qty = 'active';
-                            } else if ($current == 'pre') {
+                            } elseif ($current == 'pre') {
                                 $current_pre = 'active';
-                            } else if ($current == 'finish') {
+                            } elseif ($current == 'finish') {
                                 $current_finish = 'active';
                             }
+
+                            // load helper preorder
+                            $this->load->helper('preorder');
+                            $count_qty = number_pre_order_qty();
+                            $count_pre = number_pre_order_pre();
                             ?>
-                            <li class="nav-item">
+
+                            <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_po; ?>" id="list-tab" type="button" href="<?php echo base_url('po/'); ?>">
                                     Daftar Penjualan
                                 </a>
                             </li>
-                            <li class="nav-item">
+
+                            <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_qty; ?>" id="list-tab" type="button" href="<?php echo base_url('qty/'); ?>">
                                     Qty Order
+                                    <?php if ($count_qty > 0) : ?>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        <?php echo $count_qty; ?>
+                                    </span>
+                                    <?php endif; ?>
                                 </a>
                             </li>
-                            <li class="nav-item">
+
+                            <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_pre; ?>" id="list-tab" type="button" href="<?php echo base_url('pre/'); ?>">
                                     Pre-Order
+                                    <?php if ($count_pre > 0) : ?>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        <?php echo $count_pre; ?>
+                                    </span>
+                                    <?php endif; ?>
                                 </a>
                             </li>
-                            <li class="nav-item">
+
+                            <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_finish; ?>" id="list-tab" type="button" href="<?php echo base_url('finish/'); ?>">
                                     Finish
                                 </a>
@@ -215,6 +238,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Nomer PO</th>
+                                    <th>Container</th>
                                     <th>Tanggal Pesan</th>
                                     <th>User Pembuat</th>
                                     <th>Tanggal Pembuat</th>
@@ -229,6 +253,7 @@
                                 <tr>
                                     <td><?php echo $no++ ?></td>
                                     <td><?php echo $trx->number_po ?></td>
+                                    <td><?php echo $trx->name_container ?></td>
                                     <td><?php echo $trx->order_date ?></td>
                                     <td><?php echo $trx->created_by ?></td>
                                     <td><?php echo $trx->created_date ?></td>

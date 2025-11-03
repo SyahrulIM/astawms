@@ -122,6 +122,7 @@ https://docs.google.com/spreadsheets/d/1JoGzx2IrNF9ns0PbarzkzQrphhHLomXz7K_Ppp-r
 Data User CCTV D17:
 Username: admin
 Password: @Asta321
+Verification Code: MUV7fG
 
 Data User CCTV D09:
 Username: admin

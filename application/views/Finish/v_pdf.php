@@ -39,6 +39,7 @@
         <div class="row">
             <div class="col">
                 <h5>Nomer PO: <?php echo $po->number_po ?></h5>
+                <h5>Nama Container: <?php echo $po->name_container ?></h5>
                 <h5>Tanggal Pesan: <?php echo $po->order_date ?></h5>
             </div>
         </div>

@@ -8,11 +8,15 @@
 </head>
 
 <style>
-    #tableproduct, #tableproduct th, #tableproduct td {
+    #tableproduct,
+    #tableproduct th,
+    #tableproduct td {
         border: 1px solid black;
         border-collapse: collapse;
     }
-    #tableproduct th, #tableproduct td {
+
+    #tableproduct th,
+    #tableproduct td {
         padding: 8px;
         text-align: left;
     }
@@ -57,17 +61,17 @@
                     </thead>
                     <tbody>
                         <?php foreach ($transaction_stock as $tskey => $tsvalue) { ?>
-                            <tr>
-                                <td><?php echo $tskey + 1; ?></td>
-                                <td><?php echo $tsvalue->kategori; ?></td>
-                                <td><?php echo $tsvalue->stock_code; ?></td>
-                                <td><?php echo $tsvalue->datetime; ?></td>
-                                <td><?php echo $tsvalue->distribution_date; ?></td>
-                                <td><?php echo $tsvalue->instock; ?></td>
-                                <td><?php echo $tsvalue->outstock; ?></td>
-                                <td><?php echo $tsvalue->sisa; ?></td>
-                                <td><?php echo $tsvalue->user; ?></td>
-                            </tr>
+                        <tr>
+                            <td><?php echo $tskey + 1; ?></td>
+                            <td><?php echo $tsvalue->kategori; ?></td>
+                            <td><?php echo $tsvalue->stock_code; ?></td>
+                            <td><?php echo $tsvalue->datetime; ?></td>
+                            <td><?php echo $tsvalue->distribution_date; ?></td>
+                            <td><?php echo $tsvalue->instock; ?></td>
+                            <td><?php echo $tsvalue->outstock; ?></td>
+                            <td><?php echo $tsvalue->sisa; ?></td>
+                            <td><?php echo $tsvalue->user; ?></td>
+                        </tr>
                         <?php } ?>
                     </tbody>
                 </table>
