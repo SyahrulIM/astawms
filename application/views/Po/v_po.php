@@ -8,7 +8,7 @@
 
                 <!-- Button trigger modal Tambah PO-->
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddPo">
-                    <i class="fa-solid fa-plus"></i> Tambah PO
+                    <i class="fa-solid fa-plus"></i> Data Stock
                 </button>
                 <!-- End -->
 
@@ -38,24 +38,6 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <div class="row mb-3">
-                                        <div class="col">
-                                            <label for="createNumberPo" class="form-label">Nomer PO</label>
-                                            <input type="text" class="form-control" id="createNumberPo" name="createNumberPo" required>
-                                        </div>
-                                    </div>
-                                    <div class="row mb-3">
-                                        <div class="col">
-                                            <label for="createNameContainer" class="form-label">Nama Container</label>
-                                            <input type="text" class="form-control" id="createNameContainer" name="createNameContainer" required>
-                                        </div>
-                                    </div>
-                                    <div class="row mb-3">
-                                        <div class="col">
-                                            <label for="createOrderDate" class="form-label">Tanggal Pemesanan</label>
-                                            <input type="date" class="form-control" id="createOrderDate" name="createOrderDate">
-                                        </div>
-                                    </div>
                                     <div class="row">
                                         <div class="col mb-3">
                                             <div class="text-start">
@@ -73,18 +55,19 @@
                                                 <th>Tipe SGS</th>
                                                 <th>Tipe Satuan</th>
                                                 <th>Stock Masuk Terakhir</th>
-                                                <th>Penjualan Bulan Kemarin</th>
+                                                <th>Penjualan Bulan Lalu</th>
                                                 <th colspan="4">Penjualan Mingguan</th>
                                                 <th>Saldo Perhari Ini</th>
                                                 <th></th>
                                             </tr>
                                             <tr>
                                                 <th></th>
-                                                <th colspan="6"></th>
+                                                <th colspan="5"></th>
                                                 <th>I</th>
                                                 <th>II</th>
                                                 <th>III</th>
                                                 <th>IV</th>
+                                                <th></th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -201,7 +184,7 @@
 
                             <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_po; ?>" id="list-tab" type="button" href="<?php echo base_url('po/'); ?>">
-                                    Daftar Penjualan
+                                    Data Stock
                                 </a>
                             </li>
 
@@ -252,9 +235,27 @@
                                 foreach ($data_trx as $key => $trx) { ?>
                                 <tr>
                                     <td><?php echo $no++ ?></td>
-                                    <td><?php echo $trx->number_po ?></td>
-                                    <td><?php echo $trx->name_container ?></td>
-                                    <td><?php echo $trx->order_date ?></td>
+                                    <td>
+                                        <?php if ($trx->number_po) {
+                                                echo $trx->number_po;
+                                            } else {
+                                                echo 'Belum terset di Finish';
+                                            } ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($trx->name_container) {
+                                                echo $trx->name_container;
+                                            } else {
+                                                echo 'Belum terset di Finish';
+                                            } ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($trx->order_date) {
+                                                echo $trx->order_date;
+                                            } else {
+                                                echo 'Belum terset di Finish';
+                                            } ?>
+                                        <?php echo $trx->order_date ?></td>
                                     <td><?php echo $trx->created_by ?></td>
                                     <td><?php echo $trx->created_date ?></td>
                                     <td>

@@ -35,9 +35,6 @@ class Po extends CI_Controller
 
     public function insert()
     {
-        $createNumberPo = $this->input->post('createNumberPo');
-        $createOrderDate = $this->input->post('createOrderDate');
-        $createNameContainer = $this->input->post('createNameContainer');
         $createIdProduct = $this->input->post('createIdProduct');
         $createTypeSgs = $this->input->post('createTypeSgs');
         $createTypeUnit = $this->input->post('createTypeUnit');
@@ -49,19 +46,8 @@ class Po extends CI_Controller
         $createSaleWeekFour = $this->input->post('createSaleWeekFour');
         $createBalancePerToday = $this->input->post('createBalancePerToday');
 
-        $this->db->where('number_po', $createNumberPo);
-        $data_trx = $this->db->get('analisys_po');
-
-        if ($data_trx->num_rows() > 0) {
-            $this->session->set_flashdata('error', 'Nomor PO sudah ada, silakan gunakan nomor PO lain.');
-            redirect('po');
-        }
-
         $data = [
-            'number_po' => $createNumberPo,
-            'order_date' => $createOrderDate,
             'status_progress' => 'Listing',
-            'name_container' => $createNameContainer,
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
             'updated_by' => $this->session->userdata('username'),
@@ -70,12 +56,12 @@ class Po extends CI_Controller
         ];
 
         $this->db->insert('analisys_po', $data);
-        $insert_id = $this->db->insert_id();
+        $idanalisys_po = $this->db->insert_id();
 
         foreach ($createIdProduct as $key => $id) {
             $data_detail = [
                 'idproduct' => $id,
-                'idanalisys_po' => $insert_id,
+                'idanalisys_po' => $idanalisys_po,
                 'type_sgs' => $createTypeSgs[$key],
                 'type_unit' => $createTypeUnit[$key],
                 'latest_incoming_stock' => $createLatestIncomingStock[$key],

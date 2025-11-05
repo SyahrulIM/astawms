@@ -141,9 +141,27 @@
                                 foreach ($data_trx as $key => $trx) { ?>
                                 <tr>
                                     <td><?php echo $no++ ?></td>
-                                    <td><?php echo $trx->number_po ?></td>
-                                    <td><?php echo $trx->name_container ?></td>
-                                    <td><?php echo $trx->order_date ?></td>
+                                    <td>
+                                        <?php if ($trx->number_po) {
+                                                echo $trx->number_po;
+                                            } else {
+                                                echo 'Belum terset di Finish';
+                                            } ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($trx->name_container) {
+                                                echo $trx->name_container;
+                                            } else {
+                                                echo 'Belum terset di Finish';
+                                            } ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($trx->order_date) {
+                                                echo $trx->order_date;
+                                            } else {
+                                                echo 'Belum terset di Finish';
+                                            } ?>
+                                        <?php echo $trx->order_date ?></td>
                                     <td><?php echo $trx->created_by ?></td>
                                     <td><?php echo $trx->created_date ?></td>
                                     <td>
@@ -153,12 +171,16 @@
                                         <?php echo '<span class="badge text-bg-danger">Tercancel</span>'; ?>
                                         <?php } elseif ($trx->status_progress == 'Qty') { ?>
                                         <?php echo '<span class="badge text-bg-info">Terqty</span>'; ?>
+                                        <?php } elseif ($trx->status_progress == 'PO') { ?>
+                                        <?php echo '<span class="badge text-bg-success">Finish</span>'; ?>
                                         <?php } ?>
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-info btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
-                                            <i class="fa-solid fa-bars"></i> Process
+                                        <?php if ($trx->status_progress == 'Listing' || $trx->status_progress == 'Qty') { ?>
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="showDetail(<?= $trx->idanalisys_po ?>)">
+                                            <i class="fa-solid fa-bars"></i> Detail
                                         </button>
+                                        <?php } ?>
                                         <?php if ($trx->status_progress == 'Listing' || $trx->status_progress == 'Qty') { ?>
                                         <button type="button" class="btn btn-danger btn-sm" onclick="showCancelModal(<?= $trx->idanalisys_po ?>)">
                                             <i class="fa-solid fa-trash-can"></i> Batal Pemesanan
