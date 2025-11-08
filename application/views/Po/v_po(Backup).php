@@ -6,6 +6,12 @@
                     </div>
                 </div>
 
+                <!-- Button trigger modal Tambah PO-->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddPo">
+                    <i class="fa-solid fa-plus"></i> Data Stock
+                </button>
+                <!-- End -->
+
                 <!-- Flash messages -->
                 <?php if ($this->session->flashdata('error')) : ?>
                 <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
@@ -22,25 +28,109 @@
                 <?php endif; ?>
                 <!-- End -->
 
-                <!-- Start Modal Detail PO -->
-                <div class="modal fade modal-xl" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-                    <form action="<?php echo base_url('pre/preorder'); ?>" method="post" onsubmit="return confirm('Pastikan semua data sudah benar, Apakah Anda yakin ingin meproses data PO ini?');">
-                        <div class="modal-dialog modal-xl modal-dialog-centered">
+                <!-- Modal Tambal PO-->
+                <div class="modal fade modal-xl" id="modalAddPo" tabindex="-1" aria-labelledby="modalAddPoLabel" aria-hidden="true">
+                    <form id="formAddPO" action="<?php echo base_url('po/insert') ?>" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan data PO ini? Pastikan semua data sudah benar.');">
+                        <div class="modal-dialog modal-dialog-centered modal-fullscreen-md-down">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="detailModalLabel">Pre-Order</h5>
+                                    <h1 class="modal-title fs-5" id="modalAddPoLabel"><i class="fa-solid fa-plus"></i> Tambah PO</h1>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <div id="detailContent">Memuat data...</div>
+                                    <div class="row">
+                                        <div class="col mb-3">
+                                            <div class="text-start">
+                                                <button type="button" class="btn btn-sm btn-success" id="addRow" onclick="addInputRow()">
+                                                    <i class="bi bi-plus"></i> Tambah Baris
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <table class="table table-bordered table-sm align-middle text-center" style="font-size: small;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 40px;">No</th>
+                                                <th>Kode Product</th>
+                                                <th>Tipe SGS</th>
+                                                <th>Tipe Satuan</th>
+                                                <th>Stock Masuk Terakhir</th>
+                                                <th>Penjualan Bulan Lalu</th>
+                                                <th colspan="4">Penjualan Mingguan</th>
+                                                <th>Saldo Perhari Ini</th>
+                                                <th></th>
+                                            </tr>
+                                            <tr>
+                                                <th></th>
+                                                <th colspan="5"></th>
+                                                <th>I</th>
+                                                <th>II</th>
+                                                <th>III</th>
+                                                <th>IV</th>
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableBodyPO">
+                                            <tr>
+                                                <td>1</td>
+                                                <td>
+                                                    <select class="form-select form-select-sm" name="createIdProduct[]">
+                                                        <option disabled selected>Pilih Kode Produk</option>
+                                                        <?php foreach ($product as $key => $p) { ?>
+                                                        <option value="<?php echo $p->idproduct; ?>"><?php echo $p->sku . '(' . $p->nama_produk . ')' ?></option>
+                                                        <?php } ?>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-select form-select-sm" name="createTypeSgs[]">
+                                                        <option disabled selected>Pilih SGS</option>
+                                                        <option value="sgs">SGS</option>
+                                                        <option value="non sgs">Non SGS</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="form-control form-control-sm" name="createTypeUnit[]" value="Pcs">
+                                                </td>
+                                                <td><input type="number" class="form-control form-control-sm" name="createLatestIncomingStock[]" max="10000"></td>
+                                                <td><input type="number" class="form-control form-control-sm" name="createSaleLastMouth[]" max="10000"></td>
+                                                <td><input type="number" class="form-control form-control-sm" name="createSaleWeekOne[]" max="10000"></td>
+                                                <td><input type="number" class="form-control form-control-sm" name="createSaleWeekTwo[]" max="10000"></td>
+                                                <td><input type="number" class="form-control form-control-sm" name="createSaleWeekThree[]" max="10000"></td>
+                                                <td><input type="number" class="form-control form-control-sm" name="createSaleWeekFour[]" max="10000"></td>
+                                                <td><input type="number" class="form-control form-control-sm" name="createBalancePerToday[]" max="10000"></td>
+                                                <td></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
+
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal">Pre-Order</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary">Submit</button>
                                 </div>
                             </div>
                         </div>
                     </form>
+                </div>
+                <!-- End -->
+
+                <!-- Start Modal Detail PO -->
+                <div class="modal fade modal-xl" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="detailModalLabel">Detail Produk PO</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="detailContent">Memuat data...</div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <!-- End -->
 
@@ -96,21 +186,10 @@
 
                             <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_qty; ?>" id="list-tab" type="button" href="<?php echo base_url('qty/'); ?>">
-                                    Qty Order
+                                    Performa PO
                                     <?php if ($count_qty > 0) : ?>
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                         <?php echo $count_qty; ?>
-                                    </span>
-                                    <?php endif; ?>
-                                </a>
-                            </li>
-
-                            <li class="nav-item position-relative">
-                                <a class="nav-link <?php echo $current_pre; ?>" id="list-tab" type="button" href="<?php echo base_url('pre/'); ?>">
-                                    Pre-Order
-                                    <?php if ($count_pre > 0) : ?>
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        <?php echo $count_pre; ?>
                                     </span>
                                     <?php endif; ?>
                                 </a>
@@ -223,6 +302,91 @@
                         }
                     });
                 });
+                // Pantau setiap perubahan pilihan produk
+                document.addEventListener('change', function(e) {
+                    if (e.target && e.target.name === 'createIdProduct[]') {
+                        disableDuplicateProducts();
+                    }
+                });
+
+                // Jalankan setiap kali tambah baris juga
+                function addInputRow() {
+                    const tableBody = document.getElementById('tableBodyPO');
+                    const rowCount = tableBody.rows.length;
+                    const newRow = tableBody.insertRow();
+
+                    newRow.innerHTML = `
+                    <td>${rowCount + 1}</td>
+                    <td>
+                        <select class="form-select form-select-sm" name="createIdProduct[]">
+                            <option disabled selected>Pilih Kode Produk</option>
+                            <?php foreach ($product as $key => $p) { ?>
+                                <option value="<?php echo $p->idproduct; ?>"><?php echo $p->sku . '(' . $p->nama_produk . ')' ?></option>
+                            <?php } ?>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-select form-select-sm" name="createTypeSgs[]">
+                            <option disabled selected>Pilih SGS</option>
+                            <option value="sgs">SGS</option>
+                            <option value="non sgs">Non SGS</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-select form-select-sm" name="createTypeUnit[]">
+                            <option disabled selected>Pilih Satuan</option>
+                            <option value="pcs">Pcs</option>
+                            <option value="gram">Gram</option>
+                        </select>
+                    </td>
+                    <td><input type="number" class="form-control form-control-sm" name="createLatestIncomingStock[]" max="10000"></td>
+                    <td><input type="number" class="form-control form-control-sm" name="createSaleLastMouth[]" max="10000"></td>
+                    <td><input type="number" class="form-control form-control-sm" name="createSaleWeekOne[]" max="10000"></td>
+                    <td><input type="number" class="form-control form-control-sm" name="createSaleWeekTwo[]" max="10000"></td>
+                    <td><input type="number" class="form-control form-control-sm" name="createSaleWeekThree[]" max="10000"></td>
+                    <td><input type="number" class="form-control form-control-sm" name="createSaleWeekFour[]" max="10000"></td>
+                    <td><input type="number" class="form-control form-control-sm" name="createBalancePerToday[]" max="10000"></td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="deleteRow(this)"><i class="fa-solid fa-trash-can"></i></button></td>
+                    `;
+                    disableDuplicateProducts();
+                }
+
+                // Update disabled state untuk produk duplikat
+                function disableDuplicateProducts() {
+                    const selects = document.querySelectorAll('select[name="createIdProduct[]"]');
+                    const selectedValues = Array.from(selects)
+                        .map(s => s.value)
+                        .filter(v => v !== 'Pilih Kode Produk' && v !== '');
+
+                    selects.forEach(select => {
+                        Array.from(select.options).forEach(option => {
+                            if (selectedValues.includes(option.value) && select.value !== option.value) {
+                                option.disabled = true;
+                            } else {
+                                option.disabled = false;
+                            }
+                        });
+                    });
+                }
+
+                // Fungsi hapus baris
+                function deleteRow(button) {
+                    const row = button.closest('tr');
+                    row.remove();
+                    updateRowNumbers();
+                    disableDuplicateProducts(); // Refresh disable setelah hapus baris
+                }
+
+                // Update nomor setelah hapus baris
+                function updateRowNumbers() {
+                    const rows = document.querySelectorAll('#tableBodyPO tr');
+                    rows.forEach((row, index) => {
+                        row.cells[0].textContent = index + 1;
+                    });
+                }
+
+                // Jalankan saat halaman pertama kali load
+                document.addEventListener('DOMContentLoaded', disableDuplicateProducts);
 
                 function showDetail(idanalisys_po) {
                     // tampilkan modal dan loading
@@ -231,7 +395,7 @@
                     modal.show();
 
                     // ambil data dari controller
-                    fetch(`<?= base_url('pre/get_detail_analisys_po/') ?>${idanalisys_po}`)
+                    fetch(`<?= base_url('po/get_detail_analisys_po/') ?>${idanalisys_po}`)
                         .then(response => response.text())
                         .then(html => {
                             document.getElementById('detailContent').innerHTML = html;
@@ -249,7 +413,7 @@
 
                 document.getElementById('confirmCancelBtn').addEventListener('click', function() {
                     const id = document.getElementById('cancelIdPo').value;
-                    window.location.href = `<?= base_url('pre/cancel/') ?>${id}`;
+                    window.location.href = `<?= base_url('po/cancel/') ?>${id}`;
                 });
             </script>
             </body>

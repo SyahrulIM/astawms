@@ -35,17 +35,45 @@ class Po extends CI_Controller
 
     public function insert()
     {
-        $createIdProduct = $this->input->post('createIdProduct');
-        $createTypeSgs = $this->input->post('createTypeSgs');
-        $createTypeUnit = $this->input->post('createTypeUnit');
-        $createLatestIncomingStock = $this->input->post('createLatestIncomingStock');
-        $createSaleLastMouth = $this->input->post('createSaleLastMouth');
-        $createSaleWeekOne = $this->input->post('createSaleWeekOne');
-        $createSaleWeekTwo = $this->input->post('createSaleWeekTwo');
-        $createSaleWeekThree = $this->input->post('createSaleWeekThree');
-        $createSaleWeekFour = $this->input->post('createSaleWeekFour');
-        $createBalancePerToday = $this->input->post('createBalancePerToday');
+        $this->load->library('upload');
+        $this->load->helper('file');
+        require_once FCPATH . 'vendor/autoload.php';
 
+        $upload_path = './assets/excel/';
+        if (!is_dir($upload_path)) mkdir($upload_path, 0777, true);
+
+        $config = [
+            'upload_path' => $upload_path,
+            'allowed_types' => '*',
+            'max_size' => 2048,
+            'encrypt_name' => TRUE
+        ];
+        $this->upload->initialize($config);
+
+        // === Upload sale_mouth ===
+        if (!$this->upload->do_upload('sale_mouth')) {
+            $this->session->set_flashdata('error', 'Gagal upload file penjualan: ' . $this->upload->display_errors());
+            redirect('po');
+        }
+        $file_sale_mouth = $this->upload->data('full_path');
+
+        // === Upload balance_for_today ===
+        $this->upload->initialize($config);
+        if (!$this->upload->do_upload('balance_for_today')) {
+            $this->session->set_flashdata('error', 'Gagal upload file saldo: ' . $this->upload->display_errors());
+            redirect('po');
+        }
+        $file_balance_for_today = $this->upload->data('full_path');
+
+        // === Upload latest_incoming_stock ===
+        $this->upload->initialize($config);
+        if (!$this->upload->do_upload('latest_incoming_stock')) {
+            $this->session->set_flashdata('error', 'Gagal upload file pembelian: ' . $this->upload->display_errors());
+            redirect('po');
+        }
+        $file_latest_incoming_stock = $this->upload->data('full_path');
+
+        // === Simpan data utama analisys_po ===
         $data = [
             'status_progress' => 'Listing',
             'created_by' => $this->session->userdata('username'),
@@ -54,36 +82,106 @@ class Po extends CI_Controller
             'updated_date' => date("Y-m-d H:i:s"),
             'status' => 1
         ];
-
         $this->db->insert('analisys_po', $data);
         $idanalisys_po = $this->db->insert_id();
 
-        foreach ($createIdProduct as $key => $id) {
-            $data_detail = [
-                'idproduct' => $id,
-                'idanalisys_po' => $idanalisys_po,
-                'type_sgs' => $createTypeSgs[$key],
-                'type_unit' => $createTypeUnit[$key],
-                'latest_incoming_stock' => $createLatestIncomingStock[$key],
-                'sale_last_mouth' => $createSaleLastMouth[$key],
-                'sale_week_one' => $createSaleWeekOne[$key],
-                'sale_week_two' => $createSaleWeekTwo[$key],
-                'sale_week_three' => $createSaleWeekThree[$key],
-                'sale_week_four' => $createSaleWeekFour[$key],
-                'balance_per_today' => $createBalancePerToday[$key],
-            ];
+        // === File 1: sale_mouth ===
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file_sale_mouth);
+        $rows = $spreadsheet->getActiveSheet()->toArray();
 
-            $this->db->insert('detail_analisys_po', $data_detail);
+        for ($i = 1; $i < count($rows); $i++) {
+            $sku = trim($rows[$i][2]);
+            $sale_last_month = floatval($rows[$i][3]);
+            $current_month_sales = floatval($rows[$i][4]);
+
+            $product = $this->db->get_where('product', ['sku' => $sku])->row();
+            if ($product) {
+                $data_detail = [
+                    'idanalisys_po' => $idanalisys_po,
+                    'idproduct' => $product->idproduct,
+                    'last_mouth_sales' => $sale_last_month,
+                    'current_month_sales' => $current_month_sales,
+                    'sale_week_one' => 0,
+                    'sale_week_two' => 0,
+                    'sale_week_three' => 0,
+                    'sale_week_four' => 0,
+                    'balance_per_today' => 0,
+                    'latest_incoming_stock' => 0
+                ];
+                $this->db->insert('detail_analisys_po', $data_detail);
+            }
         }
 
-        $this->session->set_flashdata('success', 'Data PO berhasil disimpan, Silakan lanjut ke tahap Qty Order.');
+        // === File 2: balance_for_today ===
+        $spreadsheet2 = \PhpOffice\PhpSpreadsheet\IOFactory::load($file_balance_for_today);
+        $rows2 = $spreadsheet2->getActiveSheet()->toArray();
+
+        for ($i = 1; $i < count($rows2); $i++) {
+            $sku = trim($rows2[$i][2]); // kolom C
+            $balance_today = floatval($rows2[$i][8]); // kolom I
+
+            $product = $this->db->get_where('product', ['sku' => $sku])->row();
+            if ($product) {
+                $this->db->where([
+                    'idanalisys_po' => $idanalisys_po,
+                    'idproduct' => $product->idproduct
+                ])->update('detail_analisys_po', [
+                    'balance_per_today' => $balance_today
+                ]);
+            }
+        }
+
+        // === File 3: latest_incoming_stock ===
+        $spreadsheet3 = \PhpOffice\PhpSpreadsheet\IOFactory::load($file_latest_incoming_stock);
+        $sheet3 = $spreadsheet3->getActiveSheet();
+        $rows3 = $sheet3->toArray();
+
+        $header = $rows3[0];
+        $total_column_index = count($header) - 1; // Kolom "Total Bulan"
+
+        for ($i = 1; $i < count($rows3); $i++) {
+            $sku = trim($rows3[$i][1]); // kolom B (Kode #)
+            if ($sku == '') continue;
+
+            $latest_value = 0;
+            $latest_month = null;
+
+            // Cari kolom bulan terakhir dengan nilai > 0 (lewati kolom total)
+            for ($j = $total_column_index - 1; $j >= 2; $j--) {
+                $val = floatval(str_replace(',', '', $rows3[$i][$j]));
+                if ($val > 0) {
+                    $latest_value = $val;
+                    $latest_month = $header[$j]; // ambil nama bulan dari header
+                    break;
+                }
+            }
+
+            if ($latest_value > 0 && $latest_month) {
+                $product = $this->db->get_where('product', ['sku' => $sku])->row();
+                if ($product) {
+                    $this->db->where([
+                        'idanalisys_po' => $idanalisys_po,
+                        'idproduct' => $product->idproduct
+                    ])->update('detail_analisys_po', [
+                        'latest_incoming_stock' => $latest_month . ' - ' . $latest_value,
+                    ]);
+                }
+            }
+        }
+
+        // === Bersihkan file upload ===
+        unlink($file_sale_mouth);
+        unlink($file_balance_for_today);
+        unlink($file_latest_incoming_stock);
+
+        $this->session->set_flashdata('success', 'Data PO berhasil disimpan dari tiga file Excel!');
         redirect('po');
     }
 
     public function get_detail_analisys_po($idanalisys_po)
     {
         $this->db->select('p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
-                       d.sale_last_mouth, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
+                       d.last_mouth_sales, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
                        d.sale_week_four, d.balance_per_today, d.qty_order, d.price');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
@@ -130,7 +228,7 @@ class Po extends CI_Controller
                     <td>' . htmlspecialchars($row->type_sgs) . '</td>
                     <td>' . htmlspecialchars($row->type_unit) . '</td>
                     <td>' . htmlspecialchars($row->latest_incoming_stock) . '</td>
-                    <td>' . htmlspecialchars($row->sale_last_mouth) . '</td>
+                    <td>' . htmlspecialchars($row->last_mouth_sales) . '</td>
                     <td>' . htmlspecialchars($row->sale_week_one) . '</td>
                     <td>' . htmlspecialchars($row->sale_week_two) . '</td>
                     <td>' . htmlspecialchars($row->sale_week_three) . '</td>

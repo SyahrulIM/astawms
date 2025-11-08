@@ -95,7 +95,7 @@ PC Remote List:
   ID: 117053943
   PASS: asta3101
 
-- PC MSI Penjualan Mbak Dwi
+- PC Admin Stock Mbak Dwi
   ID: 121982935
   PASS: asta3101
 

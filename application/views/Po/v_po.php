@@ -30,7 +30,7 @@
 
                 <!-- Modal Tambal PO-->
                 <div class="modal fade modal-xl" id="modalAddPo" tabindex="-1" aria-labelledby="modalAddPoLabel" aria-hidden="true">
-                    <form id="formAddPO" action="<?php echo base_url('po/insert') ?>" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan data PO ini? Pastikan semua data sudah benar.');">
+                    <form id="formAddPO" action="<?php echo base_url('po/insert') ?>" method="post" enctype="multipart/form-data" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan data PO ini? Pastikan semua data sudah benar.');">
                         <div class="modal-dialog modal-dialog-centered modal-fullscreen-md-down">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -39,74 +39,29 @@
                                 </div>
                                 <div class="modal-body">
                                     <div class="row">
-                                        <div class="col mb-3">
-                                            <div class="text-start">
-                                                <button type="button" class="btn btn-sm btn-success" id="addRow" onclick="addInputRow()">
-                                                    <i class="bi bi-plus"></i> Tambah Baris
-                                                </button>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="sale_mouth" class="form-label">Excel Rincian Penjualan per Barang per Bulan(Penjualan bulan lalu, Penjualan bulan ini):</label>
+                                                <input type="file" class="form-control" name="sale_mouth" id="sale_mouth" accept=".xlsx">
                                             </div>
                                         </div>
                                     </div>
-                                    <table class="table table-bordered table-sm align-middle text-center" style="font-size: small;">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th style="width: 40px;">No</th>
-                                                <th>Kode Product</th>
-                                                <th>Tipe SGS</th>
-                                                <th>Tipe Satuan</th>
-                                                <th>Stock Masuk Terakhir</th>
-                                                <th>Penjualan Bulan Lalu</th>
-                                                <th colspan="4">Penjualan Mingguan</th>
-                                                <th>Saldo Perhari Ini</th>
-                                                <th></th>
-                                            </tr>
-                                            <tr>
-                                                <th></th>
-                                                <th colspan="5"></th>
-                                                <th>I</th>
-                                                <th>II</th>
-                                                <th>III</th>
-                                                <th>IV</th>
-                                                <th></th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tableBodyPO">
-                                            <tr>
-                                                <td>1</td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="createIdProduct[]">
-                                                        <option disabled selected>Pilih Kode Produk</option>
-                                                        <?php foreach ($product as $key => $p) { ?>
-                                                        <option value="<?php echo $p->idproduct; ?>"><?php echo $p->sku . '(' . $p->nama_produk . ')' ?></option>
-                                                        <?php } ?>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="createTypeSgs[]">
-                                                        <option disabled selected>Pilih SGS</option>
-                                                        <option value="sgs">SGS</option>
-                                                        <option value="non sgs">Non SGS</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" name="createTypeUnit[]">
-                                                        <option disabled selected>Pilih Satuan</option>
-                                                        <option value="pcs">Pcs</option>
-                                                        <option value="gram">Gram</option>
-                                                    </select>
-                                                </td>
-                                                <td><input type="number" class="form-control form-control-sm" name="createLatestIncomingStock[]" max="10000"></td>
-                                                <td><input type="number" class="form-control form-control-sm" name="createSaleLastMouth[]" max="10000"></td>
-                                                <td><input type="number" class="form-control form-control-sm" name="createSaleWeekOne[]" max="10000"></td>
-                                                <td><input type="number" class="form-control form-control-sm" name="createSaleWeekTwo[]" max="10000"></td>
-                                                <td><input type="number" class="form-control form-control-sm" name="createSaleWeekThree[]" max="10000"></td>
-                                                <td><input type="number" class="form-control form-control-sm" name="createSaleWeekFour[]" max="10000"></td>
-                                                <td><input type="number" class="form-control form-control-sm" name="createBalancePerToday[]" max="10000"></td>
-                                                <td></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="balance_for_today" class="form-label">Excel Stock perhari ini (Saldo Perhari Ini):</label>
+                                                <input type="file" class="form-control" name="balance_for_today" id="balance_for_today" accept=".xlsx">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="latest_incoming_stock" class="form-label">Excel Pembelian Barang (Stock Masuk Terakhir):</label>
+                                                <input type="file" class="form-control" name="latest_incoming_stock" id="latest_incoming_stock" accept=".xlsx">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="modal-footer">
@@ -190,21 +145,10 @@
 
                             <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_qty; ?>" id="list-tab" type="button" href="<?php echo base_url('qty/'); ?>">
-                                    Qty Order
+                                    Performa PO
                                     <?php if ($count_qty > 0) : ?>
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                         <?php echo $count_qty; ?>
-                                    </span>
-                                    <?php endif; ?>
-                                </a>
-                            </li>
-
-                            <li class="nav-item position-relative">
-                                <a class="nav-link <?php echo $current_pre; ?>" id="list-tab" type="button" href="<?php echo base_url('pre/'); ?>">
-                                    Pre-Order
-                                    <?php if ($count_pre > 0) : ?>
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        <?php echo $count_pre; ?>
                                     </span>
                                     <?php endif; ?>
                                 </a>

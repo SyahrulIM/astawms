@@ -90,27 +90,16 @@
 
                             <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_po; ?>" id="list-tab" type="button" href="<?php echo base_url('po/'); ?>">
-                                    Daftar Penjualan
+                                    Data Stock
                                 </a>
                             </li>
 
                             <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_qty; ?>" id="list-tab" type="button" href="<?php echo base_url('qty/'); ?>">
-                                    Qty Order
+                                    Performa PO
                                     <?php if ($count_qty > 0) : ?>
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                         <?php echo $count_qty; ?>
-                                    </span>
-                                    <?php endif; ?>
-                                </a>
-                            </li>
-
-                            <li class="nav-item position-relative">
-                                <a class="nav-link <?php echo $current_pre; ?>" id="list-tab" type="button" href="<?php echo base_url('pre/'); ?>">
-                                    Pre-Order
-                                    <?php if ($count_pre > 0) : ?>
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        <?php echo $count_pre; ?>
                                     </span>
                                     <?php endif; ?>
                                 </a>
