@@ -109,8 +109,17 @@ class Qty extends CI_Controller
             echo '<input type="hidden" name="idanalisys_po" value="' . $idanalisys_po . '">';
 
             // Tampilkan form mata uang dengan selected value
-            echo '<div class="row mb-4">
-                <div class="col-md-6">
+            echo '
+            <div class="row mb-4">
+                <div class="col-md">
+                    <div class="mb-3">
+                    <label for="number_po" class="form-label">Nomer PO</label>
+                    <input type="text" class="form-control" id="number_po" name="number_po">
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md">
                     <div class="mb-3">
                         <label for="money-currency" class="form-label">Mata Uang</label>
                         <select name="money-currency" id="money-currency" class="form-select" required>
