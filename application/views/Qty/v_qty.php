@@ -24,7 +24,7 @@
 
                 <!-- Start Modal Detail PO -->
                 <div class="modal fade modal-xl" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-                    <form action="<?php echo base_url('qty/process'); ?>" method="post" onsubmit="return confirm('Pastikan semua data sudah benar, Apakah Anda yakin ingin meproses data PO ini?');">
+                    <form action="<?php echo base_url('qty/process'); ?>" method="post" onsubmit="return confirm('Pastikan semua data sudah benar, Apakah Anda yakin ingin memproses data PO ini?');">
                         <div class="modal-dialog modal-xl modal-dialog-centered">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -32,11 +32,26 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
+                                    <input type="hidden" name="id" id="idPo">
+
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="money_currency" class="form-label">Mata Uang</label>
+                                                <select name="money_currency" id="money_currency" class="form-select" required>
+                                                    <option value="" disabled selected>Pilih Mata Uang</option>
+                                                    <option value="rmb">RMB</option>
+                                                    <option value="idr">IDR</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div id="detailContent">Memuat data...</div>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                                    <button type="submit" class="btn btn-info" data-bs-dismiss="modal">Process</button>
+                                    <button type="submit" class="btn btn-info">Process</button>
                                 </div>
                             </div>
                         </div>
@@ -213,21 +228,22 @@
                     });
                 });
 
-                function showDetail(idanalisys_po) {
-                    // tampilkan modal dan loading
-                    document.getElementById('detailContent').innerHTML = 'Memuat data...';
-                    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
-                    modal.show();
+                function showDetail(id) {
+                    $.ajax({
+                        url: base_url + "qty/get_detail_analisys_po/" + id,
+                        type: "GET",
+                        dataType: "json",
+                        success: function(response) {
+                            $("#detailTable").html(response.html);
 
-                    // ambil data dari controller
-                    fetch(`<?= base_url('qty/get_detail_analisys_po/') ?>${idanalisys_po}`)
-                        .then(response => response.text())
-                        .then(html => {
-                            document.getElementById('detailContent').innerHTML = html;
-                        })
-                        .catch(() => {
-                            document.getElementById('detailContent').innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
-                        });
+                            // Atur dropdown mata uang otomatis
+                            if (response.money_currency) {
+                                $("#money_currency").val(response.money_currency.toLowerCase());
+                            } else {
+                                $("#money_currency").val("");
+                            }
+                        }
+                    });
                 }
 
                 function showCancelModal(id) {
