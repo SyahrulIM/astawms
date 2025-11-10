@@ -14,16 +14,14 @@ class Qty extends CI_Controller
 
     public function index()
     {
-
         // Start Product
         $this->db->where('status', 1);
         $product = $this->db->get('product');
-        // End
 
         // Start Data Transaksi
         $this->db->where('status_progress', 'Listing');
+        $this->db->order_by('idanalisys_po', 'DESC');
         $data_trx = $this->db->get('analisys_po');
-        // End
 
         $data = [
             'title' => 'Analisys PO',
@@ -78,9 +76,7 @@ class Qty extends CI_Controller
 
     public function get_detail_analisys_po($idanalisys_po)
     {
-        $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
-                       d.sale_last_mouth, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
-                       d.sale_week_four, d.balance_per_today');
+        $this->db->select('p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, d.last_mouth_sales, d.current_month_sales, d.balance_per_today, d.qty_order, d.price, d.description');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $idanalisys_po);
@@ -90,52 +86,67 @@ class Qty extends CI_Controller
             echo '<table class="table table-bordered table-striped table-xl align-middle">
         <thead class="table-light">
             <tr>
+                <th>No</th>
                 <th>Nama Produk</th>
                 <th>SKU</th>
-                <th>SGS/Non-SGS</th>
-                <th>Tipe Satuan</th>
                 <th>Stock Masuk Terakhir</th>
                 <th>Penjualan Bulan Lalu</th>
-                <th>Minggu 1</th>
-                <th>Minggu 2</th>
-                <th>Minggu 3</th>
-                <th>Minggu 4</th>
+                <th>Penjualan Bulan Ini</th>
                 <th>Saldo Hari Ini</th>
                 <th>Avg Sales vs Stock (Bulan)</th>
-                <th>QTY Order</th>
+                <th>SGS/Non-SGS</th>
+                <th>Tipe Satuan</th>
+                <th>Qty Order</th>
+                <th>Price per Unit</th>
+                <th>Description</th>
             </tr>
         </thead>
         <tbody>';
+
+            $found = false;
+            $no = 1;
             foreach ($query->result() as $row) {
-                // Hitung rata-rata penjualan per minggu
-                $total_sales = floatval($row->sale_week_one) + floatval($row->sale_week_two) + floatval($row->sale_week_three) + floatval($row->sale_week_four);
+                $total_sales = $row->current_month_sales;
                 $avg_sales = $total_sales / 4;
 
-                // Hindari pembagian nol
                 if ($avg_sales > 0) {
                     $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
-                    $avg_vs_stock = number_format($avg_vs_stock, 2); // tampilkan 2 angka desimal
+                    if ($avg_vs_stock >= 1) continue;
+                    $found = true;
+                    $avg_vs_stock_display = number_format($avg_vs_stock, 2);
                 } else {
-                    $avg_vs_stock = '<span class="text-muted">N/A</span>';
+                    continue;
                 }
 
+                // dropdown SGS/Non-SGS
+                $select_sgs =
+                    '<select class="form-select" name="editTypeSgs[]">
+                        <option value="">Pilih SGS</option>
+                        <option value="sgs" ' . ($row->type_sgs == 'sgs' ? 'selected' : '') . '>SGS</option>
+                        <option value="non sgs" ' . ($row->type_sgs == 'non sgs' ? 'selected' : '') . '>Non SGS</option>
+                    </select>';
+
                 echo '<tr>
-            <td>' . htmlspecialchars($row->nama_produk) . '</td>
-            <td>' . htmlspecialchars($row->sku) . '</td>
-            <td>' . htmlspecialchars($row->type_sgs) . '</td>
-            <td>' . htmlspecialchars($row->type_unit) . '</td>
-            <td>' . htmlspecialchars($row->latest_incoming_stock) . '</td>
-            <td>' . htmlspecialchars($row->sale_last_mouth) . '</td>
-            <td>' . htmlspecialchars($row->sale_week_one) . '</td>
-            <td>' . htmlspecialchars($row->sale_week_two) . '</td>
-            <td>' . htmlspecialchars($row->sale_week_three) . '</td>
-            <td>' . htmlspecialchars($row->sale_week_four) . '</td>
-            <td>' . htmlspecialchars($row->balance_per_today) . '</td>
-            <td>' . $avg_vs_stock . '</td>
-            <td><input type="number" class="form-control form-control-sm" name="editQty[]" required></td>
-            <input type="hidden" class="form-control form-control-sm" name="id" value="' . htmlspecialchars($row->idanalisys_po) . '">
-          </tr>';
+                <td>' . $no++ . '</td>
+                <td>' . htmlspecialchars($row->nama_produk) . '</td>
+                <td>' . htmlspecialchars($row->sku) . '</td>
+                <td>' . htmlspecialchars($row->latest_incoming_stock) . '</td>
+                <td>' . htmlspecialchars($row->last_mouth_sales) . '</td>
+                <td>' . htmlspecialchars($row->current_month_sales) . '</td>
+                <td>' . htmlspecialchars($row->balance_per_today) . '</td>
+                <td>' . $avg_vs_stock_display . '</td>
+                <td>' . $select_sgs . '</td>
+                <td><input type="text" class="form-control" name="editTypeUnit[]" value="' . htmlspecialchars($row->type_unit) . '"></td>
+                <td><input type="number" class="form-control" name="editQty[]" value="' . htmlspecialchars($row->qty_order ?: '') . '"></td>
+                <td><input type="number" class="form-control" name="editPrice[]" value="' . htmlspecialchars($row->price ?: '') . '"></td>
+                <td><input type="textarea" class="form-control" name="editDescription[]" placeholder="Keterangan" value="' . htmlspecialchars($row->description ?: '') . '"></td>
+            </tr>';
             }
+
+            if (!$found) {
+                echo '<tr><td colspan="13" class="text-center text-muted">Tidak ada produk dengan Avg Sales vs Stock di bawah 1.00.</td></tr>';
+            }
+
             echo '</tbody></table>';
         } else {
             echo '<div class="text-center text-muted py-3">Tidak ada produk dalam analisis PO ini.</div>';

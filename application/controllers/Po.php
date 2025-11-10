@@ -101,6 +101,7 @@ class Po extends CI_Controller
                     'idproduct' => $product->idproduct,
                     'last_mouth_sales' => $sale_last_month,
                     'current_month_sales' => $current_month_sales,
+                    'type_unit' => 'pcs',
                     'sale_week_one' => 0,
                     'sale_week_two' => 0,
                     'sale_week_three' => 0,
@@ -136,22 +137,33 @@ class Po extends CI_Controller
         $sheet3 = $spreadsheet3->getActiveSheet();
         $rows3 = $sheet3->toArray();
 
-        $header = $rows3[0];
-        $total_column_index = count($header) - 1; // Kolom "Total Bulan"
+        // Baris ke-5 (index 4) berisi nama bulan
+        $header_row_index = 4;
+        $header = $rows3[$header_row_index];
 
-        for ($i = 1; $i < count($rows3); $i++) {
-            $sku = trim($rows3[$i][1]); // kolom B (Kode #)
+        // Kolom terakhir adalah "Total Bulan"
+        $total_column_index = count($header) - 1;
+
+        // Loop data mulai dari baris ke-6 (index 5)
+        for ($i = $header_row_index + 1; $i < count($rows3); $i++) {
+            $sku = trim($rows3[$i][2]); // kolom C = "Kode #"
             if ($sku == '') continue;
 
             $latest_value = 0;
             $latest_month = null;
 
-            // Cari kolom bulan terakhir dengan nilai > 0 (lewati kolom total)
-            for ($j = $total_column_index - 1; $j >= 2; $j--) {
-                $val = floatval(str_replace(',', '', $rows3[$i][$j]));
+            // Loop dari kolom terakhir ke kiri, skip kolom "Total Bulan"
+            for ($j = $total_column_index - 1; $j >= 3; $j--) {
+                $month_name = trim($header[$j]);
+                if (stripos($month_name, 'total') !== false) continue; // skip "Total Bulan"
+
+                $cellValue = trim($rows3[$i][$j]);
+                if ($cellValue === '' || $cellValue === '-' || $cellValue === '0') continue;
+
+                $val = floatval(str_replace([',', ' '], '', $cellValue));
                 if ($val > 0) {
                     $latest_value = $val;
-                    $latest_month = $header[$j]; // ambil nama bulan dari header
+                    $latest_month = $month_name;
                     break;
                 }
             }
@@ -163,7 +175,7 @@ class Po extends CI_Controller
                         'idanalisys_po' => $idanalisys_po,
                         'idproduct' => $product->idproduct
                     ])->update('detail_analisys_po', [
-                        'latest_incoming_stock' => $latest_month . ' - ' . $latest_value,
+                        'latest_incoming_stock' => $latest_month . ' - ' . $latest_value
                     ]);
                 }
             }
@@ -181,8 +193,7 @@ class Po extends CI_Controller
     public function get_detail_analisys_po($idanalisys_po)
     {
         $this->db->select('p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
-                       d.last_mouth_sales, d.sale_week_one, d.sale_week_two, d.sale_week_three, 
-                       d.sale_week_four, d.balance_per_today, d.qty_order, d.price');
+                       d.last_mouth_sales, d.current_month_sales, d.balance_per_today, d.qty_order, d.price');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $idanalisys_po);
@@ -190,55 +201,60 @@ class Po extends CI_Controller
 
         if ($query->num_rows() > 0) {
             echo '<table class="table table-bordered table-striped table-xl align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Nama Produk</th>
-                        <th>SKU</th>
-                        <th>SGS/Non-SGS</th>
-                        <th>Tipe Satuan</th>
-                        <th>Stock Masuk Terakhir</th>
-                        <th>Penjualan Bulan Lalu</th>
-                        <th>Minggu 1</th>
-                        <th>Minggu 2</th>
-                        <th>Minggu 3</th>
-                        <th>Minggu 4</th>
-                        <th>Saldo Hari Ini</th>
-                        <th>Avg Sales vs Stock (Bulan)</th>
-                        <th>Qty Order</th>
-                        <th>Price per Unit</th>
-                    </tr>
-                </thead>
-                <tbody>';
+            <thead class="table-light">
+                <tr>
+                    <th>No</th>
+                    <th>Nama Produk</th>
+                    <th>SKU</th>
+                    <th>SGS/Non-SGS</th>
+                    <th>Tipe Satuan</th>
+                    <th>Stock Masuk Terakhir</th>
+                    <th>Penjualan Bulan Lalu</th>
+                    <th>Penjualan Bulan Ini</th>
+                    <th>Saldo Hari Ini</th>
+                    <th>Avg Sales vs Stock (Bulan)</th>
+                    <th>Qty Order</th>
+                    <th>Price per Unit</th>
+                </tr>
+            </thead>
+            <tbody>';
+
+            $found = false; // untuk cek apakah ada data yang lolos filter
+            $no = 1;
             foreach ($query->result() as $row) {
-                // Hitung rata-rata penjualan per minggu
-                $total_sales = floatval($row->sale_week_one) + floatval($row->sale_week_two) + floatval($row->sale_week_three) + floatval($row->sale_week_four);
+                $total_sales = $row->current_month_sales;
                 $avg_sales = $total_sales / 4;
 
-                // Hindari pembagian nol
                 if ($avg_sales > 0) {
                     $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
-                    $avg_vs_stock = number_format($avg_vs_stock, 2); // tampilkan 2 angka desimal
+                    // filter hanya yg < 1.00
+                    if ($avg_vs_stock >= 1) continue;
+                    $found = true;
+                    $avg_vs_stock_display = number_format($avg_vs_stock, 2);
                 } else {
-                    $avg_vs_stock = '<span class="text-muted">N/A</span>';
+                    continue; // skip kalau avg_sales = 0
                 }
 
                 echo '<tr>
-                    <td>' . htmlspecialchars($row->nama_produk) . '</td>
-                    <td>' . htmlspecialchars($row->sku) . '</td>
-                    <td>' . htmlspecialchars($row->type_sgs) . '</td>
-                    <td>' . htmlspecialchars($row->type_unit) . '</td>
-                    <td>' . htmlspecialchars($row->latest_incoming_stock) . '</td>
-                    <td>' . htmlspecialchars($row->last_mouth_sales) . '</td>
-                    <td>' . htmlspecialchars($row->sale_week_one) . '</td>
-                    <td>' . htmlspecialchars($row->sale_week_two) . '</td>
-                    <td>' . htmlspecialchars($row->sale_week_three) . '</td>
-                    <td>' . htmlspecialchars($row->sale_week_four) . '</td>
-                    <td>' . htmlspecialchars($row->balance_per_today) . '</td>
-                    <td>' . $avg_vs_stock . '</td>
-                    <td>' . ($row->qty_order > 0 ? htmlspecialchars($row->qty_order) : '<span class="text-muted">Qty Order belum diproses</span>') . '</td>
-                    <td>' . ($row->price > 0 ? htmlspecialchars($row->price) : '<span class="text-muted">Pre-Order belum diproses</span>') . '</td>
-                        </tr>';
+                <td>' . $no++ . '</td>
+                <td>' . htmlspecialchars($row->nama_produk) . '</td>
+                <td>' . htmlspecialchars($row->sku) . '</td>
+                <td>' . ($row->type_sgs > 0 ? htmlspecialchars($row->type_sgs) : '<span class="text-muted">Type SGS diset di Performa PO</span>') . '</td>
+                <td>' . ($row->type_unit > 0 ? htmlspecialchars($row->type_unit) : '<span class="text-muted">Type Unit diset di Performa PO</span>') . '</td>
+                <td>' . htmlspecialchars($row->latest_incoming_stock) . '</td>
+                <td>' . htmlspecialchars($row->last_mouth_sales) . '</td>
+                <td>' . htmlspecialchars($row->current_month_sales) . '</td>
+                <td>' . htmlspecialchars($row->balance_per_today) . '</td>
+                <td>' . $avg_vs_stock_display . '</td>
+                <td>' . ($row->qty_order > 0 ? htmlspecialchars($row->qty_order) : '<span class="text-muted">Qty Order diset di Performa PO</span>') . '</td>
+                <td>' . ($row->price > 0 ? htmlspecialchars($row->price) : '<span class="text-muted">Pre-Order diset di Performa PO</span>') . '</td>
+            </tr>';
             }
+
+            if (!$found) {
+                echo '<tr><td colspan="12" class="text-center text-muted">Tidak ada produk dengan Avg Sales vs Stock di bawah 1.00.</td></tr>';
+            }
+
             echo '</tbody></table>';
         } else {
             echo '<div class="text-center text-muted py-3">Tidak ada produk dalam analisis PO ini.</div>';
