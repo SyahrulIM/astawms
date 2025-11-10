@@ -32,18 +32,6 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col">
-                                            <div class="mb-3">
-                                                <label for="money-currency" class="form-label">Mata Uang</label>
-                                                <select name="money-currency" id="money-currency" class="form-select">
-                                                    <option disabled>Pilih Mata Uang</option>
-                                                    <option value="rmb">RMB</option>
-                                                    <option value="idr">IDR</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
                                     <div id="detailContent">Memuat data...</div>
                                 </div>
                                 <div class="modal-footer">
