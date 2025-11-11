@@ -236,39 +236,39 @@ class Finish extends CI_Controller
         $this->db->where('idanalisys_po', $id);
         $data_po = $this->db->get('analisys_po');
 
-        // Ambil data detail PO dengan filter Avg Sales vs Stock < 1
-        $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
-                   d.last_mouth_sales, d.current_month_sales, d.balance_per_today, d.qty_order, d.price, d.description');
+        // Ambil data detail PO + gambar produk
+        $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, p.gambar, d.type_sgs, d.type_unit, 
+                       d.latest_incoming_stock, d.last_mouth_sales, d.current_month_sales, 
+                       d.balance_per_today, d.qty_order, d.price, d.description');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $id);
         $query = $this->db->get();
 
-        // Filter data yang akan ditampilkan (Avg Sales vs Stock < 1)
+        // Filter data (Avg Sales vs Stock < 1)
         $filtered_detail_po = [];
         $total_qty = 0;
         $total_value = 0;
 
         foreach ($query->result() as $row) {
-            // Hitung rata-rata penjualan per minggu
             $total_sales = floatval($row->current_month_sales);
             $avg_sales = $total_sales / 4;
 
-            // Filter: hanya ambil jika Avg Sales vs Stock di bawah 1
             if ($avg_sales > 0) {
                 $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
                 if ($avg_vs_stock < 1) {
-                    // Hitung nilai item
                     $item_value = floatval($row->qty_order) * floatval($row->price);
 
-                    // Tambahkan data yang difilter
                     $filtered_detail_po[] = [
                         'row' => $row,
                         'avg_vs_stock' => number_format($avg_vs_stock, 2),
-                        'item_value' => $item_value
+                        'item_value' => $item_value,
+                        // Tambahkan base_url gambar biar view gampang pakai
+                        'image_url' => !empty($row->gambar)
+                            ? base_url('uploads/product/' . $row->gambar)
+                            : base_url('uploads/no-image.png')
                     ];
 
-                    // Akumulasi total
                     $total_qty += floatval($row->qty_order);
                     $total_value += $item_value;
                 }

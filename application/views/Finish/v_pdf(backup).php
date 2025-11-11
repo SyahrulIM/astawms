@@ -147,6 +147,11 @@
                     <th width="80">SKU</th>
                     <th width="80">SGS/Non-SGS</th>
                     <th width="80">Tipe Satuan</th>
+                    <th width="80">Stock Masuk Terakhir</th>
+                    <th width="80">Penjualan Bulan Lalu</th>
+                    <th width="80">Penjualan Bulan Ini</th>
+                    <th width="80">Saldo Hari Ini</th>
+                    <th width="80">Avg Sales vs Stock</th>
                     <th width="60">Qty Order</th>
                     <th width="80">Price per Unit</th>
                     <th width="100">Total Value</th>
@@ -170,6 +175,11 @@
                     <td><?= htmlspecialchars($item['row']->sku) ?></td>
                     <td><?= htmlspecialchars($item['row']->type_sgs) ?></td>
                     <td><?= htmlspecialchars($item['row']->type_unit) ?></td>
+                    <td><?= htmlspecialchars($item['row']->latest_incoming_stock) ?></td>
+                    <td><?= htmlspecialchars($item['row']->last_mouth_sales) ?></td>
+                    <td><?= htmlspecialchars($item['row']->current_month_sales) ?></td>
+                    <td><?= htmlspecialchars($item['row']->balance_per_today) ?></td>
+                    <td><?= htmlspecialchars($item['avg_vs_stock']) ?></td>
                     <td><?= htmlspecialchars($item['row']->qty_order) ?></td>
                     <td class="text-right"><?= number_format($item['row']->price, 0, ',', '.') ?></td>
                     <td class="text-right"><?= number_format($item['item_value'], 2, ',', '.') ?></td>
@@ -177,7 +187,7 @@
                 <?php endforeach; ?>
 
                 <tr class="total-row">
-                    <td colspan="5" class="text-right"><strong>TOTAL:</strong></td>
+                    <td colspan="10" class="text-right"><strong>TOTAL:</strong></td>
                     <td><strong><?= number_format($total_qty) ?></strong></td>
                     <td></td>
                     <td class="text-right"><strong><?= number_format($total_value, 2) ?></strong></td>
