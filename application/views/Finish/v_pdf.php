@@ -34,11 +34,11 @@
 
         .po-info {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 5px 20px;
-            margin-bottom: 15px;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 30px;
+            margin-bottom: 20px;
             background-color: #f8f9fa;
-            padding: 10px;
+            padding: 10px 15px;
             border-radius: 6px;
         }
 
@@ -139,6 +139,7 @@
             <h5><strong>Tanggal Pesan:</strong> <?php echo $po->order_date ? htmlspecialchars($po->order_date) : '-'; ?></h5>
             <h5><strong>Mata Uang:</strong> <?php echo $po->money_currency ? strtoupper(htmlspecialchars($po->money_currency)) : '-'; ?></h5>
             <h5><strong>Nama Supplier:</strong> <?php echo $po->name_supplier ? strtoupper(htmlspecialchars($po->name_supplier)) : '-'; ?></h5>
+            <h5><strong>&nbsp;</strong></h5>
         </div>
 
         <!-- Products Table -->
@@ -199,11 +200,21 @@
         <div class="footer"></div>
     </div>
 
+    <?php
+    $timestamp = isset($d) && is_numeric($d) ? (int) $d : time();
+
+    $po_number = isset($po->number_po) && $po->number_po !== '' ? $po->number_po : 'PO';
+    $filename = 'Purchase_Order_' . $po_number . '_' . date('Y-m-d_H-i-s', $timestamp);
+    ?>
     <script>
         window.onload = function() {
-            window.print();
+            document.title = <?php echo json_encode($filename); ?>;
+            setTimeout(function() {
+                window.print();
+            }, 80);
         };
     </script>
+
 </body>
 
 </html>
