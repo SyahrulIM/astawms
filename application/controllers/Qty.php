@@ -43,6 +43,7 @@ class Qty extends CI_Controller
         $number_po = $this->input->post('number_po');
         $order_date = $this->input->post('order_date');
         $name_container = $this->input->post('name_container');
+        $name_supplier = $this->input->post('name_supplier');
         $qtyList = $this->input->post('editQty');
         $priceList = $this->input->post('editPrice');
         $typeSgsList = $this->input->post('editTypeSgs');
@@ -61,6 +62,7 @@ class Qty extends CI_Controller
             'number_po' => $number_po,
             'order_date' => $order_date,
             'name_container' => $name_container,
+            'name_supplier' => $name_supplier,
             'status_progress' => 'Finish',
             'updated_by' => $this->session->userdata('username'),
             'updated_date' => date('Y-m-d H:i:s')
@@ -93,7 +95,7 @@ class Qty extends CI_Controller
     public function get_detail_analisys_po($idanalisys_po)
     {
         // Ambil data yang sudah ada
-        $this->db->select('money_currency, number_po, order_date, name_container');
+        $this->db->select('money_currency, number_po, order_date, name_container, name_supplier');
         $this->db->where('idanalisys_po', $idanalisys_po);
         $analisys_data = $this->db->get('analisys_po')->row();
 
@@ -101,6 +103,7 @@ class Qty extends CI_Controller
         $current_number_po = $analisys_data->number_po ?? '';
         $current_order_date = $analisys_data->order_date ?? '';
         $current_name_container = $analisys_data->name_container ?? '';
+        $current_name_supplier = $analisys_data->name_supplier ?? '';
 
         $this->db->select('p.nama_produk, p.sku, d.iddetail_analisys_po, d.type_sgs, d.type_unit, d.latest_incoming_stock, d.last_mouth_sales, d.current_month_sales, d.balance_per_today, d.qty_order, d.price, d.description');
         $this->db->from('detail_analisys_po d');
@@ -132,11 +135,12 @@ class Qty extends CI_Controller
                     <input type="text" class="form-control" id="name_container" name="name_container" value="' . htmlspecialchars($current_name_container) . '" placeholder="Masukkan nama container">
                 </div>
             </div>
-        </div>';
-
-            // Tampilkan form mata uang dengan selected value
-            echo '
-        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="name_supplier" class="form-label">Name Supplier</label>
+                    <input type="text" class="form-control" id="name_supplier" name="name_supplier" value="' . htmlspecialchars($current_name_supplier) . '" placeholder="Masukkan nama container">
+                </div>
+            </div>
             <div class="col-md">
                 <div class="mb-3">
                     <label for="money-currency" class="form-label">Mata Uang</label>

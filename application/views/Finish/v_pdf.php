@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Export Pre-Order - <?php echo $po->number_po ?? 'PO'; ?></title>
+    <title>Export Purchase Order - <?php echo $po->number_po ?? 'PO'; ?></title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -33,15 +33,18 @@
         }
 
         .po-info {
-            margin-bottom: 20px;
-            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 5px 20px;
+            margin-bottom: 15px;
             background-color: #f8f9fa;
-            border-radius: 5px;
+            padding: 10px;
+            border-radius: 6px;
         }
 
         .po-info h5 {
-            margin: 5px 0;
-            font-size: 14px;
+            margin: 4px 0;
+            font-size: 13px;
         }
 
         #tableproduct {
@@ -75,7 +78,6 @@
         .product-info {
             display: flex;
             align-items: center;
-            justify-content: left;
             gap: 8px;
         }
 
@@ -127,7 +129,7 @@
         <!-- Header -->
         <div class="header">
             <img src="<?php echo base_url('assets/image/Logo Warna.png') ?>" alt="Company Logo">
-            <h1>Pre-Order Analysis Report</h1>
+            <h1>Purchase Order</h1>
         </div>
 
         <!-- PO Information -->
@@ -136,6 +138,7 @@
             <h5><strong>Nama Container:</strong> <?php echo $po->name_container ? htmlspecialchars($po->name_container) : '-'; ?></h5>
             <h5><strong>Tanggal Pesan:</strong> <?php echo $po->order_date ? htmlspecialchars($po->order_date) : '-'; ?></h5>
             <h5><strong>Mata Uang:</strong> <?php echo $po->money_currency ? strtoupper(htmlspecialchars($po->money_currency)) : '-'; ?></h5>
+            <h5><strong>Nama Supplier:</strong> <?php echo $po->name_supplier ? strtoupper(htmlspecialchars($po->name_supplier)) : '-'; ?></h5>
         </div>
 
         <!-- Products Table -->
@@ -193,10 +196,7 @@
         </table>
 
         <!-- Footer -->
-        <div class="footer">
-            <p>Generated on: <?= date('Y-m-d H:i:s'); ?></p>
-            <p>© <?= date('Y'); ?> Asta Homeware. All rights reserved.</p>
-        </div>
+        <div class="footer"></div>
     </div>
 
     <script>
