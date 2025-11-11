@@ -35,7 +35,9 @@
                                     <div id="detailContent">Memuat data...</div>
                                 </div>
                                 <div class="modal-footer">
-                                    <a type="button" class="btn btn-success" id="pdfButton" href="#"><i class="fa-solid fa-file-pdf"></i> PDF</a>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="fa-solid fa-xmark"></i> Close
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -214,12 +216,10 @@
 
                 function showDetail(idanalisys_po) {
                     // tampilkan modal dan loading
+                    const modalElement = document.getElementById('detailModal');
+                    const modal = new bootstrap.Modal(modalElement);
                     document.getElementById('detailContent').innerHTML = 'Memuat data...';
-                    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
                     modal.show();
-
-                    // ubah link tombol PDF
-                    document.getElementById('pdfButton').href = `<?= base_url('finish/exportPdf?id=') ?>${idanalisys_po}`;
 
                     // ambil data dari controller
                     fetch(`<?= base_url('finish/get_detail_analisys_po/') ?>${idanalisys_po}`)
@@ -231,7 +231,6 @@
                             document.getElementById('detailContent').innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
                         });
                 }
-
 
                 function showCancelModal(id) {
                     document.getElementById('cancelIdPo').value = id;
