@@ -1,4 +1,7 @@
 <?php
+
+use PhpParser\Node\Expr\AssignOp\Div;
+
 defined('BASEPATH') or exit('No direct script access allowed');
 
 class Qty extends CI_Controller
@@ -24,7 +27,7 @@ class Qty extends CI_Controller
         $data_trx = $this->db->get('analisys_po');
 
         $data = [
-            'title' => 'Analisys PO',
+            'title' => 'Analisa PO',
             'product' => $product->result(),
             'data_trx' => $data_trx->result()
         ];
@@ -156,7 +159,7 @@ class Qty extends CI_Controller
                         <th>Penjualan Bulan Lalu</th>
                         <th>Penjualan Bulan Ini</th>
                         <th>Saldo Hari Ini</th>
-                        <th>Avg Sales vs Stock (Bulan)</th>
+                        <th>Avg Sales vs Stock<span style="font-size: xx-small;"> ( YTD )</span></th>
                         <th>SGS/Non-SGS</th>
                         <th>Tipe Satuan</th>
                         <th width="120">Qty Order</th>
@@ -191,8 +194,8 @@ class Qty extends CI_Controller
 
                 echo '<tr>
                 <td>' . $no++ . '</td>
-                <td>' . htmlspecialchars($row->nama_produk) . '</td>
-                <td>' . htmlspecialchars($row->sku) . '</td>
+                <td style="font-size: small;">' . htmlspecialchars($row->nama_produk) . '</td>
+                <td style="font-size: small;">' . htmlspecialchars($row->sku) . '</td>
                 <td class="text-center">' . htmlspecialchars($row->latest_incoming_stock) . '</td>
                 <td class="text-center">' . htmlspecialchars($row->last_mouth_sales) . '</td>
                 <td class="text-center">' . htmlspecialchars($row->current_month_sales) . '</td>

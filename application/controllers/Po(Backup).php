@@ -24,7 +24,7 @@ class Po extends CI_Controller
         // End
 
         $data = [
-            'title' => 'Analisys PO',
+            'title' => 'Analisa PO',
             'product' => $product->result(),
             'data_trx' => $data_trx->result()
         ];

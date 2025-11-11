@@ -2,7 +2,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col">
-                        <h1 class="mt-4">Analisys PO</h1>
+                        <h1 class="mt-4">Analisa PO</h1>
                     </div>
                 </div>
 
@@ -134,21 +134,21 @@
                                         <?php if ($trx->number_po) {
                                                 echo $trx->number_po;
                                             } else {
-                                                echo 'Belum terset di Finish';
+                                                echo 'In Progress';
                                             } ?>
                                     </td>
                                     <td>
                                         <?php if ($trx->name_container) {
                                                 echo $trx->name_container;
                                             } else {
-                                                echo 'Belum terset di Finish';
+                                                echo 'In Progress';
                                             } ?>
                                     </td>
                                     <td>
                                         <?php if ($trx->order_date) {
                                                 echo $trx->order_date;
                                             } else {
-                                                echo 'Belum terset di Finish';
+                                                echo 'In Progress';
                                             } ?>
                                         <?php echo $trx->order_date ?></td>
                                     <td><?php echo $trx->created_by ?></td>

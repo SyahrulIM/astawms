@@ -2,7 +2,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col">
-                        <h1 class="mt-4">Analisys PO</h1>
+                        <h1 class="mt-4">Analisa PO</h1>
                     </div>
                 </div>
 
@@ -41,7 +41,7 @@
                                     <div class="row">
                                         <div class="col">
                                             <div class="mb-3">
-                                                <label for="sale_mouth" class="form-label">Excel Rincian Penjualan per Barang per Bulan(Penjualan bulan lalu, Penjualan bulan ini):</label>
+                                                <label for="sale_mouth" class="form-label">Excel Rincian Penjualan per Barang per Bulan Accurate ( Penjualan bulan lalu, Penjualan bulan ini ):</label>
                                                 <input type="file" class="form-control" name="sale_mouth" id="sale_mouth" accept=".xlsx">
                                             </div>
                                         </div>
@@ -49,7 +49,7 @@
                                     <div class="row">
                                         <div class="col">
                                             <div class="mb-3">
-                                                <label for="balance_for_today" class="form-label">Excel Stock perhari ini (Saldo Perhari Ini):</label>
+                                                <label for="balance_for_today" class="form-label">Excel Stock perhari ini ( Saldo Perhari Ini ):</label>
                                                 <input type="file" class="form-control" name="balance_for_today" id="balance_for_today" accept=".xlsx">
                                             </div>
                                         </div>
@@ -57,7 +57,7 @@
                                     <div class="row">
                                         <div class="col">
                                             <div class="mb-3">
-                                                <label for="latest_incoming_stock" class="form-label">Excel Pembelian Barang (Stock Masuk Terakhir):</label>
+                                                <label for="latest_incoming_stock" class="form-label">Excel Pembelian Barang ( Stock Masuk Terakhir ):</label>
                                                 <input type="file" class="form-control" name="latest_incoming_stock" id="latest_incoming_stock" accept=".xlsx">
                                             </div>
                                         </div>

@@ -2,7 +2,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col">
-                        <h1 class="mt-4">Analisys PO</h1>
+                        <h1 class="mt-4">Analisa PO</h1>
                     </div>
                 </div>
 
