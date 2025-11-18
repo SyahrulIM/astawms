@@ -102,6 +102,7 @@ class Finish extends CI_Controller
                 <tr>
                     <th width="50">No</th>
                     <th>Nama Produk</th>
+                    <th>Description</th>
                     <th>SKU</th>
                     <th>SGS/Non-SGS</th>
                     <th>Tipe Satuan</th>
@@ -112,7 +113,6 @@ class Finish extends CI_Controller
                     <th>Avg Sales vs Stock (Bulan)</th>
                     <th>Qty Order</th>
                     <th>Price per Unit</th>
-                    <th>Description</th>
                 </tr>
             </thead>
             <tbody>';
@@ -147,6 +147,7 @@ class Finish extends CI_Controller
                 echo '<tr>
                 <td class="text-center">' . $no++ . '</td>
                 <td>' . htmlspecialchars($row->nama_produk) . '</td>
+                <td>' . ($row->description ? htmlspecialchars($row->description) : '-') . '</td>
                 <td>' . htmlspecialchars($row->sku) . '</td>
                 <td class="text-center">' . ($row->type_sgs ? htmlspecialchars($row->type_sgs) : '-') . '</td>
                 <td class="text-center">' . ($row->type_unit ? htmlspecialchars($row->type_unit) : '-') . '</td>
@@ -157,7 +158,6 @@ class Finish extends CI_Controller
                 <td class="text-center text-danger fw-bold">' . $avg_vs_stock_display . '</td>
                 <td class="text-center">' . ($row->qty_order ? number_format($row->qty_order) : '0') . '</td>
                 <td class="text-end">' . ($row->price ? number_format($row->price, 2) : '0.00') . '</td>
-                <td>' . ($row->description ? htmlspecialchars($row->description) : '-') . '</td>
             </tr>';
             }
 
@@ -171,10 +171,9 @@ class Finish extends CI_Controller
             } else {
                 // Tampilkan total hanya jika ada produk yang ditampilkan
                 echo '<tr class="table-info fw-bold">
-                <td colspan="10" class="text-end"><strong>TOTAL:</strong></td>
+                <td colspan="11" class="text-end"><strong>TOTAL:</strong></td>
                 <td class="text-center">' . number_format($total_qty) . '</td>
                 <td> ' . $currency . number_format($total_value) . '</td>
-                <td></td>
             </tr>';
             }
 

@@ -168,7 +168,6 @@ class Qty extends CI_Controller
                         <th>Tipe Satuan</th>
                         <th width="120">Qty Order</th>
                         <th width="150">Price per Unit</th>
-                        <th>Description</th>
                     </tr>
                 </thead>
                 <tbody>';
@@ -209,7 +208,9 @@ class Qty extends CI_Controller
                 <td><input type="text" class="form-control" name="editTypeUnit[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->type_unit ?: '') . '"></td>
                 <td><input type="number" class="form-control text-center" name="editQty[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->qty_order ?: '') . '" min="0"></td>
                 <td><input type="number" class="form-control text-end" name="editPrice[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->price ?: '') . '" min="0"></td>
-                <td><textarea class="form-control" name="editDescription[' . $row->iddetail_analisys_po . ']" placeholder="Keterangan" rows="2">' . htmlspecialchars($row->description ?: '') . '</textarea></td>
+            </tr>
+            <tr>
+                <td colspan="12"><span>Description :</span><textarea class="form-control" name="editDescription[' . $row->iddetail_analisys_po . ']" placeholder="Keterangan" rows="3">' . htmlspecialchars($row->description ?: '') . '</textarea></td>
             </tr>';
             }
 

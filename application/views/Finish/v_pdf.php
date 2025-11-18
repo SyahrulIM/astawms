@@ -135,7 +135,6 @@
             <h5><strong>Nomor PO:</strong> <?php echo $po->number_po ? htmlspecialchars($po->number_po) : '-'; ?></h5>
             <h5><strong>Nama Container:</strong> <?php echo $po->name_container ? htmlspecialchars($po->name_container) : '-'; ?></h5>
             <h5><strong>Tanggal Pesan:</strong> <?php echo $po->order_date ? htmlspecialchars($po->order_date) : '-'; ?></h5>
-            <h5><strong>Mata Uang:</strong> <?php echo $po->money_currency ? strtoupper(htmlspecialchars($po->money_currency)) : '-'; ?></h5>
             <h5><strong>Nama Supplier:</strong> <?php echo $po->name_supplier ? strtoupper(htmlspecialchars($po->name_supplier)) : '-'; ?></h5>
             <h5><strong>&nbsp;</strong></h5>
         </div>
@@ -147,11 +146,12 @@
                     <th width="30">No</th>
                     <th width="110">Gambar Produk</th>
                     <th>Nama Produk</th>
+                    <th width="80">Description</th>
                     <th width="80">SKU</th>
                     <th width="80">SGS/Non-SGS</th>
                     <th width="80">Tipe Satuan</th>
-                    <th width="60">Qty Order</th>
                     <th width="80">Price per Unit</th>
+                    <th width="60">Qty Order</th>
                     <th width="100">Total Value</th>
                 </tr>
             </thead>
@@ -168,20 +168,27 @@
                         <?= htmlspecialchars($item['row']->nama_produk) ?><br>
                         <small><?= htmlspecialchars($item['row']->sku) ?></small>
                     </td>
+                    <td><?= htmlspecialchars($item['row']->description) ?></td>
                     <td><?= htmlspecialchars($item['row']->sku) ?></td>
                     <td><?= htmlspecialchars($item['row']->type_sgs) ?></td>
                     <td><?= htmlspecialchars($item['row']->type_unit) ?></td>
-                    <td><?= htmlspecialchars($item['row']->qty_order) ?></td>
                     <td class="text-right"><?= number_format($item['row']->price, 0, ',', '.') ?></td>
+                    <td><?= htmlspecialchars($item['row']->qty_order) ?></td>
                     <td class="text-right"><?= number_format($item['item_value'], 2, ',', '.') ?></td>
                 </tr>
                 <?php endforeach; ?>
 
                 <tr class="total-row">
-                    <td colspan="6" class="text-right"><strong>TOTAL:</strong></td>
+                    <td colspan="8" class="text-right"><strong>TOTAL:</strong></td>
                     <td><strong><?= number_format($total_qty) ?></strong></td>
-                    <td></td>
-                    <td class="text-right"><strong><?= number_format($total_value, 2) ?></strong></td>
+                    <td class="text-right">
+                        <strong>
+                            <?php
+                                $curency = ($po->money_currency == 'rmb') ? '¥' : 'Rp';
+                                echo $curency . ' ' . number_format($total_value, 0, ',', '.');
+                                ?>
+                        </strong>
+                    </td>
                 </tr>
                 <?php else : ?>
                 <tr>
