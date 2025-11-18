@@ -193,7 +193,8 @@ class Po extends CI_Controller
     public function get_detail_analisys_po($idanalisys_po)
     {
         $this->db->select('p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
-                       d.last_mouth_sales, d.current_month_sales, d.balance_per_today, d.qty_order, d.price');
+                       d.last_mouth_sales, d.current_month_sales, d.balance_per_today, d.qty_order, d.price, 
+                       d.type_sgs, d.type_unit');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $idanalisys_po);

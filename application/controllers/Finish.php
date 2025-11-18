@@ -35,52 +35,25 @@ class Finish extends CI_Controller
         $this->load->view('finish/v_finish');
     }
 
-    public function preorder()
-    {
-        $idanalisys_po = $this->input->post('id');
-        $priceList = $this->input->post('editPrice');
-
-        if (empty($idanalisys_po) || empty($priceList)) {
-            $this->session->set_flashdata('error', 'Data tidak lengkap. Pastikan semua QTY sudah diisi.');
-            redirect('pre');
-            return;
-        }
-
-        // Ambil semua detail berdasarkan id analisys_po
-        $this->db->where('idanalisys_po', $idanalisys_po);
-        $detailData = $this->db->get('detail_analisys_po')->result();
-
-        if (count($detailData) !== count($priceList)) {
-            $this->session->set_flashdata('error', 'Jumlah data QTY tidak sesuai dengan jumlah produk.');
-            redirect('pre');
-            return;
-        }
-
-        // Update masing-masing QTY ke tabel detail_analisys_po
-        foreach ($detailData as $index => $detail) {
-            $this->db->where('iddetail_analisys_po', $detail->iddetail_analisys_po);
-            $this->db->update('detail_analisys_po', [
-                'price' => $priceList[$index]
-            ]);
-        }
-
-        // Ubah status_progress di analisys_po jadi "Waiting Approval"
-        $this->db->where('idanalisys_po', $idanalisys_po);
-        $this->db->update('analisys_po', [
-            'status_progress' => 'PO',
-            'updated_by' => $this->session->userdata('username'),
-            'updated_date' => date('Y-m-d H:i:s')
-        ]);
-
-        $this->session->set_flashdata('success', 'PO berhasil disimpan dan dipublikasikan. Silakan cek detail dan buat dokumen anda di finish.');
-        redirect('pre');
-    }
-
     public function get_detail_analisys_po($idanalisys_po)
     {
         // Ambil data header PO
         $this->db->where('idanalisys_po', $idanalisys_po);
         $header_data = $this->db->get('analisys_po')->row();
+
+        // Tentukan simbol mata uang
+        $currency = '';
+
+        // Normalisasi ke uppercase biar aman
+        $money = strtoupper(trim($header_data->money_currency));
+
+        if ($money === 'RMB' || $money === 'CNY') {
+            $currency = '¥';
+        } elseif ($money === 'IDR' || $money === 'RP') {
+            $currency = 'Rp';
+        } else {
+            $currency = ''; // fallback kalau ada mata uang lain
+        }
 
         // Ambil data detail PO
         $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
@@ -99,21 +72,25 @@ class Finish extends CI_Controller
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md">
                         <strong>Nomor PO:</strong><br>
                         ' . ($header_data->number_po ? htmlspecialchars($header_data->number_po) : '<span class="text-muted">-</span>') . '
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md">
                         <strong>Tanggal Pesan:</strong><br>
                         ' . ($header_data->order_date ? htmlspecialchars($header_data->order_date) : '<span class="text-muted">-</span>') . '
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md">
                         <strong>Container:</strong><br>
                         ' . ($header_data->name_container ? htmlspecialchars($header_data->name_container) : '<span class="text-muted">-</span>') . '
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md">
                         <strong>Mata Uang:</strong><br>
                         ' . ($header_data->money_currency ? strtoupper(htmlspecialchars($header_data->money_currency)) : '<span class="text-muted">-</span>') . '
+                    </div>
+                    <div class="col-md">
+                        <strong>Nama Supplier:</strong><br>
+                        ' . ($header_data->name_supplier ? strtoupper(htmlspecialchars($header_data->name_supplier)) : '<span class="text-muted">-</span>') . '
                     </div>
                 </div>
             </div>
@@ -196,7 +173,7 @@ class Finish extends CI_Controller
                 echo '<tr class="table-info fw-bold">
                 <td colspan="10" class="text-end"><strong>TOTAL:</strong></td>
                 <td class="text-center">' . number_format($total_qty) . '</td>
-                <td class="text-end">' . number_format($total_value, 2) . '</td>
+                <td> ' . $currency . number_format($total_value) . '</td>
                 <td></td>
             </tr>';
             }

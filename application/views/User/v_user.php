@@ -12,17 +12,17 @@
 
                 <!-- Flash messages -->
                 <?php if ($this->session->flashdata('error')) : ?>
-                    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
-                        <?= $this->session->flashdata('error') ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    <?= $this->session->flashdata('error') ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
                 <?php endif; ?>
 
                 <?php if ($this->session->flashdata('success')) : ?>
-                    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                        <?= $this->session->flashdata('success') ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    <?= $this->session->flashdata('success') ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
                 <?php endif; ?>
                 <!-- End -->
 
@@ -65,7 +65,7 @@
                                         <select class="form-select" id="inputRole" name="inputRole">
                                             <option selected disabled>Pilih Role</option>
                                             <?php foreach ($role as $rkey => $rvalue) { ?>
-                                                <option value="<?php echo $rvalue->idrole; ?>"><?php echo $rvalue->nama_role; ?></option>
+                                            <option value="<?php echo $rvalue->idrole; ?>"><?php echo $rvalue->nama_role; ?></option>
                                             <?php } ?>
                                         </select>
                                     </div>
@@ -90,6 +90,7 @@
                 <!-- Modal Edit Pengguna -->
                 <div class="modal fade" id="editUser" tabindex="-1" aria-labelledby="editUserLabel" aria-hidden="true">
                     <form method="post" action="<?php echo base_url('user/editUser') ?>" enctype="multipart/form-data">
+                        <input type="hidden" name="editIdUser" id="editIdUser">
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -125,7 +126,7 @@
                                         <label for="editRole" class="form-label">Role</label>
                                         <select class="form-select" id="editRole" name="editRole">
                                             <?php foreach ($role as $rkey => $rvalue) { ?>
-                                                <option value="<?php echo $rvalue->idrole; ?>"><?php echo $rvalue->nama_role; ?></option>
+                                            <option value="<?php echo $rvalue->idrole; ?>"><?php echo $rvalue->nama_role; ?></option>
                                             <?php } ?>
                                         </select>
                                     </div>
@@ -187,27 +188,32 @@
                             </thead>
                             <tbody>
                                 <?php foreach ($user as $ukey => $uvalue) { ?>
-                                    <tr>
-                                        <td><?php echo $ukey + 1; ?></td>
-                                        <td><?php echo $uvalue->full_name; ?></td>
-                                        <td><?php echo $uvalue->username; ?></td>
-                                        <td><?php echo $uvalue->email; ?></td>
-                                        <td><img src="<?php echo base_url('assets/image/user/' . $uvalue->foto); ?>" alt="<?php echo $uvalue->foto; ?>" width="100px" height="100px" style="border-radius: 50%; object-fit: cover;"></td>
-                                        <td><?php echo $uvalue->nama_role; ?></td>
-                                        <?php if ($uvalue->is_whatsapp == 1) { ?>
-                                            <td><span class="badge rounded-pill text-bg-primary">ON</span></td>
-                                        <?php } else { ?>
-                                            <td><span class="badge rounded-pill text-bg-danger">OFF</span></td>
-                                        <?php } ?>
-                                        <td>
-                                            <button type="button" class="btn btn-warning btnEditUser" data-full_name="<?= $uvalue->full_name ?>" data-username="<?= $uvalue->username ?>" data-email="<?= $uvalue->email ?>" data-foto="<?= $uvalue->foto ?>" data-idrole="<?= $uvalue->idrole ?>" data-handphone="<?= $uvalue->handphone ?>" data-is_whatsapp="<?= $uvalue->is_whatsapp ?>" data-bs-toggle="modal" data-bs-target="#editUser">
-                                                <i class="fa fa-edit"></i> Edit
+                                <tr>
+                                    <td><?php echo $ukey + 1; ?></td>
+                                    <td><?php echo $uvalue->full_name; ?></td>
+                                    <td><?php echo $uvalue->username; ?></td>
+                                    <td><?php echo $uvalue->email; ?></td>
+                                    <td><img src="<?php echo base_url('assets/image/user/' . $uvalue->foto); ?>" alt="<?php echo $uvalue->foto; ?>" width="100px" height="100px" style="border-radius: 50%; object-fit: cover;"></td>
+                                    <td><?php echo $uvalue->nama_role; ?></td>
+                                    <?php if ($uvalue->is_whatsapp == 1) { ?>
+                                    <td><span class="badge rounded-pill text-bg-primary">ON</span></td>
+                                    <?php } else { ?>
+                                    <td><span class="badge rounded-pill text-bg-danger">OFF</span></td>
+                                    <?php } ?>
+                                    <td>
+                                        <button type="button" class="btn btn-warning btnEditUser" data-full_name="<?= $uvalue->full_name ?>" data-username="<?= $uvalue->username ?>" data-email="<?= $uvalue->email ?>" data-foto="<?= $uvalue->foto ?>" data-idrole="<?= $uvalue->idrole ?>" data-handphone="<?= $uvalue->handphone ?>" data-is_whatsapp="<?= $uvalue->is_whatsapp ?>" data-bs-toggle="modal" data-bs-target="#editUser">
+                                            <i class="fa fa-edit"></i> Edit
+                                        </button>
+                                        <button type="button" class="btn btn-danger btnDeleteUser" data-iduser="<?= $uvalue->iduser ?>" data-full_name="<?= $uvalue->full_name ?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                                            <i class="fa-solid fa-trash-can"></i> Hapus
+                                        </button>
+                                        <a href="<?php echo base_url('user/exportUserPdf?iduser=' . $uvalue->iduser); ?>">
+                                            <button type="button" class="btn btn-success">
+                                                <i class="fa fa-edit"></i> File Pengguna PDF
                                             </button>
-                                            <button type="button" class="btn btn-danger btnDeleteUser" data-iduser="<?= $uvalue->iduser ?>" data-full_name="<?= $uvalue->full_name ?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
-                                                <i class="fa-solid fa-trash-can"></i> Hapus
-                                            </button>
-                                        </td>
-                                    </tr>
+                                        </a>
+                                    </td>
+                                </tr>
                                 <?php } ?>
                             </tbody>
                         </table>

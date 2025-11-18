@@ -76,21 +76,13 @@
             text-align: right;
         }
 
-        .product-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .product-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 6px;
+        /* Kolom gambar produk lebih besar */
+        .product-image {
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
             border: 1px solid #ccc;
-        }
-
-        .product-name {
-            text-align: left;
+            border-radius: 8px;
         }
 
         .total-row {
@@ -121,6 +113,11 @@
             .no-print {
                 display: none;
             }
+
+            .product-image {
+                width: 80px;
+                height: 80px;
+            }
         }
     </style>
 </head>
@@ -148,6 +145,7 @@
             <thead>
                 <tr>
                     <th width="30">No</th>
+                    <th width="110">Gambar Produk</th>
                     <th>Nama Produk</th>
                     <th width="80">SKU</th>
                     <th width="80">SGS/Non-SGS</th>
@@ -163,14 +161,12 @@
                     foreach ($detail_po as $item) : ?>
                 <tr>
                     <td><?= $no++ ?></td>
+                    <td>
+                        <img src="<?= base_url('assets/image/' . $item['row']->gambar) ?>" alt="Product Image" class="product-image">
+                    </td>
                     <td class="text-left">
-                        <div class="product-info">
-                            <img src="<?= base_url('assets/image/' .  $item['row']->gambar) ?>" alt="">
-                            <div class="product-name">
-                                <?= htmlspecialchars($item['row']->nama_produk) ?><br>
-                                <small><?= htmlspecialchars($item['row']->sku) ?></small>
-                            </div>
-                        </div>
+                        <?= htmlspecialchars($item['row']->nama_produk) ?><br>
+                        <small><?= htmlspecialchars($item['row']->sku) ?></small>
                     </td>
                     <td><?= htmlspecialchars($item['row']->sku) ?></td>
                     <td><?= htmlspecialchars($item['row']->type_sgs) ?></td>
@@ -182,7 +178,7 @@
                 <?php endforeach; ?>
 
                 <tr class="total-row">
-                    <td colspan="5" class="text-right"><strong>TOTAL:</strong></td>
+                    <td colspan="6" class="text-right"><strong>TOTAL:</strong></td>
                     <td><strong><?= number_format($total_qty) ?></strong></td>
                     <td></td>
                     <td class="text-right"><strong><?= number_format($total_value, 2) ?></strong></td>
@@ -203,7 +199,6 @@
 
     <?php
     $timestamp = isset($d) && is_numeric($d) ? (int) $d : time();
-
     $po_number = isset($po->number_po) && $po->number_po !== '' ? $po->number_po : 'PO';
     $filename = 'Purchase_Order_' . $po_number . '_' . date('Y-m-d_H-i-s', $timestamp);
     ?>

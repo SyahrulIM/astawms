@@ -27,10 +27,10 @@
             </div>
 
             <!-- Display Flashdata Message for Login Failure -->
-            <?php if ($this->session->flashdata('error')): ?>
-              <div class="alert alert-danger" role="alert">
-                <?php echo $this->session->flashdata('error'); ?>
-              </div>
+            <?php if ($this->session->flashdata('error')) : ?>
+            <div class="alert alert-danger" role="alert">
+              <?php echo $this->session->flashdata('error'); ?>
+            </div>
             <?php endif; ?>
 
             <form action="<?php echo base_url('auth/login'); ?>" method="post">
@@ -55,7 +55,7 @@
                         <path d="M4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
                       </svg>
                     </span>
-                    <input type="password" class="form-control" name="password" id="password" value="" required>
+                    <input type="password" class="form-control" name="password" id="password">
                   </div>
                 </div>
                 <div class="col-12">
