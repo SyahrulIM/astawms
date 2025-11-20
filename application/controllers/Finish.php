@@ -97,22 +97,21 @@ class Finish extends CI_Controller
         </div>';
 
             echo '<div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover align-middle">
+            <table class="table table-bordered table-striped table-hover" style="font-size: small;">
             <thead class="table-light">
                 <tr>
-                    <th width="50">No</th>
-                    <th>Nama Produk</th>
-                    <th>Description</th>
-                    <th>SKU</th>
-                    <th>SGS/Non-SGS</th>
-                    <th>Tipe Satuan</th>
-                    <th>Stock Masuk Terakhir</th>
-                    <th>Penjualan Bulan Lalu</th>
-                    <th>Penjualan Bulan Ini</th>
-                    <th>Saldo Hari Ini</th>
-                    <th>Avg Sales vs Stock (Bulan)</th>
-                    <th>Qty Order</th>
-                    <th>Price per Unit</th>
+                        <th class="text-center">No</th>
+                        <th class="text-center" width="100">Product</th>
+                        <th class="text-center" width="100">Product Code</th>
+                        <th class="text-center">Last Coming</th>
+                        <th class="text-center">Last Sales</th>
+                        <th class="text-center">Current Sales</th>
+                        <th class="text-center">Balance</th>
+                        <th class="text-center">Avg Ratio</th>
+                        <th class="text-center" width="100">Type SGS</th>
+                        <th class="text-center" width="100">Type Unit</th>
+                        <th class="text-center" width="100">Qty Order</th>
+                        <th class="text-center" width="125">Price</th>
                 </tr>
             </thead>
             <tbody>';
@@ -147,16 +146,15 @@ class Finish extends CI_Controller
                 echo '<tr>
                 <td class="text-center">' . $no++ . '</td>
                 <td>' . htmlspecialchars($row->nama_produk) . '</td>
-                <td>' . ($row->description ? htmlspecialchars($row->description) : '-') . '</td>
                 <td>' . htmlspecialchars($row->sku) . '</td>
                 <td class="text-center">' . ($row->type_sgs ? htmlspecialchars($row->type_sgs) : '-') . '</td>
                 <td class="text-center">' . ($row->type_unit ? htmlspecialchars($row->type_unit) : '-') . '</td>
-                <td class="text-center">' . ($row->latest_incoming_stock ? htmlspecialchars($row->latest_incoming_stock) : '-') . '</td>
-                <td class="text-center">' . ($row->last_mouth_sales ? htmlspecialchars($row->last_mouth_sales) : '-') . '</td>
-                <td class="text-center">' . ($row->current_month_sales ? htmlspecialchars($row->current_month_sales) : '-') . '</td>
-                <td class="text-center">' . ($row->balance_per_today ? htmlspecialchars($row->balance_per_today) : '-') . '</td>
-                <td class="text-center text-danger fw-bold">' . $avg_vs_stock_display . '</td>
-                <td class="text-center">' . ($row->qty_order ? number_format($row->qty_order) : '0') . '</td>
+                <td>' . $row->latest_incoming_stock . '</td>
+                <td class="text-end">' . ($row->last_mouth_sales ? htmlspecialchars($row->last_mouth_sales) : '-') . '</td>
+                <td class="text-end">' . ($row->current_month_sales ? htmlspecialchars($row->current_month_sales) : '-') . '</td>
+                <td class="text-end">' . ($row->balance_per_today ? htmlspecialchars($row->balance_per_today) : '-') . '</td>
+                <td class="text-end text-danger fw-bold">' . $avg_vs_stock_display . '</td>
+                <td class="text-end">' . ($row->qty_order ? number_format($row->qty_order) : '0') . '</td>
                 <td class="text-end">' . ($row->price ? number_format($row->price, 2) : '0.00') . '</td>
             </tr>';
             }
@@ -171,7 +169,7 @@ class Finish extends CI_Controller
             } else {
                 // Tampilkan total hanya jika ada produk yang ditampilkan
                 echo '<tr class="table-info fw-bold">
-                <td colspan="11" class="text-end"><strong>TOTAL:</strong></td>
+                <td colspan="10" class="text-end"><strong>TOTAL:</strong></td>
                 <td class="text-center">' . number_format($total_qty) . '</td>
                 <td> ' . $currency . number_format($total_value) . '</td>
             </tr>';

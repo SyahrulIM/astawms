@@ -175,7 +175,9 @@ class Po extends CI_Controller
                         'idanalisys_po' => $idanalisys_po,
                         'idproduct' => $product->idproduct
                     ])->update('detail_analisys_po', [
-                        'latest_incoming_stock' => $latest_month . ' - ' . $latest_value
+                        'latest_incoming_stock' =>
+                        '<span class="text-primary"><i class="fa-solid fa-calendar"></i> ' . $latest_month . '</span>' .
+                            '<br><span class="text-success"><i class="fa-solid fa-box"></i> ' . $latest_value . ' pcs</span>'
                     ]);
                 }
             }
@@ -187,7 +189,7 @@ class Po extends CI_Controller
         unlink($file_latest_incoming_stock);
 
         $this->session->set_flashdata('success', 'Data PO berhasil disimpan dari tiga file Excel!');
-        redirect('po');
+        redirect('qty');
     }
 
     public function get_detail_analisys_po($idanalisys_po)
@@ -201,21 +203,17 @@ class Po extends CI_Controller
         $query = $this->db->get();
 
         if ($query->num_rows() > 0) {
-            echo '<table class="table table-bordered table-striped table-xl align-middle">
+            echo '<table class="table table-bordered table-striped table-xl">
             <thead class="table-light">
                 <tr>
                     <th>No</th>
-                    <th>Nama Produk</th>
-                    <th>SKU</th>
-                    <th>SGS/Non-SGS</th>
-                    <th>Tipe Satuan</th>
-                    <th>Stock Masuk Terakhir</th>
-                    <th>Penjualan Bulan Lalu</th>
-                    <th>Penjualan Bulan Ini</th>
-                    <th>Saldo Hari Ini</th>
-                    <th>Avg Sales vs Stock (Bulan)</th>
-                    <th>Qty Order</th>
-                    <th>Price per Unit</th>
+                    <th>Product</th>
+                    <th>Product Code</th>
+                    <th>Last Coming</th>
+                    <th>Last Sales</th>
+                    <th>Current Sales</th>
+                    <th>Balance</th>
+                    <th>Avg Ratio</th>
                 </tr>
             </thead>
             <tbody>';
@@ -240,15 +238,11 @@ class Po extends CI_Controller
                 <td>' . $no++ . '</td>
                 <td>' . htmlspecialchars($row->nama_produk) . '</td>
                 <td>' . htmlspecialchars($row->sku) . '</td>
-                <td>' . ($row->type_sgs > 0 ? htmlspecialchars($row->type_sgs) : '<span class="text-muted">Type SGS diset di Performa PO</span>') . '</td>
-                <td>' . ($row->type_unit > 0 ? htmlspecialchars($row->type_unit) : '<span class="text-muted">Type Unit diset di Performa PO</span>') . '</td>
-                <td>' . htmlspecialchars($row->latest_incoming_stock) . '</td>
+                <td>' . $row->latest_incoming_stock . '</td>
                 <td>' . htmlspecialchars($row->last_mouth_sales) . '</td>
                 <td>' . htmlspecialchars($row->current_month_sales) . '</td>
                 <td>' . htmlspecialchars($row->balance_per_today) . '</td>
                 <td>' . $avg_vs_stock_display . '</td>
-                <td>' . ($row->qty_order > 0 ? htmlspecialchars($row->qty_order) : '<span class="text-muted">Qty Order diset di Performa PO</span>') . '</td>
-                <td>' . ($row->price > 0 ? htmlspecialchars($row->price) : '<span class="text-muted">Pre-Order diset di Performa PO</span>') . '</td>
             </tr>';
             }
 

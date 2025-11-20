@@ -141,6 +141,12 @@
                             ?>
 
                             <li class="nav-item position-relative">
+                                <a class="nav-link <?php echo $current_po; ?>" id="list-tab" type="button" href="<?php echo base_url('po/'); ?>">
+                                    Data Stock
+                                </a>
+                            </li>
+
+                            <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_qty; ?>" id="list-tab" type="button" href="<?php echo base_url('qty/'); ?>">
                                     Performa PO
                                     <?php if ($count_qty > 0) : ?>

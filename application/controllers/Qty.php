@@ -153,21 +153,21 @@ class Qty extends CI_Controller
             </div>';
 
             echo '<div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover align-middle">
+<table class="table table-bordered table-striped table-hover" style="font-size: small;">
                 <thead class="table-light">
                     <tr>
-                        <th width="50">No</th>
-                        <th>Nama Produk</th>
-                        <th>SKU</th>
-                        <th>Stock Masuk Terakhir</th>
-                        <th>Penjualan Bulan Lalu</th>
-                        <th>Penjualan Bulan Ini</th>
-                        <th>Saldo Hari Ini</th>
-                        <th>Avg Sales vs Stock<span style="font-size: xx-small;"> ( YTD )</span></th>
-                        <th>SGS/Non-SGS</th>
-                        <th>Tipe Satuan</th>
-                        <th width="120">Qty Order</th>
-                        <th width="150">Price per Unit</th>
+                        <th>No</th>
+                        <th width="100">Product</th>
+                        <th width="100">Product Code</th>
+                        <th>Last Coming</th>
+                        <th>Last Sales</th>
+                        <th>Current Sales</th>
+                        <th>Balance</th>
+                        <th>Avg Ratio</th>
+                        <th width="100">Type SGS</th>
+                        <th width="100">Type Unit</th>
+                        <th width="100">Qty Order</th>
+                        <th width="125">Price</th>
                     </tr>
                 </thead>
                 <tbody>';
@@ -197,16 +197,16 @@ class Qty extends CI_Controller
 
                 echo '<tr>
                 <td>' . $no++ . '</td>
-                <td style="font-size: small;">' . htmlspecialchars($row->nama_produk) . '</td>
-                <td style="font-size: small;">' . htmlspecialchars($row->sku) . '</td>
-                <td class="text-center">' . htmlspecialchars($row->latest_incoming_stock) . '</td>
-                <td class="text-center">' . htmlspecialchars($row->last_mouth_sales) . '</td>
-                <td class="text-center">' . htmlspecialchars($row->current_month_sales) . '</td>
-                <td class="text-center">' . htmlspecialchars($row->balance_per_today) . '</td>
-                <td class="text-center ' . ($avg_vs_stock < 1 ? 'text-danger fw-bold' : '') . '">' . $avg_vs_stock_display . '</td>
+                <td class="text-center">' . htmlspecialchars($row->nama_produk) . '</td>
+                <td class="text-center">' . htmlspecialchars($row->sku) . '</td>
+                <td>' . $row->latest_incoming_stock . '</td>
+                <td class="text-end">' . htmlspecialchars($row->last_mouth_sales) . '</td>
+                <td class="text-end">' . htmlspecialchars($row->current_month_sales) . '</td>
+                <td class="text-end">' . htmlspecialchars($row->balance_per_today) . '</td>
+                <td class="text-end ' . ($avg_vs_stock < 1 ? 'text-danger fw-bold' : '') . '">' . $avg_vs_stock_display . '</td>
                 <td>' . $select_sgs . '</td>
                 <td><input type="text" class="form-control" name="editTypeUnit[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->type_unit ?: '') . '"></td>
-                <td><input type="number" class="form-control text-center" name="editQty[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->qty_order ?: '') . '" min="0"></td>
+                <td><input type="number" class="form-control text-end" name="editQty[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->qty_order ?: '') . '" min="0"></td>
                 <td><input type="number" class="form-control text-end" name="editPrice[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->price ?: '') . '" min="0"></td>
             </tr>
             <tr>
