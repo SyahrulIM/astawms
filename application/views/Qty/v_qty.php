@@ -74,13 +74,36 @@
                 </div>
                 <!-- End -->
 
+                <style>
+                    .table-scroll {
+                        max-height: 450px;
+                        /* atur tinggi scroll */
+                        overflow-y: auto;
+                        display: block;
+                    }
+
+                    .table-scroll table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+
+                    .table-scroll thead th {
+                        position: sticky;
+                        top: 0;
+                        background: #f8f9fa;
+                        /* biar header tetap kelihatan */
+                        z-index: 10;
+                    }
+                </style>
+
+
                 <!-- Start Modal Detail PO -->
                 <div class="modal fade modal-xl" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true" style="font-size: small;">
                     <form action="<?php echo base_url('qty/process'); ?>" method="post" onsubmit="return confirm('Pastikan semua data sudah benar, Apakah Anda yakin ingin meproses data PO ini?');">
                         <div class="modal-dialog modal-xl modal-dialog-centered">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="detailModalLabel">Process Produk PO</h5>
+                                    <h5 class="modal-title" id="detailModalLabel">Process Purchase Order</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">

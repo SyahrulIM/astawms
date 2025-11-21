@@ -73,24 +73,24 @@ class Finish extends CI_Controller
             <div class="card-body">
                 <div class="row">
                     <div class="col-md">
-                        <strong>Nomor PO:</strong><br>
+                        <strong>No Purchase Order:</strong><br>
                         ' . ($header_data->number_po ? htmlspecialchars($header_data->number_po) : '<span class="text-muted">-</span>') . '
                     </div>
                     <div class="col-md">
-                        <strong>Tanggal Pesan:</strong><br>
+                        <strong>Order Date:</strong><br>
                         ' . ($header_data->order_date ? htmlspecialchars($header_data->order_date) : '<span class="text-muted">-</span>') . '
                     </div>
                     <div class="col-md">
-                        <strong>Container:</strong><br>
+                        <strong>Shipment Number:</strong><br>
                         ' . ($header_data->name_container ? htmlspecialchars($header_data->name_container) : '<span class="text-muted">-</span>') . '
                     </div>
                     <div class="col-md">
-                        <strong>Mata Uang:</strong><br>
-                        ' . ($header_data->money_currency ? strtoupper(htmlspecialchars($header_data->money_currency)) : '<span class="text-muted">-</span>') . '
+                    <strong>Name Supplier:</strong><br>
+                    ' . ($header_data->name_supplier ? strtoupper(htmlspecialchars($header_data->name_supplier)) : '<span class="text-muted">-</span>') . '
                     </div>
                     <div class="col-md">
-                        <strong>Nama Supplier:</strong><br>
-                        ' . ($header_data->name_supplier ? strtoupper(htmlspecialchars($header_data->name_supplier)) : '<span class="text-muted">-</span>') . '
+                        <strong>Money Currency:</strong><br>
+                        ' . ($header_data->money_currency ? strtoupper(htmlspecialchars($header_data->money_currency)) : '<span class="text-muted">-</span>') . '
                     </div>
                 </div>
             </div>
@@ -103,13 +103,13 @@ class Finish extends CI_Controller
                         <th class="text-center">No</th>
                         <th class="text-center" width="100">Product</th>
                         <th class="text-center" width="100">Product Code</th>
+                        <th class="text-center" width="100">Type SGS</th>
+                        <th class="text-center" width="100">Type Unit</th>
                         <th class="text-center">Last Coming</th>
                         <th class="text-center">Last Sales</th>
                         <th class="text-center">Current Sales</th>
                         <th class="text-center">Balance</th>
                         <th class="text-center">Avg Ratio</th>
-                        <th class="text-center" width="100">Type SGS</th>
-                        <th class="text-center" width="100">Type Unit</th>
                         <th class="text-center" width="100">Qty Order</th>
                         <th class="text-center" width="125">Price</th>
                 </tr>

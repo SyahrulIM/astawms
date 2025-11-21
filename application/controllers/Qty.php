@@ -119,19 +119,19 @@ class Qty extends CI_Controller
         <div class="row mb-4">
             <div class="col-md-4">
                 <div class="mb-3">
-                    <label for="number_po" class="form-label">Nomer PO</label>
+                    <label for="number_po" class="form-label">No Purchase Order</label>
                     <input type="text" class="form-control" id="number_po" name="number_po" value="' . htmlspecialchars($current_number_po) . '" placeholder="Masukkan nomer PO">
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="mb-3">
-                    <label for="order_date" class="form-label">Tanggal Pesan</label>
+                    <label for="order_date" class="form-label">Order Date</label>
                     <input type="date" class="form-control" id="order_date" name="order_date" value="' . htmlspecialchars($current_order_date) . '">
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="mb-3">
-                    <label for="name_container" class="form-label">Nama Container</label>
+                    <label for="name_container" class="form-label">Shipment Number</label>
                     <input type="text" class="form-control" id="name_container" name="name_container" value="' . htmlspecialchars($current_name_container) . '" placeholder="Masukkan nama container">
                 </div>
             </div>
@@ -143,31 +143,33 @@ class Qty extends CI_Controller
             </div>
             <div class="col-md">
                 <div class="mb-3">
-                    <label for="money-currency" class="form-label">Mata Uang</label>
+                    <label for="money-currency" class="form-label">Money Currency</label>
                     <select name="money-currency" id="money-currency" class="form-select" required>
-                        <option value="">Pilih Mata Uang</option>
+                        <option value="">Select Money Currency</option>
                         <option value="rmb" ' . ($current_currency == 'rmb' ? 'selected' : '') . '>RMB</option>
                         <option value="idr" ' . ($current_currency == 'idr' ? 'selected' : '') . '>IDR</option>
                     </select>
                 </div>
             </div>';
 
-            echo '<div class="table-responsive">
-<table class="table table-bordered table-striped table-hover" style="font-size: small;">
+            echo '
+            <div class="table-responsive">
+                <div class="table-scroll">
+                    <table class="table table-bordered table-striped table-hover" style="font-size: small;">
                 <thead class="table-light">
                     <tr>
-                        <th>No</th>
-                        <th width="100">Product</th>
-                        <th width="100">Product Code</th>
-                        <th>Last Coming</th>
-                        <th>Last Sales</th>
-                        <th>Current Sales</th>
-                        <th>Balance</th>
-                        <th>Avg Ratio</th>
-                        <th width="100">Type SGS</th>
-                        <th width="100">Type Unit</th>
-                        <th width="100">Qty Order</th>
-                        <th width="125">Price</th>
+                        <th class="text-center">No</th>
+                        <th class="text-center" width="100">Product</th>
+                        <th class="text-center" width="100">Product Code</th>
+                        <th class="text-center">Last Coming</th>
+                        <th class="text-center">Last Sales</th>
+                        <th class="text-center">Current Sales</th>
+                        <th class="text-center">Balance</th>
+                        <th class="text-center">Avg Ratio</th>
+                        <th class="text-center" width="100">Type SGS</th>
+                        <th class="text-center" width="100">Type Unit</th>
+                        <th class="text-center" width="100">Qty Order</th>
+                        <th class="text-center" width="125">Price</th>
                     </tr>
                 </thead>
                 <tbody>';
@@ -224,8 +226,9 @@ class Qty extends CI_Controller
             }
 
             echo '</tbody>
-            </table>
-        </div>';
+        </table>
+    </div> <!-- end table-scroll -->
+</div> <!-- end table-responsive -->';
         } else {
             echo '<div class="alert alert-warning text-center">
             <i class="fa-solid fa-exclamation-triangle me-2"></i>
