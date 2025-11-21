@@ -137,7 +137,7 @@
                     </div>
                 </div>
                 <?php if ($this->session->userdata('idrole') == 1) { ?>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'po') ? 'active' : ''; ?>" href="<?php echo base_url('po/'); ?>">Analysis PO</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= in_array($current, ['qty', 'finish']) ? 'active' : ''; ?>" href="<?php echo base_url('qty/'); ?>">Analisa PO</a>
                 <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>">Pengguna</a>
                 <?php } ?>
             </div>

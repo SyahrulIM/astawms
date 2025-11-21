@@ -170,8 +170,8 @@ class Finish extends CI_Controller
                 // Tampilkan total hanya jika ada produk yang ditampilkan
                 echo '<tr class="table-info fw-bold">
                 <td colspan="10" class="text-end"><strong>TOTAL:</strong></td>
-                <td class="text-center">' . number_format($total_qty) . '</td>
-                <td> ' . $currency . number_format($total_value) . '</td>
+                <td class="text-end">' . number_format($total_qty) . '</td>
+                <td class="text-end"> ' . $currency . number_format($total_value) . '</td>
             </tr>';
             }
 
