@@ -215,6 +215,31 @@
             </tbody>
         </table>
 
+        <!-- SIGNATURE SECTION (BOTTOM) -->
+        <div style="margin-top:80px; width:100%; display:flex; justify-content:space-between; page-break-inside:avoid;">
+
+            <!-- LEFT (Prepared) -->
+            <div style="width:45%; text-align:center;">
+                <div style="font-size:12px; margin-bottom:70px;">
+                    Prepared By,
+                </div>
+                <div style="border-top:1px solid #333; width:80%; margin:0 auto; padding-top:3px; font-size:12px;">
+                    ( Purchasing Staff )
+                </div>
+            </div>
+
+            <!-- RIGHT (Approved) -->
+            <div style="width:45%; text-align:center;">
+                <div style="font-size:12px; margin-bottom:70px;">
+                    Approved By,
+                </div>
+                <div style="border-top:1px solid #333; width:80%; margin:0 auto; padding-top:3px; font-size:12px;">
+                    ( Manager )
+                </div>
+            </div>
+
+        </div>
+
         <!-- FOOTER -->
         <div class="footer">
             <p>Generated on: <?php echo date('F j, Y H:i:s'); ?></p>
