@@ -143,7 +143,7 @@
                         <td>: <?php echo $po->order_date ?? '-'; ?></td>
                     </tr>
                     <tr>
-                        <td><strong>Container</strong></td>
+                        <td><strong>Shipment Number</strong></td>
                         <td>: <?php echo $po->name_container ?? '-'; ?></td>
                     </tr>
                 </table>
