@@ -85,7 +85,7 @@ class Finish extends CI_Controller
                         ' . ($header_data->name_container ? htmlspecialchars($header_data->name_container) : '<span class="text-muted">-</span>') . '
                     </div>
                     <div class="col-md">
-                    <strong>Name Supplier:</strong><br>
+                    <strong>Supplier:</strong><br>
                     ' . ($header_data->name_supplier ? strtoupper(htmlspecialchars($header_data->name_supplier)) : '<span class="text-muted">-</span>') . '
                     </div>
                     <div class="col-md">

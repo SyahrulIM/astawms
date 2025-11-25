@@ -192,7 +192,7 @@
 
                 <!-- TOTAL -->
                 <tr class="total-row">
-                    <td colspan="7" class="text-right"><strong>TOTAL:</strong></td>
+                    <td colspan="7" class="text-right"><strong>TOTAL</strong></td>
                     <td><strong><?= number_format($total_qty) ?></strong></td>
                     <td class="text-right">
                         <strong>
@@ -230,9 +230,13 @@
 
             <!-- RIGHT (Approved) -->
             <div style="width:45%; text-align:center;">
-                <div style="font-size:12px; margin-bottom:70px;">
+                <div style="font-size:12px; margin-bottom:20px;">
                     Approved By,
                 </div>
+
+                <!-- Signature image 80% width to match the line -->
+                <img src="<?php echo base_url('assets\image\Syahrul Izha_TTD.png'); ?>" alt="TTD_Syahrul" style="width:80%; max-width:250px; margin-bottom:10px;">
+
                 <div style="border-top:1px solid #333; width:80%; margin:0 auto; padding-top:3px; font-size:12px;">
                     ( Manager )
                 </div>

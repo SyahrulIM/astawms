@@ -9,43 +9,42 @@ $token = 'EyuhsmTqzeKaDknoxdxt';
 
 $sql = "SELECT handphone FROM user WHERE email = 'chalung.izha@gmail.com' LIMIT 1";
 $result = $conn->query($sql);
-$row = $result->fetch_assoc();
-$targets = $row['handphone'];
+$row_hp = $result->fetch_assoc();
+$targets = $row_hp['handphone'];
 
 $sql1 = "
-    SELECT 
-        'INSTOCK' AS tipe,
-        i.instock_code AS kode_transaksi,
-        i.tgl_terima AS tanggal,
-        i.jam_terima AS jam,
-        i.kategori,
-        i.user,
-        g.nama_gudang,
-        i.status_verification
-    FROM instock i
-    LEFT JOIN gudang g ON g.idgudang = i.idgudang
-    WHERE i.status_verification = 0
-
-    UNION ALL
-
-    SELECT 
-        'OUTSTOCK' AS tipe,
-        o.outstock_code AS kode_transaksi,
-        o.tgl_keluar AS tanggal,
-        o.jam_keluar AS jam,
-        o.kategori,
-        o.user,
-        g.nama_gudang,
-        o.status_verification
-    FROM outstock o
-    LEFT JOIN gudang g ON g.idgudang = o.idgudang
-    WHERE o.status_verification = 0
-
-    ORDER BY tanggal DESC, jam DESC
+(
+    SELECT no_faktur
+    FROM acc_tiktok_detail
+    WHERE DATE(updated_date) <> CURDATE()
+    AND order_date >= (NOW() - INTERVAL 15 DAY)
+)
+UNION ALL
+(
+    SELECT no_faktur
+    FROM acc_shopee_detail
+    WHERE DATE(updated_date) <> CURDATE()
+    AND order_date >= (NOW() - INTERVAL 15 DAY)
+)
 ";
+
 $result1 = $conn->query($sql1);
-$total_pending = $result1->num_rows;
-$message = "\nTotal pending verifikasi: " . $total_pending;
+
+$message = 'Dalam rentang 15 hari semua terupdate';
+
+if ($result1) {
+    $total_pending = $result1->num_rows;
+
+    if ($total_pending > 0) {
+        $message = "Total faktur yg belum diupdate: $total_pending\nDiantaranya:\n";
+
+        while ($row_data = $result1->fetch_assoc()) {
+            $message .= "- {$row_data['no_faktur']}\n";
+        }
+    }
+}
+
+echo nl2br($message);
 
 $curl = curl_init();
 curl_setopt_array($curl, array(

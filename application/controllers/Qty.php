@@ -137,7 +137,7 @@ class Qty extends CI_Controller
             </div>
             <div class="col-md-4">
                 <div class="mb-3">
-                    <label for="name_supplier" class="form-label">Name Supplier</label>
+                    <label for="name_supplier" class="form-label">Supplier</label>
                     <input type="text" class="form-control" id="name_supplier" name="name_supplier" value="' . htmlspecialchars($current_name_supplier) . '" placeholder="Masukkan nama container">
                 </div>
             </div>

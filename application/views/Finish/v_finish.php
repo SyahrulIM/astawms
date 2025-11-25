@@ -102,7 +102,7 @@
 
                             <li class="nav-item position-relative">
                                 <a class="nav-link <?php echo $current_finish; ?>" id="list-tab" type="button" href="<?php echo base_url('finish/'); ?>">
-                                    Finish
+                                    Final
                                 </a>
                             </li>
                         </ul>

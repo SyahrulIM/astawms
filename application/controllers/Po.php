@@ -33,6 +33,17 @@ class Po extends CI_Controller
         $this->load->view('Po/v_po');
     }
 
+    private function translateToEnglish($text)
+    {
+        try {
+            $tr = new \Stichoza\GoogleTranslate\GoogleTranslate('en'); // target English
+            return $tr->translate($text);
+        } catch (\Exception $e) {
+            // fallback ke text asli
+            return $text;
+        }
+    }
+
     public function insert()
     {
         $this->load->library('upload');
@@ -99,6 +110,7 @@ class Po extends CI_Controller
                 $data_detail = [
                     'idanalisys_po' => $idanalisys_po,
                     'idproduct' => $product->idproduct,
+                    'product_name_en' => $this->translateToEnglish($product->nama_produk),
                     'last_mouth_sales' => $sale_last_month,
                     'current_month_sales' => $current_month_sales,
                     'type_unit' => 'pcs',
