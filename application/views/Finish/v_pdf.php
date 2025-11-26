@@ -19,11 +19,13 @@
             width: 100%;
         }
 
-        /* TABLE STYLE */
         #tableproduct {
             width: 100%;
             border-collapse: collapse;
             margin-top: 25px;
+
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
 
         #tableproduct th,
@@ -36,9 +38,11 @@
         }
 
         #tableproduct th {
-            background-color: #003d73;
-            color: white;
+            background-color: #003d73 !important;
+            color: white !important;
             font-weight: bold;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
 
         #tableproduct td.text-left {
@@ -49,7 +53,6 @@
             text-align: right;
         }
 
-        /* PRODUCT IMAGE */
         .product-image {
             width: 90px;
             height: 90px;
@@ -58,11 +61,12 @@
             border-radius: 6px;
         }
 
-        /* TOTAL ROW */
         .total-row {
-            background-color: #003d73;
-            color: white;
+            background-color: #003d73 !important;
+            color: white !important;
             font-weight: bold;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
 
         .footer {
@@ -86,6 +90,12 @@
                 width: 70px;
                 height: 70px;
             }
+
+            #tableproduct th,
+            .total-row {
+                background-color: #003d73 !important;
+                color: white !important;
+            }
         }
     </style>
 </head>
@@ -93,15 +103,12 @@
 <body>
     <div class="container">
 
-        <!-- HEADER: LOGO + COMPANY -->
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
 
-            <!-- LEFT LOGO -->
             <div style="width:40%;">
                 <img src="<?php echo base_url('assets/image/Logo Warna.png') ?>" style="width:150px; margin-bottom:10px;">
             </div>
 
-            <!-- RIGHT COMPANY INFO -->
             <div style="width:60%; text-align:right; font-size:12px; line-height:1.4;">
                 <strong style="font-size:14px;">CV Surya Jaya Makmur</strong><br>
                 Taman Internasional 1 B6 / 30<br>
@@ -113,13 +120,10 @@
             </div>
         </div>
 
-        <!-- BLUE LINE -->
         <div style="border-top:4px solid #003d73; margin-bottom:25px;"></div>
 
-        <!-- TWO COLUMNS: SUPPLIER & PO INFO -->
         <div style="display:flex; justify-content:space-between;">
 
-            <!-- LEFT SUPPLIER -->
             <div style="width:48%;">
                 <h3 style="margin:0 0 8px 0; font-size:15px; color:#003d73; border-bottom:2px solid #003d73;">Supplier</h3>
 
@@ -129,7 +133,6 @@
                 </div>
             </div>
 
-            <!-- RIGHT PO INFO -->
             <div style="width:48%;">
                 <h3 style="margin:0 0 8px 0; font-size:15px; color:#003d73; border-bottom:2px solid #003d73;">Purchase Order</h3>
 
@@ -150,7 +153,6 @@
             </div>
         </div>
 
-        <!-- PRODUCT TABLE -->
         <table id="tableproduct">
             <thead>
                 <tr>
@@ -181,23 +183,24 @@
                         <small>SKU: <?= htmlspecialchars($item['row']->sku) ?></small>
                     </td>
                     <td><?= htmlspecialchars($item['row']->sku) ?></td>
-                    <td><?= htmlspecialchars($item['row']->type_sgs) ?></td>
-                    <td><?= htmlspecialchars($item['row']->type_unit) ?></td>
-                    <td class="text-right">$ <?= number_format($item['row']->price, 2, '.', ',') ?></td>
+                    <td><?= htmlspecialchars(strtoupper($item['row']->type_sgs)) ?></td>
+                    <td><?= htmlspecialchars(strtoupper($item['row']->type_unit)) ?></td>
+                    <td class="text-right"><?php $currency = ($po->money_currency == 'rmb') ? '¥' : 'Rp';
+                                                    echo $currency; ?> <?= number_format($item['row']->price, 2, '.', ',') ?></td>
                     <td><?= htmlspecialchars($item['row']->qty_order) ?></td>
-                    <td class="text-right">$ <?= number_format($item['item_value'], 2, '.', ',') ?></td>
+                    <td class="text-right"><?php $currency = ($po->money_currency == 'rmb') ? '¥' : 'Rp';
+                                                    echo $currency; ?> <?= number_format($item['item_value'], 2, '.', ',') ?></td>
                     <td><?= htmlspecialchars($item['row']->description) ?></td>
                 </tr>
                 <?php endforeach; ?>
 
-                <!-- TOTAL -->
                 <tr class="total-row">
                     <td colspan="7" class="text-right"><strong>TOTAL</strong></td>
                     <td><strong><?= number_format($total_qty) ?></strong></td>
                     <td class="text-right">
                         <strong>
                             <?php
-                                $currency = ($po->money_currency == 'rmb') ? '¥' : '$';
+                                $currency = ($po->money_currency == 'rmb') ? '¥' : 'Rp';
                                 echo $currency . ' ' . number_format($total_value, 2, '.', ',');
                                 ?>
                         </strong>
@@ -215,28 +218,21 @@
             </tbody>
         </table>
 
-        <!-- SIGNATURE SECTION (BOTTOM) -->
         <div style="margin-top:80px; width:100%; display:flex; justify-content:space-between; page-break-inside:avoid;">
 
-            <!-- LEFT (Prepared) -->
             <div style="width:45%; text-align:center;">
-                <div style="font-size:12px; margin-bottom:70px;">
-                    Prepared By,
-                </div>
+                <div style="font-size:12px; margin-bottom:38%;">Prepared By,</div>
                 <div style="border-top:1px solid #333; width:80%; margin:0 auto; padding-top:3px; font-size:12px;">
                     ( Purchasing Staff )
                 </div>
             </div>
 
-            <!-- RIGHT (Approved) -->
-            <div style="width:45%; text-align:center;">
-                <div style="font-size:12px; margin-bottom:20px;">
-                    Approved By,
+            <div style="width:45%; text-align:center; position: relative;">
+                <div style="font-size:12px; margin-bottom:4px;">Approved By,</div>
+                <div style="width:100%; height:200px; position:relative; margin-bottom:10px;">
+                    <img src="<?php echo base_url('assets/image/Suriadi Chianger_TTD.png'); ?>" style="width:55%; max-width:260px; position:absolute; left:45%; top:40%; transform:translate(-50%, -50%); z-index:1;">
+                    <img src="<?php echo base_url('assets/image/Stempel Asta Blue.png'); ?>" style="width:30%; max-width:260px; position:absolute; left:60%; top:45%; transform:translate(-50%, -50%); opacity:0.85; z-index:2;">
                 </div>
-
-                <!-- Signature image 80% width to match the line -->
-                <img src="<?php echo base_url('assets\image\Syahrul Izha_TTD.png'); ?>" alt="TTD_Syahrul" style="width:80%; max-width:250px; margin-bottom:10px;">
-
                 <div style="border-top:1px solid #333; width:80%; margin:0 auto; padding-top:3px; font-size:12px;">
                     ( Manager )
                 </div>

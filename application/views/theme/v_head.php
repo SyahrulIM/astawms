@@ -33,12 +33,11 @@
             $current = $this->uri->segment(1); // Get the first segment of URI
             ?>
             <div class="list-group list-group-flush">
-                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'dashboard') ? 'active' : ''; ?>" href="<?php echo base_url('dashboard/'); ?>">Dashboard</a>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'product') ? 'active' : ''; ?>" href="<?php echo base_url('product/'); ?>">Database Product</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'dashboard') ? 'active' : ''; ?>" href="<?php echo base_url('dashboard/'); ?>"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'product') ? 'active' : ''; ?>" href="<?php echo base_url('product/'); ?>"><i class="fa-solid fa-tags"></i> Database Product</a>
                 <!-- Transaksi Dropdown -->
                 <div class="list-group-item p-0">
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3 d-flex justify-content-between align-items-center <?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#transaksiSubmenu" role="button" aria-expanded="<?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'true' : 'false'; ?>" aria-controls="transaksiSubmenu">
-                        Transaksi
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3 d-flex justify-content-between align-items-center <?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#transaksiSubmenu" role="button" aria-expanded="<?= in_array($current, ['verification', 'barangmasuk', 'outstock']) ? 'true' : 'false'; ?>" aria-controls="transaksiSubmenu"><i class="fa-solid fa-right-left"></i> Transaksi
                         <?php
                         $this->load->helper('transaction');
                         if (number_pending_verification() > 0) {
@@ -65,7 +64,7 @@
                 <div class="list-group-item p-0">
                     <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= in_array($current, ['delivery_note']) ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#suratjalanSubmenu" role="button" aria-expanded="<?= in_array($current, ['customer', 'delivery_note']) ? 'true' : 'false'; ?>" aria-controls="suratjalanSubmenu">
                         <div class="d-flex justify-content-between align-items-start w-100">
-                            <div>Surat Jalan</div>
+                            <div><i class="fa-solid fa-truck"></i> Surat Jalan</div>
 
                             <div class="d-flex flex-column align-items-end text-end">
                                 <?php
@@ -137,8 +136,8 @@
                     </div>
                 </div>
                 <?php if ($this->session->userdata('idrole') == 1) { ?>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= in_array($current, ['qty', 'finish']) ? 'active' : ''; ?>" href="<?php echo base_url('qty/'); ?>">Analisa PO</a>
-                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>">Pengguna</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= in_array($current, ['qty', 'finish']) ? 'active' : ''; ?>" href="<?php echo base_url('qty/'); ?>"><i class="fa-solid fa-chart-simple"></i> Analisa PO</a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 <?= ($current == 'user') ? 'active' : ''; ?>" href="<?php echo base_url('user/'); ?>"><i class="fa-solid fa-users"></i> Pengguna</a>
                 <?php } ?>
             </div>
         </div>
