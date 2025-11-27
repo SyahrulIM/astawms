@@ -218,22 +218,23 @@
             </tbody>
         </table>
 
-        <div style="margin-top:80px; width:100%; display:flex; justify-content:space-between; page-break-inside:avoid;">
+        <div style="margin-top:80px; width:100%; display:flex; justify-content:space-between; align-items:flex-start; page-break-inside:avoid;">
 
-            <div style="width:45%; text-align:center;">
-                <div style="font-size:12px; margin-bottom:38%;">Prepared By,</div>
-                <div style="border-top:1px solid #333; width:80%; margin:0 auto; padding-top:3px; font-size:12px;">
+            <div style="width:45%; text-align:center; height:200px; position:relative;">
+                <div style="font-size:12px; margin-bottom:10px;">Prepared By,</div>
+
+                <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:80%; border-top:1px solid #333; padding-top:3px; font-size:12px;">
                     ( Purchasing Staff )
                 </div>
             </div>
 
-            <div style="width:45%; text-align:center; position: relative;">
-                <div style="font-size:12px; margin-bottom:4px;">Approved By,</div>
-                <div style="width:100%; height:200px; position:relative; margin-bottom:10px;">
-                    <img src="<?php echo base_url('assets/image/Suriadi Chianger_TTD.png'); ?>" style="width:55%; max-width:260px; position:absolute; left:45%; top:40%; transform:translate(-50%, -50%); z-index:1;">
-                    <img src="<?php echo base_url('assets/image/Stempel Asta Blue.png'); ?>" style="width:30%; max-width:260px; position:absolute; left:60%; top:45%; transform:translate(-50%, -50%); opacity:0.85; z-index:2;">
+            <div style="width:45%; text-align:center; height:200px; position:relative;">
+                <div style="font-size:12px; margin-bottom:10px;">Approved By,</div>
+                <div style="width:100%; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">
+                    <img src="<?php echo base_url('assets/image/Suriadi Chianger_TTD.png'); ?>" style="width:55%; max-width:260px;">
+                    <img src="<?php echo base_url('assets/image/Stempel Asta Blue.png'); ?>" style="width:30%; max-width:260px; opacity:0.85; margin-left:-20%;">
                 </div>
-                <div style="border-top:1px solid #333; width:80%; margin:0 auto; padding-top:3px; font-size:12px;">
+                <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:80%; border-top:1px solid #333; padding-top:3px; font-size:12px;">
                     ( Manager )
                 </div>
             </div>

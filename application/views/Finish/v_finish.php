@@ -110,11 +110,11 @@
                             <thead>
                                 <tr>
                                     <th>No</th>
-                                    <th>Nomer PO</th>
-                                    <th>Container</th>
-                                    <th>Tanggal Pesan</th>
-                                    <th>User Pembuat</th>
-                                    <th>Tanggal Pembuat</th>
+                                    <th>Number PO</th>
+                                    <th>Shipment</th>
+                                    <th>Order Date</th>
+                                    <th>Created By</th>
+                                    <th>Created Date</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -213,15 +213,26 @@
                     document.getElementById('detailContent').innerHTML = 'Memuat data...';
                     modal.show();
 
-                    // ambil data dari controller
                     fetch(`<?= base_url('finish/get_detail_analisys_po/') ?>${idanalisys_po}`)
                         .then(response => response.text())
                         .then(html => {
                             document.getElementById('detailContent').innerHTML = html;
+
+                            // INISIALISASI DATATABLE SETELAH HTML MASUK
+                            let dt = new DataTable('#detailTable', {
+                                responsive: true,
+                                paging: true,
+                                searching: true,
+                                ordering: true,
+                                layout: {
+                                    bottomEnd: {
+                                        paging: {
+                                            firstLast: false
+                                        }
+                                    }
+                                }
+                            });
                         })
-                        .catch(() => {
-                            document.getElementById('detailContent').innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
-                        });
                 }
 
                 function showCancelModal(id) {

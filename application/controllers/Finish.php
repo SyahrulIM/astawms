@@ -14,7 +14,6 @@ class Finish extends CI_Controller
 
     public function index()
     {
-
         // Start Product
         $this->db->where('status', 1);
         $product = $this->db->get('product');
@@ -147,8 +146,8 @@ class Finish extends CI_Controller
                 <td class="text-center">' . $no++ . '</td>
                 <td>' . htmlspecialchars($row->nama_produk) . '</td>
                 <td>' . htmlspecialchars($row->sku) . '</td>
-                <td class="text-center">' . ($row->type_sgs ? htmlspecialchars($row->type_sgs) : '-') . '</td>
-                <td class="text-center">' . ($row->type_unit ? htmlspecialchars($row->type_unit) : '-') . '</td>
+                <td class="text-center">' . ($row->type_sgs ? strtoupper(htmlspecialchars($row->type_sgs)) : '-') . '</td>
+                <td class="text-center">' . ($row->type_unit ? strtoupper(htmlspecialchars($row->type_unit)) : '-') . '</td>
                 <td>' . $row->latest_incoming_stock . '</td>
                 <td class="text-end">' . ($row->last_mouth_sales ? htmlspecialchars($row->last_mouth_sales) : '-') . '</td>
                 <td class="text-end">' . ($row->current_month_sales ? htmlspecialchars($row->current_month_sales) : '-') . '</td>
@@ -167,7 +166,6 @@ class Finish extends CI_Controller
                 </td>
             </tr>';
             } else {
-                // Tampilkan total hanya jika ada produk yang ditampilkan
                 echo '<tr class="table-info fw-bold">
                 <td colspan="10" class="text-end"><strong>TOTAL:</strong></td>
                 <td class="text-end">' . number_format($total_qty) . '</td>
@@ -177,7 +175,6 @@ class Finish extends CI_Controller
 
             echo '</tbody></table></div>';
 
-            // Tombol export PDF hanya jika ada produk yang ditampilkan
             if ($found) {
                 echo '<div class="mt-4 text-center">
                 <a href="' . base_url('finish/exportPdf?id=' . $idanalisys_po) . '" class="btn btn-danger" target="_blank">
