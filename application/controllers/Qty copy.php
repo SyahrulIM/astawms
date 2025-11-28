@@ -112,34 +112,9 @@ class Qty extends CI_Controller
         $query = $this->db->get();
 
         if ($query->num_rows() > 0) {
-            $products = [];
-            $found = false;
-
-            foreach ($query->result() as $row) {
-                $total_sales = $row->current_month_sales;
-                $avg_sales = $total_sales / 4;
-
-                if ($avg_sales > 0) {
-                    $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
-                    $avg_vs_stock_display = number_format($avg_vs_stock, 2);
-
-                    if ($avg_vs_stock < 1) {
-                        $found = true;
-                        $products[] = [
-                            'row' => $row,
-                            'avg_vs_stock' => $avg_vs_stock,
-                            'avg_vs_stock_display' => $avg_vs_stock_display
-                        ];
-                    }
-                }
-            }
-
-            usort($products, function ($a, $b) {
-                return $a['avg_vs_stock'] <=> $b['avg_vs_stock'];
-            });
-
             echo '<input type="hidden" name="idanalisys_po" value="' . $idanalisys_po . '">';
 
+            // Tampilkan form input data PO
             echo '
         <div class="row mb-4">
             <div class="col-md-4">
@@ -163,7 +138,7 @@ class Qty extends CI_Controller
             <div class="col-md-4">
                 <div class="mb-3">
                     <label for="name_supplier" class="form-label">Supplier</label>
-                    <input type="text" class="form-control" id="name_supplier" name="name_supplier" value="' . htmlspecialchars($current_name_supplier) . '" placeholder="Masukkan nama supplier">
+                    <input type="text" class="form-control" id="name_supplier" name="name_supplier" value="' . htmlspecialchars($current_name_supplier) . '" placeholder="Masukkan nama container">
                 </div>
             </div>
             <div class="col-md">
@@ -175,65 +150,73 @@ class Qty extends CI_Controller
                         <option value="idr" ' . ($current_currency == 'idr' ? 'selected' : '') . '>IDR</option>
                     </select>
                 </div>
-            </div>
-        </div>';
+            </div>';
 
             echo '
-        <div class="table-responsive">
-            <div class="table-scroll">
-                <table class="table table-bordered table-striped table-hover" style="font-size: small;">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="text-center">No</th>
-                            <th class="text-center" width="100">Product</th>
-                            <th class="text-center" width="100">Product Code</th>
-                            <th class="text-center">Last Coming</th>
-                            <th class="text-center">Last Sales</th>
-                            <th class="text-center">Current Sales</th>
-                            <th class="text-center">Balance</th>
-                            <th class="text-center">Avg Ratio</th>
-                            <th class="text-center" width="100">Type SGS</th>
-                            <th class="text-center" width="100">Type Unit</th>
-                            <th class="text-center" width="100">Qty Order</th>
-                            <th class="text-center" width="125">Price</th>
-                        </tr>
-                    </thead>
-                    <tbody>';
+            <div class="table-responsive">
+                <div class="table-scroll">
+                    <table class="table table-bordered table-striped table-hover" style="font-size: small;">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">No</th>
+                        <th class="text-center" width="100">Product</th>
+                        <th class="text-center" width="100">Product Code</th>
+                        <th class="text-center">Last Coming</th>
+                        <th class="text-center">Last Sales</th>
+                        <th class="text-center">Current Sales</th>
+                        <th class="text-center">Balance</th>
+                        <th class="text-center">Avg Ratio</th>
+                        <th class="text-center" width="100">Type SGS</th>
+                        <th class="text-center" width="100">Type Unit</th>
+                        <th class="text-center" width="100">Qty Order</th>
+                        <th class="text-center" width="125">Price</th>
+                    </tr>
+                </thead>
+                <tbody>';
 
-            if ($found) {
-                $no = 1;
-                foreach ($products as $product) {
-                    $row = $product['row'];
-                    $avg_vs_stock_display = $product['avg_vs_stock_display'];
-                    $avg_vs_stock = $product['avg_vs_stock'];
+            $found = false;
+            $no = 1;
+            foreach ($query->result() as $row) {
+                $total_sales = $row->current_month_sales;
+                $avg_sales = $total_sales / 4;
 
-                    // dropdown SGS/Non-SGS
-                    $select_sgs =
-                        '<select class="form-select" name="editTypeSgs[' . $row->iddetail_analisys_po . ']">
+                if ($avg_sales > 0) {
+                    $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
+                    if ($avg_vs_stock >= 1) continue;
+                    $found = true;
+                    $avg_vs_stock_display = number_format($avg_vs_stock, 2);
+                } else {
+                    continue;
+                }
+
+                // dropdown SGS/Non-SGS
+                $select_sgs =
+                    '<select class="form-select" name="editTypeSgs[' . $row->iddetail_analisys_po . ']">
                     <option value="">Pilih SGS</option>
                     <option value="sgs" ' . ($row->type_sgs == 'sgs' ? 'selected' : '') . '>SGS</option>
                     <option value="non sgs" ' . ($row->type_sgs == 'non sgs' ? 'selected' : '') . '>Non SGS</option>
                 </select>';
 
-                    echo '<tr>
-                    <td>' . $no++ . '</td>
-                    <td class="text-center">' . htmlspecialchars($row->nama_produk) . '</td>
-                    <td class="text-center">' . htmlspecialchars($row->sku) . '</td>
-                    <td>' . $row->latest_incoming_stock . '</td>
-                    <td class="text-end">' . htmlspecialchars($row->last_mouth_sales) . '</td>
-                    <td class="text-end">' . htmlspecialchars($row->current_month_sales) . '</td>
-                    <td class="text-end">' . htmlspecialchars($row->balance_per_today) . '</td>
-                    <td class="text-end ' . ($avg_vs_stock < 1 ? 'text-danger fw-bold' : '') . '">' . $avg_vs_stock_display . '</td>
-                    <td>' . $select_sgs . '</td>
-                    <td><input type="text" class="form-control" name="editTypeUnit[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->type_unit ?: '') . '"></td>
-                    <td><input type="number" class="form-control text-end" name="editQty[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->qty_order ?: '') . '" min="0"></td>
-                    <td><input type="number" class="form-control text-end" name="editPrice[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->price ?: '') . '" min="0"></td>
-                </tr>
-                <tr>
-                    <td colspan="12"><span>Description :</span><textarea class="form-control" name="editDescription[' . $row->iddetail_analisys_po . ']" placeholder="Keterangan" rows="3">' . htmlspecialchars($row->description ?: '') . '</textarea></td>
-                </tr>';
-                }
-            } else {
+                echo '<tr>
+                <td>' . $no++ . '</td>
+                <td class="text-center">' . htmlspecialchars($row->nama_produk) . '</td>
+                <td class="text-center">' . htmlspecialchars($row->sku) . '</td>
+                <td>' . $row->latest_incoming_stock . '</td>
+                <td class="text-end">' . htmlspecialchars($row->last_mouth_sales) . '</td>
+                <td class="text-end">' . htmlspecialchars($row->current_month_sales) . '</td>
+                <td class="text-end">' . htmlspecialchars($row->balance_per_today) . '</td>
+                <td class="text-end ' . ($avg_vs_stock < 1 ? 'text-danger fw-bold' : '') . '">' . $avg_vs_stock_display . '</td>
+                <td>' . $select_sgs . '</td>
+                <td><input type="text" class="form-control" name="editTypeUnit[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->type_unit ?: '') . '"></td>
+                <td><input type="number" class="form-control text-end" name="editQty[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->qty_order ?: '') . '" min="0"></td>
+                <td><input type="number" class="form-control text-end" name="editPrice[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->price ?: '') . '" min="0"></td>
+            </tr>
+            <tr>
+                <td colspan="12"><span>Description :</span><textarea class="form-control" name="editDescription[' . $row->iddetail_analisys_po . ']" placeholder="Keterangan" rows="3">' . htmlspecialchars($row->description ?: '') . '</textarea></td>
+            </tr>';
+            }
+
+            if (!$found) {
                 echo '<tr>
                 <td colspan="13" class="text-center text-muted py-4">
                     <i class="fa-solid fa-info-circle me-2"></i>
@@ -243,9 +226,9 @@ class Qty extends CI_Controller
             }
 
             echo '</tbody>
-            </table>
-        </div> <!-- end table-scroll -->
-    </div> <!-- end table-responsive -->';
+        </table>
+    </div> <!-- end table-scroll -->
+</div> <!-- end table-responsive -->';
         } else {
             echo '<div class="alert alert-warning text-center">
             <i class="fa-solid fa-exclamation-triangle me-2"></i>
