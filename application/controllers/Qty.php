@@ -140,6 +140,22 @@ class Qty extends CI_Controller
 
             echo '<input type="hidden" name="idanalisys_po" value="' . $idanalisys_po . '">';
 
+            // Search section
+            echo '
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-search"></i></span>
+                    <input type="text" id="searchDetailTable" class="form-control" placeholder="Cari produk, kode, atau lainnya...">
+                    <button type="button" class="btn btn-outline-secondary" id="clearSearch">Clear</button>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="form-text" id="searchResultInfo">Menampilkan semua data</div>
+            </div>
+        </div>';
+
+            // Form section
             echo '
         <div class="row mb-4">
             <div class="col-md-4">
@@ -178,10 +194,11 @@ class Qty extends CI_Controller
             </div>
         </div>';
 
+            // Table section
             echo '
         <div class="table-responsive">
             <div class="table-scroll">
-                <table class="table table-bordered table-striped table-hover" style="font-size: small;">
+                <table class="table table-bordered table-striped table-hover" style="font-size: small;" id="detailTable">
                     <thead class="table-light">
                         <tr>
                             <th class="text-center">No</th>
@@ -198,7 +215,7 @@ class Qty extends CI_Controller
                             <th class="text-center" width="125">Price</th>
                         </tr>
                     </thead>
-                    <tbody>';
+                    <tbody id="detailTableBody">';
 
             if ($found) {
                 $no = 1;
@@ -207,30 +224,41 @@ class Qty extends CI_Controller
                     $avg_vs_stock_display = $product['avg_vs_stock_display'];
                     $avg_vs_stock = $product['avg_vs_stock'];
 
-                    // dropdown SGS/Non-SGS
-                    $select_sgs =
-                        '<select class="form-select" name="editTypeSgs[' . $row->iddetail_analisys_po . ']">
-                    <option value="">Pilih SGS</option>
-                    <option value="sgs" ' . ($row->type_sgs == 'sgs' ? 'selected' : '') . '>SGS</option>
-                    <option value="non sgs" ' . ($row->type_sgs == 'non sgs' ? 'selected' : '') . '>Non SGS</option>
-                </select>';
+                    // Prepare search data for filtering
+                    $searchData = htmlspecialchars(strtolower($row->nama_produk . ' ' . $row->sku . ' ' . $row->type_sgs . ' ' . $row->type_unit));
 
-                    echo '<tr>
-                    <td>' . $no++ . '</td>
+                    // Dropdown for SGS/Non-SGS
+                    $select_sgs = '
+                    <select class="form-select" name="editTypeSgs[' . $row->iddetail_analisys_po . ']">
+                        <option value="">Pilih SGS</option>
+                        <option value="sgs" ' . ($row->type_sgs == 'sgs' ? 'selected' : '') . '>SGS</option>
+                        <option value="non sgs" ' . ($row->type_sgs == 'non sgs' ? 'selected' : '') . '>Non SGS</option>
+                    </select>';
+
+                    // Product row
+                    echo '<tr data-search="' . $searchData . '">
+                    <td class="text-center">' . $no++ . '</td>
                     <td class="text-center">' . htmlspecialchars($row->nama_produk) . '</td>
                     <td class="text-center">' . htmlspecialchars($row->sku) . '</td>
-                    <td>' . $row->latest_incoming_stock . '</td>
-                    <td class="text-end">' . htmlspecialchars($row->last_mouth_sales) . '</td>
-                    <td class="text-end">' . htmlspecialchars($row->current_month_sales) . '</td>
-                    <td class="text-end">' . htmlspecialchars($row->balance_per_today) . '</td>
+                    <td class="text-center">' . $row->latest_incoming_stock . '</td>
+                    <td class="text-end">' . number_format($row->last_mouth_sales) . '</td>
+                    <td class="text-end">' . number_format($row->current_month_sales) . '</td>
+                    <td class="text-end">' . number_format($row->balance_per_today) . '</td>
                     <td class="text-end ' . ($avg_vs_stock < 1 ? 'text-danger fw-bold' : '') . '">' . $avg_vs_stock_display . '</td>
                     <td>' . $select_sgs . '</td>
-                    <td><input type="text" class="form-control" name="editTypeUnit[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->type_unit ?: '') . '"></td>
-                    <td><input type="number" class="form-control text-end" name="editQty[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->qty_order ?: '') . '" min="0"></td>
-                    <td><input type="number" class="form-control text-end" name="editPrice[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->price ?: '') . '" min="0"></td>
-                </tr>
-                <tr>
-                    <td colspan="12"><span>Description :</span><textarea class="form-control" name="editDescription[' . $row->iddetail_analisys_po . ']" placeholder="Keterangan" rows="3">' . htmlspecialchars($row->description ?: '') . '</textarea></td>
+                    <td><input type="text" class="form-control" name="editTypeUnit[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->type_unit ?: '') . '" placeholder="Type unit"></td>
+                    <td><input type="number" class="form-control text-end" name="editQty[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->qty_order ?: '') . '" min="0" step="1"></td>
+                    <td><input type="number" class="form-control text-end" name="editPrice[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->price ?: '') . '" min="0" step="0.01"></td>
+                </tr>';
+
+                    // Description row
+                    echo '<tr data-search="' . $searchData . '">
+                    <td colspan="12">
+                        <div class="mb-2">
+                            <span class="fw-bold">Description:</span>
+                        </div>
+                        <textarea class="form-control" name="editDescription[' . $row->iddetail_analisys_po . ']" placeholder="Keterangan tambahan..." rows="2">' . htmlspecialchars($row->description ?: '') . '</textarea>
+                    </td>
                 </tr>';
                 }
             } else {
@@ -246,10 +274,24 @@ class Qty extends CI_Controller
             </table>
         </div> <!-- end table-scroll -->
     </div> <!-- end table-responsive -->';
+
+            // Summary section (optional)
+            echo '
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    <small>
+                        <i class="fa-solid fa-circle-info me-2"></i>
+                        <strong>Informasi:</strong> Sistem hanya menampilkan produk dengan rasio Avg Sales vs Stock di bawah 1.00. 
+                        Pastikan semua data quantity dan price telah diisi sebelum memproses PO.
+                    </small>
+                </div>
+            </div>
+        </div>';
         } else {
             echo '<div class="alert alert-warning text-center">
             <i class="fa-solid fa-exclamation-triangle me-2"></i>
-            Tidak ada produk dalam analisis PO ini.
+            Tidak ada produk dalam analisis PO ini atau data belum tersedia.
         </div>';
         }
     }

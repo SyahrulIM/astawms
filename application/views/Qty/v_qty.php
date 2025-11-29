@@ -253,21 +253,17 @@
             </div>
             </div>
             <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-            <!-- 2. DataTables JS -->
-            <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
             <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
             <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
             <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/rowReorder.dataTables.js"></script>
             <script src="https://cdn.datatables.net/responsive/3.0.4/js/dataTables.responsive.js"></script>
             <script src="https://cdn.datatables.net/responsive/3.0.4/js/responsive.dataTables.js"></script>
-            <!-- 3. Bootstrap bundle -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-            <!-- 4. Core theme JS -->
             <script src="<?php echo base_url(); ?>js/scripts.js"></script>
 
-            <!-- Initialize DataTables AFTER all scripts are loaded -->
             <script>
                 $(document).ready(function() {
+                    // Initialize main DataTable
                     new DataTable('#tableproduct', {
                         responsive: true,
                         layout: {
@@ -278,34 +274,280 @@
                             }
                         }
                     });
+
+                    // Form submission handling for Add PO
+                    $('#formAddPO').on('submit', function(e) {
+                        const saleMouth = $('#sale_mouth').val();
+                        const balanceToday = $('#balance_for_today').val();
+                        const incomingStock = $('#latest_incoming_stock').val();
+
+                        if (!saleMouth || !balanceToday || !incomingStock) {
+                            e.preventDefault();
+                            alert('Harap unggah semua file yang diperlukan!');
+                            return false;
+                        }
+
+                        const allowedExtensions = /(\.xlsx)$/i;
+                        if (!allowedExtensions.exec(saleMouth) || !allowedExtensions.exec(balanceToday) || !allowedExtensions.exec(incomingStock)) {
+                            e.preventDefault();
+                            alert('Hanya file Excel (.xlsx) yang diizinkan!');
+                            return false;
+                        }
+
+                        return true;
+                    });
+
+                    // Auto-dismiss alerts after 5 seconds
+                    setTimeout(function() {
+                        $('.alert').alert('close');
+                    }, 5000);
+
+                    // Handle tab switching persistence
+                    $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                        localStorage.setItem('activeTab', $(e.target).attr('href'));
+                    });
+
+                    const activeTab = localStorage.getItem('activeTab');
+                    if (activeTab) {
+                        const tabElement = $('.nav-tabs a[href="' + activeTab + '"]');
+                        if (tabElement.length) {
+                            tabElement.tab('show');
+                        }
+                    }
                 });
 
+                // Function to show detail modal
                 function showDetail(idanalisys_po) {
-                    // tampilkan modal dan loading
-                    document.getElementById('detailContent').innerHTML = 'Memuat data...';
+                    document.getElementById('detailContent').innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Memuat data...</p>
+            </div>
+        `;
+
                     const modal = new bootstrap.Modal(document.getElementById('detailModal'));
                     modal.show();
 
-                    // ambil data dari controller
                     fetch(`<?= base_url('qty/get_detail_analisys_po/') ?>${idanalisys_po}`)
-                        .then(response => response.text())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.text();
+                        })
                         .then(html => {
                             document.getElementById('detailContent').innerHTML = html;
+                            initializeSearch();
+                            initializeFormValidation();
                         })
-                        .catch(() => {
-                            document.getElementById('detailContent').innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
+                        .catch((error) => {
+                            console.error('Error:', error);
+                            document.getElementById('detailContent').innerHTML = `
+                    <div class="alert alert-danger text-center">
+                        <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                        Gagal memuat data. Silakan coba lagi.
+                    </div>
+                `;
                         });
                 }
 
+                // Function to initialize search functionality
+                function initializeSearch() {
+                    const searchInput = document.getElementById('searchDetailTable');
+                    const clearButton = document.getElementById('clearSearch');
+                    const searchResultInfo = document.getElementById('searchResultInfo');
+
+                    if (!searchInput) return;
+
+                    function performSearch() {
+                        const searchTerm = searchInput.value.toLowerCase().trim();
+                        const rows = document.querySelectorAll('#detailTableBody tr[data-search]');
+                        let visibleCount = 0;
+                        let totalRows = 0;
+
+                        rows.forEach(row => {
+                            totalRows++;
+                            const searchData = row.getAttribute('data-search').toLowerCase();
+                            if (searchData.includes(searchTerm)) {
+                                row.style.display = '';
+                                visibleCount++;
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        });
+
+                        if (searchTerm === '') {
+                            searchResultInfo.textContent = `Menampilkan semua ${totalRows} data`;
+                            searchResultInfo.className = 'form-text text-muted';
+                        } else {
+                            const hasResults = visibleCount > 0;
+                            searchResultInfo.textContent = hasResults ?
+                                `Menemukan ${visibleCount} dari ${totalRows} data untuk "${searchTerm}"` :
+                                `Tidak ditemukan data untuk "${searchTerm}"`;
+                            searchResultInfo.className = hasResults ? 'form-text text-success fw-bold' : 'form-text text-danger fw-bold';
+                        }
+                    }
+
+                    searchInput.addEventListener('input', performSearch);
+
+                    if (clearButton) {
+                        clearButton.addEventListener('click', function() {
+                            searchInput.value = '';
+                            performSearch();
+                            searchInput.focus();
+                        });
+                    }
+
+                    searchInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            performSearch();
+                        }
+                    });
+
+                    performSearch();
+                }
+
+                // Function to initialize form validation for detail modal
+                function initializeFormValidation() {
+                    const form = document.querySelector('#detailModal form');
+                    if (!form) return;
+
+                    form.addEventListener('submit', function(e) {
+                        const moneyCurrency = document.querySelector('select[name="money-currency"]');
+                        const qtyInputs = document.querySelectorAll('input[name^="editQty"]');
+                        const priceInputs = document.querySelectorAll('input[name^="editPrice"]');
+                        let hasValidData = false;
+                        let emptyRequiredFields = [];
+
+                        if (!moneyCurrency || !moneyCurrency.value) {
+                            emptyRequiredFields.push('Mata Uang');
+                        }
+
+                        for (let i = 0; i < qtyInputs.length; i++) {
+                            const qty = parseInt(qtyInputs[i].value) || 0;
+                            const price = parseInt(priceInputs[i].value) || 0;
+
+                            if (qty > 0 && price > 0) {
+                                hasValidData = true;
+                                break;
+                            }
+                        }
+
+                        if (!hasValidData) {
+                            e.preventDefault();
+                            alert('Harap isi quantity dan price untuk setidaknya satu produk sebelum memproses PO!');
+                            return false;
+                        }
+
+                        if (emptyRequiredFields.length > 0) {
+                            e.preventDefault();
+                            alert('Harap isi semua field yang diperlukan: ' + emptyRequiredFields.join(', '));
+                            return false;
+                        }
+
+                        return true;
+                    });
+                }
+
+                // Function to show cancel confirmation modal
                 function showCancelModal(id) {
                     document.getElementById('cancelIdPo').value = id;
                     const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
                     modal.show();
                 }
 
+                // Event listener for modal show (to reset search when modal opens)
+                document.getElementById('detailModal').addEventListener('show.bs.modal', function() {
+                    const searchInput = document.getElementById('searchDetailTable');
+                    const searchResultInfo = document.getElementById('searchResultInfo');
+
+                    if (searchInput) {
+                        searchInput.value = '';
+                    }
+                    if (searchResultInfo) {
+                        searchResultInfo.textContent = 'Menampilkan semua data';
+                        searchResultInfo.className = 'form-text text-muted';
+                    }
+                });
+
+                // Event listener for modal hidden (cleanup)
+                document.getElementById('detailModal').addEventListener('hidden.bs.modal', function() {
+                    document.getElementById('detailContent').innerHTML = 'Memuat data...';
+                });
+
+                // Confirm cancel button event listener
                 document.getElementById('confirmCancelBtn').addEventListener('click', function() {
                     const id = document.getElementById('cancelIdPo').value;
-                    window.location.href = `<?= base_url('qty/cancel/') ?>${id}`;
+                    if (id) {
+                        const cancelBtn = this;
+                        const originalText = cancelBtn.innerHTML;
+                        cancelBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Membatalkan...';
+                        cancelBtn.disabled = true;
+
+                        window.location.href = `<?= base_url('qty/cancel/') ?>${id}`;
+                    }
+                });
+
+                // Global keyboard shortcuts
+                document.addEventListener('keydown', function(e) {
+                    // Ctrl + F for search focus (when detail modal is open)
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                        const searchInput = document.getElementById('searchDetailTable');
+                        if (searchInput && document.getElementById('detailModal').classList.contains('show')) {
+                            e.preventDefault();
+                            searchInput.focus();
+                            searchInput.select();
+                        }
+                    }
+
+                    // Escape key to close modals
+                    if (e.key === 'Escape') {
+                        const detailModal = bootstrap.Modal.getInstance(document.getElementById('detailModal'));
+                        const cancelModal = bootstrap.Modal.getInstance(document.getElementById('cancelModal'));
+                        const addPoModal = bootstrap.Modal.getInstance(document.getElementById('modalAddPo'));
+
+                        if (detailModal) detailModal.hide();
+                        if (cancelModal) cancelModal.hide();
+                        if (addPoModal) addPoModal.hide();
+                    }
+                });
+
+                // Utility function to debounce rapid function calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Auto-format currency inputs
+                function formatCurrencyInput(input) {
+                    input.addEventListener('blur', function() {
+                        const value = parseInt(this.value) || 0;
+                        if (value > 0) {
+                            this.value = value.toLocaleString('id-ID');
+                        }
+                    });
+
+                    input.addEventListener('focus', function() {
+                        this.value = this.value.replace(/\./g, '');
+                    });
+                }
+
+                // Initialize all currency inputs when page loads
+                document.addEventListener('DOMContentLoaded', function() {
+                    const currencyInputs = document.querySelectorAll('input[name^="editPrice"]');
+                    currencyInputs.forEach(input => {
+                        formatCurrencyInput(input);
+                    });
                 });
             </script>
             </body>
