@@ -209,19 +209,19 @@ class Qty extends CI_Controller
     <div class="row mb-4">
         <div class="col-md-4">
             <label class="form-label">No Purchase Order</label>
-            <input type="text" class="form-control" id="number_po" name="number_po" value="' . htmlspecialchars($current_number_po) . '">
+            <input type="text" class="form-control" id="number_po" name="number_po" value="' . htmlspecialchars($current_number_po) . '" placeholder="Nomer Purchase Order">
         </div>
         <div class="col-md-4">
             <label class="form-label">Order Date</label>
-            <input type="date" class="form-control" id="order_date" name="order_date" value="' . htmlspecialchars($current_order_date) . '">
+            <input type="date" class="form-control" id="order_date" name="order_date" value="' . htmlspecialchars($current_order_date) . '" placeholder="Order Date">
         </div>
         <div class="col-md-4">
             <label class="form-label">Shipment Number</label>
-            <input type="text" class="form-control" id="name_container" name="name_container" value="' . htmlspecialchars($current_name_container) . '">
+            <input type="text" class="form-control" id="name_container" name="name_container" value="' . htmlspecialchars($current_name_container) . '" placeholder="Name Container">
         </div>
         <div class="col-md-4 mt-3">
             <label class="form-label">Supplier</label>
-            <input type="text" class="form-control" id="name_supplier" name="name_supplier" value="' . htmlspecialchars($current_name_supplier) . '">
+            <input type="text" class="form-control" id="name_supplier" name="name_supplier" value="' . htmlspecialchars($current_name_supplier) . '" placeholder="Name Supplier">
         </div>
         <div class="col-md mt-3">
             <label class="form-label">Money Currency</label>
