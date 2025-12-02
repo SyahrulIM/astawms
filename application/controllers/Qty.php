@@ -17,11 +17,9 @@ class Qty extends CI_Controller
 
     public function index()
     {
-        // Start Product
         $this->db->where('status', 1);
         $product = $this->db->get('product');
 
-        // Start Data Transaksi
         $this->db->where_in('status_progress', ['Listing', 'Finish']);
         $this->db->order_by('idanalisys_po', 'DESC');
         $data_trx = $this->db->get('analisys_po');
@@ -56,7 +54,6 @@ class Qty extends CI_Controller
             return;
         }
 
-        // Update data di analisys_po
         $updateAnalisys = [
             'money_currency' => $money_currency,
             'number_po' => $number_po,
@@ -71,7 +68,6 @@ class Qty extends CI_Controller
         $this->db->where('idanalisys_po', $idanalisys_po);
         $result = $this->db->update('analisys_po', $updateAnalisys);
 
-        // Update masing-masing detail ke tabel detail_analisys_po
         if (!empty($qtyList) && is_array($qtyList)) {
             foreach ($qtyList as $detail_id => $qty) {
                 $updateData = [
@@ -94,9 +90,6 @@ class Qty extends CI_Controller
 
     public function get_detail_analisys_po($idanalisys_po)
     {
-        // ==========================
-        // 0️⃣ AMBIL DATA HEADER PO
-        // ==========================
         $this->db->select('money_currency, number_po, order_date, name_container, name_supplier');
         $this->db->where('idanalisys_po', $idanalisys_po);
         $analisys_data = $this->db->get('analisys_po')->row();
@@ -107,16 +100,13 @@ class Qty extends CI_Controller
         $current_name_container = $analisys_data->name_container ?? '';
         $current_name_supplier = $analisys_data->name_supplier ?? '';
 
-        // ====================================
-        // 1️⃣ CARI ANALISIS PO SEBELUMNYA
-        // ====================================
         $this->db->select('idanalisys_po');
         $this->db->where('idanalisys_po <', $idanalisys_po);
         $this->db->order_by('idanalisys_po', 'DESC');
         $this->db->limit(1);
         $prev_po = $this->db->get('analisys_po')->row();
 
-        $previous_qty = []; // key: idproduct → previous qty_order
+        $previous_qty = [];
 
         if ($prev_po) {
             $prev_id = $prev_po->idanalisys_po;
@@ -128,10 +118,6 @@ class Qty extends CI_Controller
                 $previous_qty[$pd->idproduct] = $pd->qty_order;
             }
         }
-
-        // ====================================
-        // 2️⃣ AMBIL DETAIL PRODUK SAAT INI
-        // ====================================
         $this->db->select('
         p.nama_produk, p.sku, 
         d.iddetail_analisys_po, d.type_sgs, d.type_unit, 
@@ -154,7 +140,6 @@ class Qty extends CI_Controller
 
         foreach ($query->result() as $row) {
 
-            // hitung avg ratio
             $total_sales = $row->current_month_sales;
             $avg_sales = $total_sales / 4;
 
@@ -165,7 +150,6 @@ class Qty extends CI_Controller
                 if ($avg_vs_stock < 1) {
                     $found = true;
 
-                    // Inject qty sebelumnya
                     $row->qty_previous = $previous_qty[$row->idproduct] ?? null;
 
                     $products[] = [
@@ -177,17 +161,12 @@ class Qty extends CI_Controller
             }
         }
 
-        // sort by avg ratio
         usort($products, function ($a, $b) {
             return $a['avg_vs_stock'] <=> $b['avg_vs_stock'];
         });
 
-        // Hidden input
         echo '<input type="hidden" name="idanalisys_po" value="' . $idanalisys_po . '">';
 
-        // ====================================
-        // 3️⃣ SEARCH BAR
-        // ====================================
         echo '
     <div class="row mb-3">
         <div class="col-md-4">
@@ -202,9 +181,6 @@ class Qty extends CI_Controller
         </div>
     </div>';
 
-        // ====================================
-        // 4️⃣ FORM HEADER
-        // ====================================
         echo '
     <div class="row mb-4">
         <div class="col-md-4">
@@ -272,10 +248,8 @@ class Qty extends CI_Controller
             $row = $product['row'];
             $avg_vs_stock_display = $product['avg_vs_stock_display'];
 
-            // qty default → ambil previous kalau ada
             $default_qty = $row->qty_previous !== null ? $row->qty_previous : $row->qty_order;
 
-            // tooltips previous qty
             $tooltip = $row->qty_previous !== null
                 ? 'title="Last Order Qty: ' . $row->qty_previous . '"'
                 : '';
