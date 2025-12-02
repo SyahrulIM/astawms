@@ -436,12 +436,6 @@
                             }
                         }
 
-                        if (!hasValidData) {
-                            e.preventDefault();
-                            alert('Harap isi quantity dan price untuk setidaknya satu produk sebelum memproses PO!');
-                            return false;
-                        }
-
                         if (emptyRequiredFields.length > 0) {
                             e.preventDefault();
                             alert('Harap isi semua field yang diperlukan: ' + emptyRequiredFields.join(', '));

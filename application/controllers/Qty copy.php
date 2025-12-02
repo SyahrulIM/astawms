@@ -94,7 +94,9 @@ class Qty extends CI_Controller
 
     public function get_detail_analisys_po($idanalisys_po)
     {
-        // Ambil data yang sudah ada
+        // ==========================
+        // 0️⃣ AMBIL DATA HEADER PO
+        // ==========================
         $this->db->select('money_currency, number_po, order_date, name_container, name_supplier');
         $this->db->where('idanalisys_po', $idanalisys_po);
         $analisys_data = $this->db->get('analisys_po')->row();
@@ -105,57 +107,139 @@ class Qty extends CI_Controller
         $current_name_container = $analisys_data->name_container ?? '';
         $current_name_supplier = $analisys_data->name_supplier ?? '';
 
-        $this->db->select('p.nama_produk, p.sku, d.iddetail_analisys_po, d.type_sgs, d.type_unit, d.latest_incoming_stock, d.last_mouth_sales, d.current_month_sales, d.balance_per_today, d.qty_order, d.price, d.description');
+        // ====================================
+        // 1️⃣ CARI ANALISIS PO SEBELUMNYA
+        // ====================================
+        $this->db->select('idanalisys_po');
+        $this->db->where('idanalisys_po <', $idanalisys_po);
+        $this->db->order_by('idanalisys_po', 'DESC');
+        $this->db->limit(1);
+        $prev_po = $this->db->get('analisys_po')->row();
+
+        $previous_qty = []; // key: idproduct → previous qty_order
+
+        if ($prev_po) {
+            $prev_id = $prev_po->idanalisys_po;
+            $this->db->select('idproduct, qty_order');
+            $this->db->where('idanalisys_po', $prev_id);
+            $prev_details = $this->db->get('detail_analisys_po')->result();
+
+            foreach ($prev_details as $pd) {
+                $previous_qty[$pd->idproduct] = $pd->qty_order;
+            }
+        }
+
+        // ====================================
+        // 2️⃣ AMBIL DETAIL PRODUK SAAT INI
+        // ====================================
+        $this->db->select('
+        p.nama_produk, p.sku, 
+        d.iddetail_analisys_po, d.type_sgs, d.type_unit, 
+        d.latest_incoming_stock, d.last_mouth_sales, 
+        d.current_month_sales, d.balance_per_today,
+        d.qty_order, d.price, d.description, d.idproduct
+    ');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $idanalisys_po);
         $query = $this->db->get();
 
-        if ($query->num_rows() > 0) {
-            echo '<input type="hidden" name="idanalisys_po" value="' . $idanalisys_po . '">';
+        if ($query->num_rows() == 0) {
+            echo '<div class="alert alert-warning text-center">Tidak ada produk dalam analisis PO ini.</div>';
+            return;
+        }
 
-            // Tampilkan form input data PO
-            echo '
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label for="number_po" class="form-label">No Purchase Order</label>
-                    <input type="text" class="form-control" id="number_po" name="number_po" value="' . htmlspecialchars($current_number_po) . '" placeholder="Masukkan nomer PO">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label for="order_date" class="form-label">Order Date</label>
-                    <input type="date" class="form-control" id="order_date" name="order_date" value="' . htmlspecialchars($current_order_date) . '">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label for="name_container" class="form-label">Shipment Number</label>
-                    <input type="text" class="form-control" id="name_container" name="name_container" value="' . htmlspecialchars($current_name_container) . '" placeholder="Masukkan nama container">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label for="name_supplier" class="form-label">Supplier</label>
-                    <input type="text" class="form-control" id="name_supplier" name="name_supplier" value="' . htmlspecialchars($current_name_supplier) . '" placeholder="Masukkan nama container">
-                </div>
-            </div>
-            <div class="col-md">
-                <div class="mb-3">
-                    <label for="money-currency" class="form-label">Money Currency</label>
-                    <select name="money-currency" id="money-currency" class="form-select" required>
-                        <option value="">Select Money Currency</option>
-                        <option value="rmb" ' . ($current_currency == 'rmb' ? 'selected' : '') . '>RMB</option>
-                        <option value="idr" ' . ($current_currency == 'idr' ? 'selected' : '') . '>IDR</option>
-                    </select>
-                </div>
-            </div>';
+        $products = [];
+        $found = false;
 
-            echo '
-            <div class="table-responsive">
-                <div class="table-scroll">
-                    <table class="table table-bordered table-striped table-hover" style="font-size: small;">
+        foreach ($query->result() as $row) {
+
+            // hitung avg ratio
+            $total_sales = $row->current_month_sales;
+            $avg_sales = $total_sales / 4;
+
+            if ($avg_sales > 0) {
+                $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
+                $avg_vs_stock_display = number_format($avg_vs_stock, 2);
+
+                if ($avg_vs_stock < 1) {
+                    $found = true;
+
+                    // Inject qty sebelumnya
+                    $row->qty_previous = $previous_qty[$row->idproduct] ?? null;
+
+                    $products[] = [
+                        'row' => $row,
+                        'avg_vs_stock' => $avg_vs_stock,
+                        'avg_vs_stock_display' => $avg_vs_stock_display
+                    ];
+                }
+            }
+        }
+
+        // sort by avg ratio
+        usort($products, function ($a, $b) {
+            return $a['avg_vs_stock'] <=> $b['avg_vs_stock'];
+        });
+
+        // Hidden input
+        echo '<input type="hidden" name="idanalisys_po" value="' . $idanalisys_po . '">';
+
+        // ====================================
+        // 3️⃣ SEARCH BAR
+        // ====================================
+        echo '
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-search"></i></span>
+                <input type="text" id="searchDetailTable" class="form-control" placeholder="Cari produk, kode, atau lainnya...">
+                <button type="button" class="btn btn-outline-secondary" id="clearSearch">Clear</button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="form-text" id="searchResultInfo">Menampilkan semua data</div>
+        </div>
+    </div>';
+
+        // ====================================
+        // 4️⃣ FORM HEADER
+        // ====================================
+        echo '
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label class="form-label">No Purchase Order</label>
+            <input type="text" class="form-control" id="number_po" name="number_po" value="' . htmlspecialchars($current_number_po) . '">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Order Date</label>
+            <input type="date" class="form-control" id="order_date" name="order_date" value="' . htmlspecialchars($current_order_date) . '">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Shipment Number</label>
+            <input type="text" class="form-control" id="name_container" name="name_container" value="' . htmlspecialchars($current_name_container) . '">
+        </div>
+        <div class="col-md-4 mt-3">
+            <label class="form-label">Supplier</label>
+            <input type="text" class="form-control" id="name_supplier" name="name_supplier" value="' . htmlspecialchars($current_name_supplier) . '">
+        </div>
+        <div class="col-md mt-3">
+            <label class="form-label">Money Currency</label>
+            <select name="money-currency" id="money-currency" class="form-select">
+                <option value="">Select Money Currency</option>
+                <option value="rmb" ' . ($current_currency == 'rmb' ? 'selected' : '') . '>RMB</option>
+                <option value="idr" ' . ($current_currency == 'idr' ? 'selected' : '') . '>IDR</option>
+            </select>
+        </div>
+    </div>';
+
+        // ====================================
+        // 5️⃣ TABEL PRODUK
+        // ====================================
+        echo '
+    <div class="table-responsive">
+        <div class="table-scroll">
+            <table class="table table-bordered table-striped table-hover" style="font-size: small;" id="detailTable">
                 <thead class="table-light">
                     <tr>
                         <th class="text-center">No</th>
@@ -174,67 +258,97 @@ class Qty extends CI_Controller
                 </thead>
                 <tbody>';
 
-            $found = false;
-            $no = 1;
-            foreach ($query->result() as $row) {
-                $total_sales = $row->current_month_sales;
-                $avg_sales = $total_sales / 4;
+        if (!$found) {
+            echo '
+        <tr>
+            <td colspan="12" class="text-center text-muted py-4">
+                <i class="fa-solid fa-info-circle me-2"></i>
+                Tidak ada produk dengan Avg < 1.00.
+            </td>
+        </tr>';
+            echo '</tbody></table></div></div>';
+            return;
+        }
 
-                if ($avg_sales > 0) {
-                    $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
-                    if ($avg_vs_stock >= 1) continue;
-                    $found = true;
-                    $avg_vs_stock_display = number_format($avg_vs_stock, 2);
-                } else {
-                    continue;
-                }
+        $no = 1;
+        foreach ($products as $product) {
+            $row = $product['row'];
+            $avg_vs_stock_display = $product['avg_vs_stock_display'];
 
-                // dropdown SGS/Non-SGS
-                $select_sgs =
-                    '<select class="form-select" name="editTypeSgs[' . $row->iddetail_analisys_po . ']">
+            // qty default → ambil previous kalau ada
+            $default_qty = $row->qty_previous !== null ? $row->qty_previous : $row->qty_order;
+
+            // tooltips previous qty
+            $tooltip = $row->qty_previous !== null
+                ? 'title="Last Order Qty: ' . $row->qty_previous . '"'
+                : '';
+
+            echo '
+        <tr>
+            <td class="text-center">' . $no++ . '</td>
+            <td class="text-center">' . htmlspecialchars($row->nama_produk) . '</td>
+            <td class="text-center">' . htmlspecialchars($row->sku) . '</td>
+            <td class="text-center">' . $row->latest_incoming_stock . '</td>
+            <td class="text-end">' . number_format($row->last_mouth_sales) . '</td>
+            <td class="text-end">' . number_format($row->current_month_sales) . '</td>
+            <td class="text-end">' . number_format($row->balance_per_today) . '</td>
+            <td class="text-end ' . ($product['avg_vs_stock'] < 1 ? 'text-danger fw-bold' : '') . '">' . $avg_vs_stock_display . '</td>
+
+            <td>
+                <select class="form-select" name="editTypeSgs[' . $row->iddetail_analisys_po . ']">
                     <option value="">Pilih SGS</option>
                     <option value="sgs" ' . ($row->type_sgs == 'sgs' ? 'selected' : '') . '>SGS</option>
                     <option value="non sgs" ' . ($row->type_sgs == 'non sgs' ? 'selected' : '') . '>Non SGS</option>
-                </select>';
+                </select>
+            </td>
 
-                echo '<tr>
-                <td>' . $no++ . '</td>
-                <td class="text-center">' . htmlspecialchars($row->nama_produk) . '</td>
-                <td class="text-center">' . htmlspecialchars($row->sku) . '</td>
-                <td>' . $row->latest_incoming_stock . '</td>
-                <td class="text-end">' . htmlspecialchars($row->last_mouth_sales) . '</td>
-                <td class="text-end">' . htmlspecialchars($row->current_month_sales) . '</td>
-                <td class="text-end">' . htmlspecialchars($row->balance_per_today) . '</td>
-                <td class="text-end ' . ($avg_vs_stock < 1 ? 'text-danger fw-bold' : '') . '">' . $avg_vs_stock_display . '</td>
-                <td>' . $select_sgs . '</td>
-                <td><input type="text" class="form-control" name="editTypeUnit[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->type_unit ?: '') . '"></td>
-                <td><input type="number" class="form-control text-end" name="editQty[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->qty_order ?: '') . '" min="0"></td>
-                <td><input type="number" class="form-control text-end" name="editPrice[' . $row->iddetail_analisys_po . ']" value="' . htmlspecialchars($row->price ?: '') . '" min="0"></td>
-            </tr>
-            <tr>
-                <td colspan="12"><span>Description :</span><textarea class="form-control" name="editDescription[' . $row->iddetail_analisys_po . ']" placeholder="Keterangan" rows="3">' . htmlspecialchars($row->description ?: '') . '</textarea></td>
-            </tr>';
-            }
+            <td>
+                <input type="text" class="form-control"
+                    name="editTypeUnit[' . $row->iddetail_analisys_po . ']"
+                    value="' . htmlspecialchars($row->type_unit ?: '') . '">
+            </td>
 
-            if (!$found) {
-                echo '<tr>
-                <td colspan="13" class="text-center text-muted py-4">
-                    <i class="fa-solid fa-info-circle me-2"></i>
-                    Tidak ada produk dengan Avg Sales vs Stock di bawah 1.00.
-                </td>
-            </tr>';
-            }
+            <td>
+                <input type="number" class="form-control text-end"
+                    ' . $tooltip . '
+                    style="' . (!empty($row->qty_previous) ? 'background:red;color:white;' : '') . '"
+                    name="editQty[' . $row->iddetail_analisys_po . ']"
+                    value="' . (is_numeric($default_qty) ? $default_qty : 0) . '"
+                    min="0" step="1">
+            </td>
 
-            echo '</tbody>
-        </table>
-    </div> <!-- end table-scroll -->
-</div> <!-- end table-responsive -->';
-        } else {
-            echo '<div class="alert alert-warning text-center">
-            <i class="fa-solid fa-exclamation-triangle me-2"></i>
-            Tidak ada produk dalam analisis PO ini.
-        </div>';
+            <td>
+                <input type="number" class="form-control text-end"
+                    name="editPrice[' . $row->iddetail_analisys_po . ']"
+                    value="' . (is_numeric($row->price) ? $row->price : 0) . '"
+                    min="0" step="0.01">
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="12">
+                <div class="mb-2"><b>Description:</b></div>
+                <textarea class="form-control"
+                    name="editDescription[' . $row->iddetail_analisys_po . ']"
+                    rows="2">' . htmlspecialchars($row->description ?: '') . '</textarea>
+            </td>
+        </tr>';
         }
+
+        echo '
+                </tbody>
+            </table>
+        </div>
+    </div>';
+
+        echo '
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <small><strong>Informasi:</strong> Sistem otomatis mengisi Qty Order berdasarkan analisis PO sebelumnya.</small>
+            </div>
+        </div>
+    </div>';
     }
 
     public function cancel($idanalisys_po)

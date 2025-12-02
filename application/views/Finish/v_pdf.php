@@ -179,7 +179,7 @@
                         <img src="<?= base_url('assets/image/' . $item['row']->gambar) ?>" class="product-image">
                     </td>
                     <td class="text-left">
-                        <?= htmlspecialchars($item['row']->nama_produk) ?><br>
+                        <?= htmlspecialchars(translate_to_english($item['row']->nama_produk)) ?><br>
                         <small>SKU: <?= htmlspecialchars($item['row']->sku) ?></small>
                     </td>
                     <td><?= htmlspecialchars($item['row']->sku) ?></td>

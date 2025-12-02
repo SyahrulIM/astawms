@@ -202,6 +202,7 @@ class Finish extends CI_Controller
 
     public function exportPdf()
     {
+        $this->load->helper('translate');
         $id = $this->input->get('id');
 
         // Ambil data header PO

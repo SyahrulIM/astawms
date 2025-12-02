@@ -110,7 +110,7 @@ class Po extends CI_Controller
                 $data_detail = [
                     'idanalisys_po' => $idanalisys_po,
                     'idproduct' => $product->idproduct,
-                    'product_name_en' => $this->translateToEnglish($product->nama_produk),
+                    'product_name_en' => $product->nama_produk,
                     'last_mouth_sales' => $sale_last_month,
                     'current_month_sales' => $current_month_sales,
                     'type_unit' => 'pcs',
