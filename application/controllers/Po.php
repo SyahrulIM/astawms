@@ -33,17 +33,6 @@ class Po extends CI_Controller
         $this->load->view('Po/v_po');
     }
 
-    private function translateToEnglish($text)
-    {
-        try {
-            $tr = new \Stichoza\GoogleTranslate\GoogleTranslate('en'); // target English
-            return $tr->translate($text);
-        } catch (\Exception $e) {
-            // fallback ke text asli
-            return $text;
-        }
-    }
-
     public function insert()
     {
         $this->load->library('upload');
@@ -119,7 +108,8 @@ class Po extends CI_Controller
                     'sale_week_three' => 0,
                     'sale_week_four' => 0,
                     'balance_per_today' => 0,
-                    'latest_incoming_stock' => 0
+                    'latest_incoming_stock_mouth' => 0,
+                    'latest_incoming_stock_pcs' => 0
                 ];
                 $this->db->insert('detail_analisys_po', $data_detail);
             }
@@ -187,9 +177,8 @@ class Po extends CI_Controller
                         'idanalisys_po' => $idanalisys_po,
                         'idproduct' => $product->idproduct
                     ])->update('detail_analisys_po', [
-                        'latest_incoming_stock' =>
-                        '<span class="text-primary"><i class="fa-solid fa-calendar"></i> ' . $latest_month . '</span>' .
-                            '<br><span class="text-success"><i class="fa-solid fa-box"></i> ' . $latest_value . ' pcs</span>'
+                        'latest_incoming_stock_mouth' => $latest_month,
+                        'latest_incoming_stock_pcs' => $latest_value
                     ]);
                 }
             }

@@ -77,7 +77,6 @@
                 <style>
                     .table-scroll {
                         max-height: 450px;
-                        /* atur tinggi scroll */
                         overflow-y: auto;
                         display: block;
                     }
@@ -91,15 +90,13 @@
                         position: sticky;
                         top: 0;
                         background: #f8f9fa;
-                        /* biar header tetap kelihatan */
                         z-index: 10;
                     }
                 </style>
 
-
                 <!-- Start Modal Detail PO -->
                 <div class="modal fade modal-xl" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true" style="font-size: small;">
-                    <form action="<?php echo base_url('qty/process'); ?>" method="post" onsubmit="return confirm('Pastikan semua data sudah benar, Apakah Anda yakin ingin meproses data PO ini?');">
+                    <form action="<?php echo base_url('qty/process'); ?>" method="post">
                         <div class="modal-dialog modal-xl modal-dialog-centered">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -157,7 +154,6 @@
                                 $current_finish = 'active';
                             }
 
-                            // load helper preorder
                             $this->load->helper('preorder');
                             $count_qty = number_pre_order_qty();
                             $count_pre = number_pre_order_pre();
@@ -263,7 +259,6 @@
 
             <script>
                 $(document).ready(function() {
-                    // Initialize main DataTable
                     new DataTable('#tableproduct', {
                         responsive: true,
                         layout: {
@@ -275,7 +270,6 @@
                         }
                     });
 
-                    // Form submission handling for Add PO
                     $('#formAddPO').on('submit', function(e) {
                         const saleMouth = $('#sale_mouth').val();
                         const balanceToday = $('#balance_for_today').val();
@@ -297,12 +291,10 @@
                         return true;
                     });
 
-                    // Auto-dismiss alerts after 5 seconds
                     setTimeout(function() {
                         $('.alert').alert('close');
                     }, 5000);
 
-                    // Handle tab switching persistence
                     $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
                         localStorage.setItem('activeTab', $(e.target).attr('href'));
                     });
@@ -316,7 +308,6 @@
                     }
                 });
 
-                // Function to show detail modal
                 function showDetail(idanalisys_po) {
                     document.getElementById('detailContent').innerHTML = `
             <div class="text-center py-4">
@@ -330,7 +321,7 @@
                     const modal = new bootstrap.Modal(document.getElementById('detailModal'));
                     modal.show();
 
-                    fetch(`<?= base_url('qty/get_detail_analisys_po/') ?>${idanalisys_po}`)
+                    fetch('<?= base_url('qty/get_detail_analisys_po/') ?>' + idanalisys_po)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error('Network response was not ok');
@@ -340,7 +331,7 @@
                         .then(html => {
                             document.getElementById('detailContent').innerHTML = html;
                             initializeSearch();
-                            initializeFormValidation();
+                            initializeTooltips();
                         })
                         .catch((error) => {
                             console.error('Error:', error);
@@ -359,18 +350,40 @@
                     const clearButton = document.getElementById('clearSearch');
                     const searchResultInfo = document.getElementById('searchResultInfo');
 
-                    if (!searchInput) return;
+                    if (!searchInput) {
+                        console.log('Search input not found');
+                        return;
+                    }
+
+                    console.log('Initializing search...');
 
                     function performSearch() {
                         const searchTerm = searchInput.value.toLowerCase().trim();
-                        const rows = document.querySelectorAll('#detailTableBody tr[data-search]');
+                        const tableBody = document.getElementById('detailTableBody');
+
+                        if (!tableBody) {
+                            console.error('Table body not found');
+                            return;
+                        }
+
+                        // Get all rows in the table body
+                        const rows = tableBody.querySelectorAll('tr');
                         let visibleCount = 0;
-                        let totalRows = 0;
+                        let totalRows = rows.length;
 
                         rows.forEach(row => {
-                            totalRows++;
-                            const searchData = row.getAttribute('data-search').toLowerCase();
-                            if (searchData.includes(searchTerm)) {
+                            // Check if this is a "no data" message row
+                            const isNoDataRow = row.querySelector('td[colspan="12"]');
+                            if (isNoDataRow) {
+                                // For "no data" rows, show only if search is empty
+                                row.style.display = searchTerm === '' ? '' : 'none';
+                                if (searchTerm === '') visibleCount++;
+                                return;
+                            }
+
+                            const searchData = row.getAttribute('data-search') || '';
+
+                            if (searchTerm === '' || searchData.includes(searchTerm)) {
                                 row.style.display = '';
                                 visibleCount++;
                             } else {
@@ -378,19 +391,21 @@
                             }
                         });
 
+                        // Update search result info
                         if (searchTerm === '') {
-                            searchResultInfo.textContent = `Menampilkan semua ${totalRows} data`;
+                            searchResultInfo.textContent = 'Menampilkan semua ' + visibleCount + ' data';
                             searchResultInfo.className = 'form-text text-muted';
                         } else {
                             const hasResults = visibleCount > 0;
                             searchResultInfo.textContent = hasResults ?
-                                `Menemukan ${visibleCount} dari ${totalRows} data untuk "${searchTerm}"` :
-                                `Tidak ditemukan data untuk "${searchTerm}"`;
+                                'Menemukan ' + visibleCount + ' dari ' + totalRows + ' data untuk "' + searchTerm + '"' :
+                                'Tidak ditemukan data untuk "' + searchTerm + '"';
                             searchResultInfo.className = hasResults ? 'form-text text-success fw-bold' : 'form-text text-danger fw-bold';
                         }
                     }
 
-                    searchInput.addEventListener('input', performSearch);
+                    // Add event listeners
+                    searchInput.addEventListener('input', debounce(performSearch, 300));
 
                     if (clearButton) {
                         clearButton.addEventListener('click', function() {
@@ -407,42 +422,19 @@
                         }
                     });
 
-                    performSearch();
+                    // Initialize search on load
+                    setTimeout(performSearch, 50);
                 }
 
-                // Function to initialize form validation for detail modal
-                function initializeFormValidation() {
-                    const form = document.querySelector('#detailModal form');
-                    if (!form) return;
-
-                    form.addEventListener('submit', function(e) {
-                        const moneyCurrency = document.querySelector('select[name="money-currency"]');
-                        const qtyInputs = document.querySelectorAll('input[name^="editQty"]');
-                        const priceInputs = document.querySelectorAll('input[name^="editPrice"]');
-                        let hasValidData = false;
-                        let emptyRequiredFields = [];
-
-                        if (!moneyCurrency || !moneyCurrency.value) {
-                            emptyRequiredFields.push('Mata Uang');
-                        }
-
-                        for (let i = 0; i < qtyInputs.length; i++) {
-                            const qty = parseInt(qtyInputs[i].value) || 0;
-                            const price = parseInt(priceInputs[i].value) || 0;
-
-                            if (qty > 0 && price > 0) {
-                                hasValidData = true;
-                                break;
-                            }
-                        }
-
-                        if (emptyRequiredFields.length > 0) {
-                            e.preventDefault();
-                            alert('Harap isi semua field yang diperlukan: ' + emptyRequiredFields.join(', '));
-                            return false;
-                        }
-
-                        return true;
+                // Function to initialize tooltips
+                function initializeTooltips() {
+                    // Add tooltips for previous quantity
+                    const qtyInputs = document.querySelectorAll('.qty-input[title]');
+                    qtyInputs.forEach(input => {
+                        $(input).tooltip({
+                            trigger: 'hover focus',
+                            placement: 'top'
+                        });
                     });
                 }
 
@@ -470,6 +462,8 @@
                 // Event listener for modal hidden (cleanup)
                 document.getElementById('detailModal').addEventListener('hidden.bs.modal', function() {
                     document.getElementById('detailContent').innerHTML = 'Memuat data...';
+                    // Remove any tooltips
+                    $('.qty-input').tooltip('dispose');
                 });
 
                 // Confirm cancel button event listener
@@ -481,7 +475,7 @@
                         cancelBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Membatalkan...';
                         cancelBtn.disabled = true;
 
-                        window.location.href = `<?= base_url('qty/cancel/') ?>${id}`;
+                        window.location.href = '<?= base_url('qty/cancel/') ?>' + id;
                     }
                 });
 
@@ -490,7 +484,8 @@
                     // Ctrl + F for search focus (when detail modal is open)
                     if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                         const searchInput = document.getElementById('searchDetailTable');
-                        if (searchInput && document.getElementById('detailModal').classList.contains('show')) {
+                        const detailModal = document.getElementById('detailModal');
+                        if (searchInput && detailModal && detailModal.classList.contains('show')) {
                             e.preventDefault();
                             searchInput.focus();
                             searchInput.select();
@@ -499,13 +494,24 @@
 
                     // Escape key to close modals
                     if (e.key === 'Escape') {
-                        const detailModal = bootstrap.Modal.getInstance(document.getElementById('detailModal'));
-                        const cancelModal = bootstrap.Modal.getInstance(document.getElementById('cancelModal'));
-                        const addPoModal = bootstrap.Modal.getInstance(document.getElementById('modalAddPo'));
+                        const detailModalEl = document.getElementById('detailModal');
+                        const cancelModalEl = document.getElementById('cancelModal');
+                        const addPoModalEl = document.getElementById('modalAddPo');
 
-                        if (detailModal) detailModal.hide();
-                        if (cancelModal) cancelModal.hide();
-                        if (addPoModal) addPoModal.hide();
+                        if (detailModalEl && detailModalEl.classList.contains('show')) {
+                            const detailModal = bootstrap.Modal.getInstance(detailModalEl);
+                            if (detailModal) detailModal.hide();
+                        }
+
+                        if (cancelModalEl && cancelModalEl.classList.contains('show')) {
+                            const cancelModal = bootstrap.Modal.getInstance(cancelModalEl);
+                            if (cancelModal) cancelModal.hide();
+                        }
+
+                        if (addPoModalEl && addPoModalEl.classList.contains('show')) {
+                            const addPoModal = bootstrap.Modal.getInstance(addPoModalEl);
+                            if (addPoModal) addPoModal.hide();
+                        }
                     }
                 });
 
@@ -522,26 +528,10 @@
                     };
                 }
 
-                // Auto-format currency inputs
-                function formatCurrencyInput(input) {
-                    input.addEventListener('blur', function() {
-                        const value = parseInt(this.value) || 0;
-                        if (value > 0) {
-                            this.value = value.toLocaleString('id-ID');
-                        }
-                    });
-
-                    input.addEventListener('focus', function() {
-                        this.value = this.value.replace(/\./g, '');
-                    });
-                }
-
-                // Initialize all currency inputs when page loads
+                // Add Bootstrap tooltips on page load
                 document.addEventListener('DOMContentLoaded', function() {
-                    const currencyInputs = document.querySelectorAll('input[name^="editPrice"]');
-                    currencyInputs.forEach(input => {
-                        formatCurrencyInput(input);
-                    });
+                    // Add Bootstrap tooltips
+                    $('[title]').tooltip();
                 });
             </script>
             </body>

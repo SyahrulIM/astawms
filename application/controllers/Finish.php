@@ -55,7 +55,7 @@ class Finish extends CI_Controller
         }
 
         // Ambil data detail PO
-        $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, d.latest_incoming_stock, 
+        $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, , d.latest_incoming_stock_mouth, d.latest_incoming_stock_pcs, 
                    d.last_mouth_sales, d.current_month_sales, d.balance_per_today, d.qty_order, d.price, d.description');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
@@ -148,7 +148,7 @@ class Finish extends CI_Controller
                 <td>' . htmlspecialchars($row->sku) . '</td>
                 <td class="text-center">' . ($row->type_sgs ? strtoupper(htmlspecialchars($row->type_sgs)) : '-') . '</td>
                 <td class="text-center">' . ($row->type_unit ? strtoupper(htmlspecialchars($row->type_unit)) : '-') . '</td>
-                <td>' . $row->latest_incoming_stock . '</td>
+                <td class="text-center"><span class="text-primary"><i class="fa-solid fa-calendar"></i> ' . $row->latest_incoming_stock_mouth . '</span><br><span class="text-success"><i class="fa-solid fa-box"></i> ' . $row->latest_incoming_stock_pcs . ' Pcs</span></td>
                 <td class="text-end">' . ($row->last_mouth_sales ? htmlspecialchars($row->last_mouth_sales) : '-') . '</td>
                 <td class="text-end">' . ($row->current_month_sales ? htmlspecialchars($row->current_month_sales) : '-') . '</td>
                 <td class="text-end">' . ($row->balance_per_today ? htmlspecialchars($row->balance_per_today) : '-') . '</td>
@@ -211,12 +211,12 @@ class Finish extends CI_Controller
 
         // Ambil data detail PO + gambar produk
         $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, p.gambar, d.type_sgs, d.type_unit, 
-                       d.latest_incoming_stock, d.last_mouth_sales, d.current_month_sales, 
+                       d.latest_incoming_stock_mouth, d.latest_incoming_stock_pcs, d.last_mouth_sales, d.current_month_sales, 
                        d.balance_per_today, d.qty_order, d.price, d.description');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $id);
-        $this->db->where('d.qty_order > 0');
+        $this->db->where('d.price > 0');
         $query = $this->db->get();
 
         // Filter data (Avg Sales vs Stock < 1)

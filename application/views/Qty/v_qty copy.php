@@ -77,7 +77,6 @@
                 <style>
                     .table-scroll {
                         max-height: 450px;
-                        /* atur tinggi scroll */
                         overflow-y: auto;
                         display: block;
                     }
@@ -91,15 +90,13 @@
                         position: sticky;
                         top: 0;
                         background: #f8f9fa;
-                        /* biar header tetap kelihatan */
                         z-index: 10;
                     }
                 </style>
 
-
                 <!-- Start Modal Detail PO -->
                 <div class="modal fade modal-xl" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true" style="font-size: small;">
-                    <form action="<?php echo base_url('qty/process'); ?>" method="post" onsubmit="return confirm('Pastikan semua data sudah benar, Apakah Anda yakin ingin meproses data PO ini?');">
+                    <form action="<?php echo base_url('qty/process'); ?>" method="post">
                         <div class="modal-dialog modal-xl modal-dialog-centered">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -157,7 +154,6 @@
                                 $current_finish = 'active';
                             }
 
-                            // load helper preorder
                             $this->load->helper('preorder');
                             $count_qty = number_pre_order_qty();
                             $count_pre = number_pre_order_pre();
@@ -253,19 +249,14 @@
             </div>
             </div>
             <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-            <!-- 2. DataTables JS -->
-            <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
             <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
             <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
             <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/rowReorder.dataTables.js"></script>
             <script src="https://cdn.datatables.net/responsive/3.0.4/js/dataTables.responsive.js"></script>
             <script src="https://cdn.datatables.net/responsive/3.0.4/js/responsive.dataTables.js"></script>
-            <!-- 3. Bootstrap bundle -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-            <!-- 4. Core theme JS -->
             <script src="<?php echo base_url(); ?>js/scripts.js"></script>
 
-            <!-- Initialize DataTables AFTER all scripts are loaded -->
             <script>
                 $(document).ready(function() {
                     new DataTable('#tableproduct', {
@@ -278,34 +269,269 @@
                             }
                         }
                     });
+
+                    $('#formAddPO').on('submit', function(e) {
+                        const saleMouth = $('#sale_mouth').val();
+                        const balanceToday = $('#balance_for_today').val();
+                        const incomingStock = $('#latest_incoming_stock').val();
+
+                        if (!saleMouth || !balanceToday || !incomingStock) {
+                            e.preventDefault();
+                            alert('Harap unggah semua file yang diperlukan!');
+                            return false;
+                        }
+
+                        const allowedExtensions = /(\.xlsx)$/i;
+                        if (!allowedExtensions.exec(saleMouth) || !allowedExtensions.exec(balanceToday) || !allowedExtensions.exec(incomingStock)) {
+                            e.preventDefault();
+                            alert('Hanya file Excel (.xlsx) yang diizinkan!');
+                            return false;
+                        }
+
+                        return true;
+                    });
+
+                    setTimeout(function() {
+                        $('.alert').alert('close');
+                    }, 5000);
+
+                    $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                        localStorage.setItem('activeTab', $(e.target).attr('href'));
+                    });
+
+                    const activeTab = localStorage.getItem('activeTab');
+                    if (activeTab) {
+                        const tabElement = $('.nav-tabs a[href="' + activeTab + '"]');
+                        if (tabElement.length) {
+                            tabElement.tab('show');
+                        }
+                    }
                 });
 
                 function showDetail(idanalisys_po) {
-                    // tampilkan modal dan loading
-                    document.getElementById('detailContent').innerHTML = 'Memuat data...';
+                    document.getElementById('detailContent').innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Memuat data...</p>
+            </div>
+        `;
+
                     const modal = new bootstrap.Modal(document.getElementById('detailModal'));
                     modal.show();
 
-                    // ambil data dari controller
-                    fetch(`<?= base_url('qty/get_detail_analisys_po/') ?>${idanalisys_po}`)
-                        .then(response => response.text())
+                    fetch('<?= base_url('qty/get_detail_analisys_po/') ?>' + idanalisys_po)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.text();
+                        })
                         .then(html => {
                             document.getElementById('detailContent').innerHTML = html;
+                            initializeSearch();
+                            initializeTooltips();
                         })
-                        .catch(() => {
-                            document.getElementById('detailContent').innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
+                        .catch((error) => {
+                            console.error('Error:', error);
+                            document.getElementById('detailContent').innerHTML = `
+                    <div class="alert alert-danger text-center">
+                        <i class="fa-solid fa-exclamation-triangle me-2"></i>
+                        Gagal memuat data. Silakan coba lagi.
+                    </div>
+                `;
                         });
                 }
 
+                // Function to initialize search functionality
+                function initializeSearch() {
+                    const searchInput = document.getElementById('searchDetailTable');
+                    const clearButton = document.getElementById('clearSearch');
+                    const searchResultInfo = document.getElementById('searchResultInfo');
+
+                    if (!searchInput) {
+                        console.log('Search input not found');
+                        return;
+                    }
+
+                    console.log('Initializing search...');
+
+                    function performSearch() {
+                        const searchTerm = searchInput.value.toLowerCase().trim();
+                        const tableBody = document.getElementById('detailTableBody');
+
+                        if (!tableBody) {
+                            console.error('Table body not found');
+                            return;
+                        }
+
+                        // Get all rows in the table body
+                        const rows = tableBody.querySelectorAll('tr');
+                        let visibleCount = 0;
+                        let totalRows = rows.length;
+
+                        rows.forEach(row => {
+                            // Check if this is a "no data" message row
+                            const isNoDataRow = row.querySelector('td[colspan="12"]');
+                            if (isNoDataRow) {
+                                // For "no data" rows, show only if search is empty
+                                row.style.display = searchTerm === '' ? '' : 'none';
+                                if (searchTerm === '') visibleCount++;
+                                return;
+                            }
+
+                            const searchData = row.getAttribute('data-search') || '';
+
+                            if (searchTerm === '' || searchData.includes(searchTerm)) {
+                                row.style.display = '';
+                                visibleCount++;
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        });
+
+                        // Update search result info
+                        if (searchTerm === '') {
+                            searchResultInfo.textContent = 'Menampilkan semua ' + visibleCount + ' data';
+                            searchResultInfo.className = 'form-text text-muted';
+                        } else {
+                            const hasResults = visibleCount > 0;
+                            searchResultInfo.textContent = hasResults ?
+                                'Menemukan ' + visibleCount + ' dari ' + totalRows + ' data untuk "' + searchTerm + '"' :
+                                'Tidak ditemukan data untuk "' + searchTerm + '"';
+                            searchResultInfo.className = hasResults ? 'form-text text-success fw-bold' : 'form-text text-danger fw-bold';
+                        }
+                    }
+
+                    // Add event listeners
+                    searchInput.addEventListener('input', debounce(performSearch, 300));
+
+                    if (clearButton) {
+                        clearButton.addEventListener('click', function() {
+                            searchInput.value = '';
+                            performSearch();
+                            searchInput.focus();
+                        });
+                    }
+
+                    searchInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            performSearch();
+                        }
+                    });
+
+                    // Initialize search on load
+                    setTimeout(performSearch, 50);
+                }
+
+                // Function to initialize tooltips
+                function initializeTooltips() {
+                    // Add tooltips for previous quantity
+                    const qtyInputs = document.querySelectorAll('.qty-input[title]');
+                    qtyInputs.forEach(input => {
+                        $(input).tooltip({
+                            trigger: 'hover focus',
+                            placement: 'top'
+                        });
+                    });
+                }
+
+                // Function to show cancel confirmation modal
                 function showCancelModal(id) {
                     document.getElementById('cancelIdPo').value = id;
                     const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
                     modal.show();
                 }
 
+                // Event listener for modal show (to reset search when modal opens)
+                document.getElementById('detailModal').addEventListener('show.bs.modal', function() {
+                    const searchInput = document.getElementById('searchDetailTable');
+                    const searchResultInfo = document.getElementById('searchResultInfo');
+
+                    if (searchInput) {
+                        searchInput.value = '';
+                    }
+                    if (searchResultInfo) {
+                        searchResultInfo.textContent = 'Menampilkan semua data';
+                        searchResultInfo.className = 'form-text text-muted';
+                    }
+                });
+
+                // Event listener for modal hidden (cleanup)
+                document.getElementById('detailModal').addEventListener('hidden.bs.modal', function() {
+                    document.getElementById('detailContent').innerHTML = 'Memuat data...';
+                    // Remove any tooltips
+                    $('.qty-input').tooltip('dispose');
+                });
+
+                // Confirm cancel button event listener
                 document.getElementById('confirmCancelBtn').addEventListener('click', function() {
                     const id = document.getElementById('cancelIdPo').value;
-                    window.location.href = `<?= base_url('qty/cancel/') ?>${id}`;
+                    if (id) {
+                        const cancelBtn = this;
+                        const originalText = cancelBtn.innerHTML;
+                        cancelBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Membatalkan...';
+                        cancelBtn.disabled = true;
+
+                        window.location.href = '<?= base_url('qty/cancel/') ?>' + id;
+                    }
+                });
+
+                // Global keyboard shortcuts
+                document.addEventListener('keydown', function(e) {
+                    // Ctrl + F for search focus (when detail modal is open)
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                        const searchInput = document.getElementById('searchDetailTable');
+                        const detailModal = document.getElementById('detailModal');
+                        if (searchInput && detailModal && detailModal.classList.contains('show')) {
+                            e.preventDefault();
+                            searchInput.focus();
+                            searchInput.select();
+                        }
+                    }
+
+                    // Escape key to close modals
+                    if (e.key === 'Escape') {
+                        const detailModalEl = document.getElementById('detailModal');
+                        const cancelModalEl = document.getElementById('cancelModal');
+                        const addPoModalEl = document.getElementById('modalAddPo');
+
+                        if (detailModalEl && detailModalEl.classList.contains('show')) {
+                            const detailModal = bootstrap.Modal.getInstance(detailModalEl);
+                            if (detailModal) detailModal.hide();
+                        }
+
+                        if (cancelModalEl && cancelModalEl.classList.contains('show')) {
+                            const cancelModal = bootstrap.Modal.getInstance(cancelModalEl);
+                            if (cancelModal) cancelModal.hide();
+                        }
+
+                        if (addPoModalEl && addPoModalEl.classList.contains('show')) {
+                            const addPoModal = bootstrap.Modal.getInstance(addPoModalEl);
+                            if (addPoModal) addPoModal.hide();
+                        }
+                    }
+                });
+
+                // Utility function to debounce rapid function calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Add Bootstrap tooltips on page load
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Add Bootstrap tooltips
+                    $('[title]').tooltip();
                 });
             </script>
             </body>
