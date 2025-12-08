@@ -223,34 +223,42 @@
                     $('#modalUserPenginput').closest('.col').show();
                 }
 
-                // Normalisasi tipe
+                // Normalisasi tipe untuk AJAX call
                 let ajaxType = selectedTransactionType.toLowerCase();
 
+                // Untuk Packing List, gunakan 'packing' bukan 'analisys_po'
                 if (ajaxType === 'packing list') {
-                    ajaxType = 'analisys_po'; // sesuai nama tabel
+                    ajaxType = 'packing'; // Ubah ini dari 'analisys_po' ke 'packing'
                 }
+
+                console.log('AJAX Request - Type:', ajaxType, 'Code:', selectedTransactionCode);
 
                 $.ajax({
                     url: '<?= base_url('verification/get_details/') ?>' + ajaxType + '/' + selectedTransactionCode,
                     type: 'GET',
                     dataType: 'json',
                     success: function(response) {
+                        console.log('AJAX Response:', response);
+
                         $('#detailStockTable').empty();
-                        if (response.details) {
+                        if (response.details && response.details.length > 0) {
                             response.details.forEach(function(detail) {
                                 var row = '<tr>' +
-                                    '<td>' + (detail.sku || '') + '</td>' +
+                                    '<td>' + (detail.sku || 'N/A') + '</td>' +
                                     '<td>' + (detail.nama_produk || '') + '</td>' +
-                                    '<td>' + (detail.jumlah || '') + '</td>' +
+                                    '<td>' + (detail.jumlah || '0') + '</td>' +
                                     '</tr>';
                                 $('#detailStockTable').append(row);
                             });
+                        } else if (response.error) {
+                            $('#detailStockTable').html('<tr><td colspan="3" class="text-danger">' + response.error + '</td></tr>');
                         } else {
-                            $('#detailStockTable').html('<tr><td colspan="3">Tidak ada data</td></tr>');
+                            $('#detailStockTable').html('<tr><td colspan="3" class="text-warning">Tidak ada produk dengan quantity lebih dari 0</td></tr>');
                         }
                     },
-                    error: function() {
-                        $('#detailStockTable').html('<tr><td colspan="3">Gagal memuat data</td></tr>');
+                    error: function(xhr, status, error) {
+                        console.log('AJAX Error:', error, 'Status:', status, 'Response:', xhr.responseText);
+                        $('#detailStockTable').html('<tr><td colspan="3" class="text-danger">Gagal memuat data. Error: ' + error + '</td></tr>');
                     }
                 });
             });

@@ -171,41 +171,94 @@ class Verification extends CI_Controller
 	{
 		$type = strtolower($type);
 
+		// Debug: Cek tipe yang diterima
+		error_log("Type received in get_details: " . $type . " | Code: " . $kode);
+
 		// Daftar tipe valid
-		$valid_types = ['instock', 'outstock', 'packing'];
+		$valid_types = ['instock', 'outstock', 'packing', 'packing_list'];
 		if (!in_array($type, $valid_types)) {
-			echo json_encode(['error' => 'Invalid type']);
+			echo json_encode(['error' => 'Invalid type: ' . $type . '. Valid types: ' . implode(', ', $valid_types)]);
 			return;
 		}
 
 		if ($type == 'instock') {
 			$kode_field = 'instock_code';
 			$detail_table = 'detail_instock';
+
+			$details = $this->db
+				->select("$detail_table.*, p.nama_produk")
+				->from($detail_table)
+				->join('product p', "$detail_table.sku = p.sku", 'left')
+				->where("$detail_table.$kode_field", $kode)
+				->where("$detail_table.jumlah >", 0) // Hanya ambil yang jumlah > 0
+				->get()
+				->result();
 		} elseif ($type == 'outstock') {
 			$kode_field = 'outstock_code';
 			$detail_table = 'detail_outstock';
-		} elseif ($type == 'packing') {
-			// untuk analisys_po
-			$kode_field = 'number_po';
-			$detail_table = 'detail_analisys_po';
+
+			$details = $this->db
+				->select("$detail_table.*, p.nama_produk")
+				->from($detail_table)
+				->join('product p', "$detail_table.sku = p.sku", 'left')
+				->where("$detail_table.$kode_field", $kode)
+				->where("$detail_table.jumlah >", 0) // Hanya ambil yang jumlah > 0
+				->get()
+				->result();
+		} elseif ($type == 'packing' || $type == 'packing_list') {
+			// Untuk analisys_po - cari berdasarkan number_po
+			$main_data = $this->db->where('number_po', $kode)->get('analisys_po')->row();
+
+			if (!$main_data) {
+				echo json_encode(['error' => 'Data tidak ditemukan untuk kode: ' . $kode]);
+				return;
+			}
+
+			// Debug: Cek apakah ada data
+			error_log("Found analisys_po ID: " . $main_data->idanalisys_po);
+
+			// Ambil detail dari detail_analisys_po dengan JOIN ke product untuk mendapatkan SKU
+			$details = $this->db
+				->select("d.*, p.sku, p.nama_produk")
+				->from('detail_analisys_po d')
+				->join('product p', 'd.idproduct = p.idproduct', 'left') // JOIN dengan product berdasarkan idproduct
+				->where('d.idanalisys_po', $main_data->idanalisys_po)
+				->where('(d.qty_order > 0 OR d.qty_receive > 0)', null, false) // Hanya ambil yang qty_order > 0 atau qty_receive > 0
+				->get()
+				->result();
+
+			// Debug: Cek jumlah detail
+			error_log("Found " . count($details) . " details");
+
+			// Format data untuk sesuai dengan yang diharapkan JavaScript
+			$formatted_details = [];
+			foreach ($details as $detail) {
+				// Tentukan jumlah mana yang akan ditampilkan
+				$jumlah = 0;
+				if (isset($detail->qty_order) && $detail->qty_order > 0) {
+					$jumlah = $detail->qty_order;
+				} elseif (isset($detail->qty_receive) && $detail->qty_receive > 0) {
+					$jumlah = $detail->qty_receive;
+				}
+
+				// Hanya tambahkan jika jumlah > 0
+				if ($jumlah > 0) {
+					$formatted_details[] = [
+						'sku' => isset($detail->sku) ? $detail->sku : '', // Ambil SKU dari product
+						'nama_produk' => isset($detail->nama_produk) ? $detail->nama_produk : (isset($detail->product_name_en) ? $detail->product_name_en : ''),
+						'jumlah' => $jumlah
+					];
+				}
+			}
+			$details = $formatted_details;
 		}
 
-		// Query Penarik Data
-		$details = $this->db
-			->select("$detail_table.*, p.nama_produk")
-			->from($detail_table)
-			->join('product p', "$detail_table.sku = p.sku", 'left')
-			->where("$detail_table.$kode_field", $kode)
-			->get()
-			->result();
-
-		if ($details) {
+		if ($details && count($details) > 0) {
 			echo json_encode(['details' => $details]);
 		} else {
-			echo json_encode(['error' => 'Data tidak ditemukan']);
+			echo json_encode(['error' => 'Data detail tidak ditemukan atau semua quantity 0']);
 		}
 	}
-
 
 	public function reject($type, $code)
 	{
