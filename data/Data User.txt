@@ -140,3 +140,11 @@ Shopee ID:
 333026876
 
 =SUM('Happy Mart'!F5,'Nike Jaya Abadi'!F5,'Jaya bintang'!F5)
+
+CV Surya Jaya Makmur
+Taman Internasional 1 B6 / 30
+Citraraya
+Surabaya 60219 - East Java
+Indonesia
+Phone / Mobile : +62816536516
+Email : schianger@gmail.com

@@ -87,88 +87,133 @@
         </div>
     </div>
 
-    <!-- Verification Modal -->
-    <div class="modal fade" id="verifikasiModal" tabindex="-1" aria-labelledby="verifikasiModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="verifikasiModalLabel">Konfirmasi Verifikasi</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
+<!-- Verification Modal -->
+<div class="modal fade" id="verifikasiModal" tabindex="-1" aria-labelledby="verifikasiModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="verifikasiModalLabel">Konfirmasi Verifikasi</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <form id="verifikasiForm" method="post">
                 <div class="modal-body">
                     <!-- Transaction Information -->
-                    <div>
-                        <h6>Informasi Transaksi</h6>
-                        <div class="row mb-2">
-                            <div class="col">
-                                <div>Tipe Transaksi:</div>
-                                <div id="modalTipeTransaksi"></div>
-                            </div>
-                            <div class="col">
-                                <div>Kode Transaksi:</div>
-                                <div id="modalKodeTransaksi"></div>
-                            </div>
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-info-circle"></i> Informasi Transaksi</h6>
                         </div>
-                        <div class="row mb-2">
-                            <div class="col">
-                                <div>Tanggal Distribusi:</div>
-                                <div id="modalTanggalDistribusi"></div>
-                            </div>
-                            <div class="col">
-                                <div>User Penginput:</div>
-                                <div id="modalUserPenginput"></div>
-                            </div>
-                        </div>
-                        <div id="poInputGroup" style="display:none;">
-                            <div class="row mb-2">
-                                <div class="col">
-                                    <label for="inputNomorPo" class="form-label">Nomor Accurate</label>
-                                    <input type="text" id="inputNomorPo" class="form-control" placeholder="Masukkan Nomor Accurate">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Tipe Transaksi:</small>
+                                        <div id="modalTipeTransaksi" class="fw-bold"></div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col">
-                                    <label for="inputWarehouse" class="form-label">Gudang</label>
-                                    <select class="form-select" name="inputWarehouse" id="inputWarehouse">
-                                        <option value="">Pilih Gudang</option>
-                                        <?php foreach ($warehouse as $values) : ?>
-                                        <option value="<?= $values->idgudang ?>"><?= $values->nama_gudang ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                <div class="col-md-3">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Kode Transaksi:</small>
+                                        <div id="modalKodeTransaksi" class="fw-bold text-primary"></div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col">
-                                    <label for="inputDateReceiving" class="form-label">Tanggal Diterima</label>
-                                    <input type="datetime-local" id="inputDateReceiving" class="form-control" placeholder="Masukkan Nomor PO">
+                                <div class="col-md-3">
+                                    <div class="mb-2">
+                                        <small class="text-muted">Tanggal Distribusi:</small>
+                                        <div id="modalTanggalDistribusi" class="fw-bold"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-2">
+                                        <small class="text-muted">User Penginput:</small>
+                                        <div id="modalUserPenginput" class="fw-bold"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tabel Detail Stok -->
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>SKU</th>
-                                    <th>Nama Produk</th>
-                                    <th>Jumlah</th>
-                                </tr>
-                            </thead>
-                            <tbody id="detailStockTable">
-                                <!-- Data detail stok akan ditambahkan di sini dengan JavaScript -->
-                            </tbody>
-                        </table>
+                    <!-- Additional Fields for Packing List -->
+                    <div id="poInputGroup" style="display:none;">
+                        <div class="card mb-3">
+                            <div class="card-header bg-warning">
+                                <h6 class="mb-0"><i class="fas fa-edit"></i> Data Tambahan untuk Packing List</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="inputNomorPo" class="form-label">Nomor Accurate <span class="text-danger">*</span></label>
+                                            <input type="text" id="inputNomorPo" name="nomor_accurate" class="form-control" placeholder="Masukkan Nomor Accurate">
+                                            <div class="form-text">Contoh: ACC-2025-001</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="inputWarehouse" class="form-label">Gudang <span class="text-danger">*</span></label>
+                                            <select class="form-select" name="idgudang" id="inputWarehouse">
+                                                <option value="">Pilih Gudang</option>
+                                                <?php foreach ($warehouse as $values) : ?>
+                                                <option value="<?= $values->idgudang ?>"><?= $values->nama_gudang ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="inputDateReceiving" class="form-label">Tanggal Diterima <span class="text-danger">*</span></label>
+                                            <input type="datetime-local" id="inputDateReceiving" name="tanggal_diterima" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Items -->
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-list"></i> Detail Barang</h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr id="detailHeaderInstockOutstock">
+                                        <th width="20%">SKU</th>
+                                        <th width="60%">Nama Produk</th>
+                                        <th width="20%" class="text-end">Jumlah</th>
+                                    </tr>
+                                    <tr id="detailHeaderPackingList" style="display:none;">
+                                        <th width="15%">SKU</th>
+                                        <th width="40%">Nama Produk</th>
+                                        <th width="15%" class="text-end">Qty Order</th>
+                                        <th width="15%" class="text-end">Qty Receive</th>
+                                        <th width="15%" class="text-end">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailStockTable">
+                                    <!-- Data akan diisi oleh JavaScript -->
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" id="rejectVerifikasi">Reject</button>
-                    <button type="button" class="btn btn-primary" id="confirmVerifikasi">Ya, Verifikasi</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                    <button type="button" class="btn btn-danger" id="rejectVerifikasi">
+                        <i class="fas fa-times-circle"></i> Tolak
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="confirmVerifikasi">
+                        <i class="fas fa-check-circle"></i> Ya, Verifikasi
+                    </button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
+</div>
     <!-- End -->
 
     <!-- Scripts -->
@@ -181,6 +226,7 @@
     <script>
         let selectedTransactionCode = null;
         let selectedTransactionType = null;
+        let productDetails = []; // Menyimpan detail produk untuk perhitungan
 
         $(document).ready(function() {
             new DataTable('#tableproduct', {
@@ -194,98 +240,266 @@
                 }
             });
 
-            $(document).on('click', '.btn-verifikasi', function() {
-                selectedTransactionCode = $(this).data('id');
-                selectedTransactionType = $(this).data('tipe');
+$(document).on('click', '.btn-verifikasi', function() {
+    selectedTransactionCode = $(this).data('id');
+    selectedTransactionType = $(this).data('tipe');
 
-                // Get the row data
-                let row = $(this).closest('tr');
-                let distributionDate = row.find('td:eq(4)').text();
-                let userInput = row.find('td:eq(5)').text();
+    // Get the row data
+    let row = $(this).closest('tr');
+    let distributionDate = row.find('td:eq(4)').text();
+    let userInput = row.find('td:eq(5)').text();
 
-                // Set the modal information
-                $('#modalTipeTransaksi').text(selectedTransactionType.charAt(0).toUpperCase() + selectedTransactionType.slice(1));
-                $('#modalKodeTransaksi').text(selectedTransactionCode);
-                $('#modalTanggalDistribusi').text(distributionDate);
-                $('#modalUserPenginput').text(userInput);
+    // Reset form
+    $('#verifikasiForm')[0].reset();
+    $('#detailStockTable').empty();
+    $('#detailStockTableFooter').hide();
 
-                // ⚡ SHOW / HIDE Input Nomor PO dan kolom distribusi/user
-                if (selectedTransactionType === 'Packing List') {
-                    $('#poInputGroup').show();
-                    // Sembunyikan Tanggal Distribusi dan User Penginput
-                    $('#modalTanggalDistribusi').closest('.col').hide();
-                    $('#modalUserPenginput').closest('.col').hide();
+    // Set the modal information
+    $('#modalTipeTransaksi').text(selectedTransactionType);
+    $('#modalKodeTransaksi').text(selectedTransactionCode);
+    $('#modalTanggalDistribusi').text(distributionDate || '-');
+    $('#modalUserPenginput').text(userInput || '-');
+
+    // Show/hide input fields based on transaction type
+    let normalizedType = selectedTransactionType.toLowerCase();
+    if (normalizedType === 'packing list') {
+        $('#poInputGroup').show();
+        // Set default date to now
+        let now = new Date();
+        let formattedDate = now.toISOString().slice(0, 16);
+        $('#inputDateReceiving').val(formattedDate);
+        // Make fields required
+        $('#inputNomorPo').prop('required', true);
+        $('#inputWarehouse').prop('required', true);
+        $('#inputDateReceiving').prop('required', true);
+            $('#detailHeaderInstockOutstock').hide();
+    $('#detailHeaderPackingList').show();
+    } else {
+        $('#poInputGroup').hide();
+        // Remove required attribute for non-packing list
+        $('#inputNomorPo').prop('required', false);
+        $('#inputWarehouse').prop('required', false);
+        $('#inputDateReceiving').prop('required', false);
+            $('#detailHeaderInstockOutstock').show();
+    $('#detailHeaderPackingList').hide();
+    }
+
+    // Normalisasi tipe untuk AJAX call
+    let ajaxType = selectedTransactionType.toLowerCase();
+    if (ajaxType === 'packing list') {
+        ajaxType = 'packing_list';
+    }
+
+    console.log('Fetching details for:', ajaxType, 'Code:', selectedTransactionCode);
+
+    // Show loading
+    $('#detailStockTable').html('<tr><td colspan="' + (normalizedType === 'packing list' ? '5' : '3') + '" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>');
+
+    // Fetch transaction details
+    $.ajax({
+        url: '<?= base_url('verification/get_details/') ?>' + ajaxType + '/' + selectedTransactionCode,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            console.log('AJAX Response:', response);
+            
+            $('#detailStockTable').empty();
+            
+            if (response.success && response.details && response.details.length > 0) {
+                if (normalizedType === 'packing list') {
+                    // Untuk Packing List - tampilkan qty_order dan qty_receive
+                    let totalQty = 0;
+                    response.details.forEach(function(detail, index) {
+                        let qtyOrder = detail.qty_order || 0;
+                        let qtyReceive = detail.qty_receive || 0;
+                        let price = detail.price || 0;
+                        
+                        var row = '<tr>' +
+                            '<td>' + (detail.sku || 'N/A') + '</td>' +
+                            '<td>' + (detail.nama_produk || '') + '</td>' +
+                            '<td class="text-end">' + qtyOrder + '</td>' +
+                            '<td class="text-end">' + qtyReceive + '</td>' +
+                            '<td class="text-end">' + (qtyReceive * price).toLocaleString() + '</td>' +
+                            '</tr>';
+                        $('#detailStockTable').append(row);
+                        totalQty += qtyReceive;
+                    });
+                    
+                    // Tampilkan total
+                    $('#detailStockTableFooter').show();
+                    $('#totalQtyReceive').text(totalQty.toLocaleString());
+                    
                 } else {
-                    $('#poInputGroup').hide();
-                    $('#inputNomorPo').val('');
-                    // Tampilkan kembali Tanggal Distribusi dan User Penginput
-                    $('#modalTanggalDistribusi').closest('.col').show();
-                    $('#modalUserPenginput').closest('.col').show();
-                }
-
-                // Normalisasi tipe untuk AJAX call
-                let ajaxType = selectedTransactionType.toLowerCase();
-
-                // Untuk Packing List, gunakan 'packing' bukan 'analisys_po'
-                if (ajaxType === 'packing list') {
-                    ajaxType = 'packing'; // Ubah ini dari 'analisys_po' ke 'packing'
-                }
-
-                console.log('AJAX Request - Type:', ajaxType, 'Code:', selectedTransactionCode);
-
-                $.ajax({
-                    url: '<?= base_url('verification/get_details/') ?>' + ajaxType + '/' + selectedTransactionCode,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        console.log('AJAX Response:', response);
-
-                        $('#detailStockTable').empty();
-                        if (response.details && response.details.length > 0) {
-                            response.details.forEach(function(detail) {
-                                var row = '<tr>' +
-                                    '<td>' + (detail.sku || 'N/A') + '</td>' +
-                                    '<td>' + (detail.nama_produk || '') + '</td>' +
-                                    '<td>' + (detail.jumlah || '0') + '</td>' +
-                                    '</tr>';
-                                $('#detailStockTable').append(row);
-                            });
-                        } else if (response.error) {
-                            $('#detailStockTable').html('<tr><td colspan="3" class="text-danger">' + response.error + '</td></tr>');
-                        } else {
-                            $('#detailStockTable').html('<tr><td colspan="3" class="text-warning">Tidak ada produk dengan quantity lebih dari 0</td></tr>');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.log('AJAX Error:', error, 'Status:', status, 'Response:', xhr.responseText);
-                        $('#detailStockTable').html('<tr><td colspan="3" class="text-danger">Gagal memuat data. Error: ' + error + '</td></tr>');
+                    // Untuk Instock/Outstock - tampilkan jumlah saja
+                    let totalQty = 0;
+                    response.details.forEach(function(detail) {
+                        var row = '<tr>' +
+                            '<td>' + (detail.sku || 'N/A') + '</td>' +
+                            '<td>' + (detail.nama_produk || '') + '</td>' +
+                            '<td class="text-end">' + (detail.jumlah || '0') + '</td>' +
+                            '</tr>';
+                        $('#detailStockTable').append(row);
+                        totalQty += parseInt(detail.jumlah || 0);
+                    });
+                    
+                    // Untuk Instock/Outstock, tambahkan summary
+                    if (totalQty > 0) {
+                        var summaryRow = '<tr class="table-info">' +
+                            '<td colspan="2"><strong>Total:</strong></td>' +
+                            '<td class="text-end"><strong>' + totalQty + '</strong></td>' +
+                            '</tr>';
+                        $('#detailStockTable').append(summaryRow);
                     }
+                }
+            } else {
+                let errorMsg = response.error || 'Tidak ada data detail yang ditemukan';
+                let colspan = normalizedType === 'packing list' ? 5 : 3;
+                $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center text-warning">' + errorMsg + '</td></tr>');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX Error:', error, 'Status:', status, 'Response:', xhr.responseText);
+            let colspan = normalizedType === 'packing list' ? 5 : 3;
+            $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center text-danger">Gagal memuat data detail transaksi.</td></tr>');
+        }
+    });
+});
+
+            // Event listener untuk perubahan qty_receive
+            $(document).on('change', '.qty-receive-input', function() {
+                let index = $(this).data('index');
+                let newQty = parseInt($(this).val()) || 0;
+                let maxQty = parseInt($(this).attr('max')) || 0;
+                
+                // Validasi max quantity
+                if (newQty > maxQty) {
+                    alert('Quantity receive tidak boleh lebih dari quantity order (' + maxQty + ')');
+                    $(this).val(maxQty);
+                    newQty = maxQty;
+                }
+                
+                // Update product details
+                if (productDetails[index]) {
+                    productDetails[index].qty_receive = newQty;
+                }
+                
+                // Update subtotal
+                let price = productDetails[index]?.price || 0;
+                let subtotal = newQty * price;
+                $('.subtotal[data-index="' + index + '"]').text(subtotal.toLocaleString());
+                
+                // Update total
+                updateTotalQtyReceive();
+            });
+
+            // Fungsi untuk update total qty receive
+            function updateTotalQtyReceive() {
+                let total = 0;
+                productDetails.forEach(function(detail) {
+                    total += detail.qty_receive || 0;
                 });
-            });
+                $('#totalQtyReceive').text(total.toLocaleString());
+                
+                // Update hidden input
+                $('input[name="total_qty_receive"]').val(total);
+            }
 
-            $('#confirmVerifikasi').on('click', function() {
-                if (selectedTransactionCode && selectedTransactionType) {
-                    console.log('Confirming:', selectedTransactionCode, selectedTransactionType);
-                    window.location.href = "<?= base_url('verification/confirm_stock/') ?>" + selectedTransactionType + "/" + selectedTransactionCode;
-                } else {
-                    console.error('Cannot confirm - missing transaction data');
+            // Handle form submission
+            $('#verifikasiForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                if (!selectedTransactionCode || !selectedTransactionType) {
+                    alert('Data transaksi tidak valid.');
+                    return false;
                 }
+                
+                // Untuk Packing List, validasi form
+                let normalizedType = selectedTransactionType.toLowerCase();
+                if (normalizedType === 'packing list') {
+                    // Validasi input utama
+                    if (!$('#inputNomorPo').val().trim()) {
+                        alert('Harap masukkan Nomor Accurate.');
+                        $('#inputNomorPo').focus();
+                        return false;
+                    }
+                    if (!$('#inputWarehouse').val()) {
+                        alert('Harap pilih Gudang.');
+                        $('#inputWarehouse').focus();
+                        return false;
+                    }
+                    if (!$('#inputDateReceiving').val()) {
+                        alert('Harap pilih Tanggal Diterima.');
+                        $('#inputDateReceiving').focus();
+                        return false;
+                    }
+                    
+                    // Validasi qty_receive
+                    let hasInvalidQty = false;
+                    $('.qty-receive-input').each(function() {
+                        let qty = parseInt($(this).val()) || 0;
+                        let maxQty = parseInt($(this).attr('max')) || 0;
+                        let sku = $(this).data('sku');
+                        
+                        if (qty < 0) {
+                            alert('Quantity receive untuk SKU ' + sku + ' tidak boleh negatif.');
+                            $(this).focus();
+                            hasInvalidQty = true;
+                            return false;
+                        }
+                        
+                        if (qty > maxQty) {
+                            alert('Quantity receive untuk SKU ' + sku + ' tidak boleh lebih dari ' + maxQty + '.');
+                            $(this).focus();
+                            hasInvalidQty = true;
+                            return false;
+                        }
+                    });
+                    
+                    if (hasInvalidQty) return false;
+                    
+                    // Tambahkan hidden input untuk product details
+                    productDetails.forEach(function(detail, index) {
+                        $('#detailStockTable').append(
+                            '<input type="hidden" name="product_details[' + index + '][sku]" value="' + (detail.sku || '') + '">' +
+                            '<input type="hidden" name="product_details[' + index + '][idproduct]" value="' + (detail.idproduct || '') + '">' +
+                            '<input type="hidden" name="product_details[' + index + '][qty_order]" value="' + (detail.qty_order || 0) + '">' +
+                            '<input type="hidden" name="product_details[' + index + '][price]" value="' + (detail.price || 0) + '">'
+                        );
+                    });
+                }
+                
+                // Set form action dan submit
+                let actionUrl = "<?= base_url('verification/confirm_stock/') ?>" + 
+                            encodeURIComponent(selectedTransactionType) + "/" + 
+                            encodeURIComponent(selectedTransactionCode);
+                $(this).attr('action', actionUrl);
+                this.submit();
             });
 
+            // Handle reject button
             $('#rejectVerifikasi').on('click', function() {
-                if (selectedTransactionCode && selectedTransactionType) {
-                    console.log('Rejecting:', selectedTransactionCode, selectedTransactionType);
-                    window.location.href = "<?= base_url('verification/reject/') ?>" + selectedTransactionType + "/" + selectedTransactionCode;
-                } else {
-                    console.error('Cannot reject - missing transaction data');
+                if (!selectedTransactionCode || !selectedTransactionType) {
+                    alert('Data transaksi tidak valid.');
+                    return;
                 }
+                
+                if (!confirm('Apakah Anda yakin ingin menolak transaksi ini?')) {
+                    return;
+                }
+                
+                // Redirect untuk reject
+                let rejectUrl = "<?= base_url('verification/reject/') ?>" + 
+                            encodeURIComponent(selectedTransactionType) + "/" + 
+                            encodeURIComponent(selectedTransactionCode);
+                window.location.href = rejectUrl;
             });
 
+            // Filter functionality
             $.fn.dataTable.ext.search.push(
                 function(settings, data, dataIndex) {
                     let start = $('#filterInputStart').val();
                     let end = $('#filterInputEnd').val();
-                    let tanggalInput = data[3].split(' ')[0]; // Kolom ke-4: "Tanggal Input" (format yyyy-mm-dd)
+                    let tanggalInput = data[3].split(' ')[0]; // Kolom ke-4: "Tanggal Input"
 
                     if (!start && !end) return true;
 
@@ -299,6 +513,5 @@
             $('#filterInputStart, #filterInputEnd').on('change', function() {
                 $('#tableproduct').DataTable().draw();
             });
-
         });
     </script>
