@@ -9,43 +9,69 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class Verification extends CI_Controller
 {
+	public function __construct()
+	{
+		parent::__construct();
+		if (!$this->session->userdata('logged_in')) {
+			$this->session->set_flashdata('error', 'Eeettss gak boleh nakal, Login dulu ya kak hehe.');
+			redirect('auth');
+		}
+	}
+
 	public function index()
 	{
 		$query = "
-			SELECT 
-				'INSTOCK' AS tipe,
-				i.instock_code AS kode_transaksi,
-				i.no_manual AS no_manual,
-				i.tgl_terima AS tanggal,
-				i.jam_terima AS jam,
-				i.distribution_date as distribution_date,
-				i.kategori,
-				i.user,
-				g.nama_gudang,
-				i.status_verification
-			FROM instock i
-			LEFT JOIN gudang g ON g.idgudang = i.idgudang
-	
-			UNION ALL
-	
-			SELECT 
-				'OUTSTOCK' AS tipe,
-				o.outstock_code AS kode_transaksi,
-				o.no_manual AS no_manual,
-				o.tgl_keluar AS tanggal,
-				o.jam_keluar AS jam,
-				o.distribution_date as distribution_date,
-				o.kategori,
-				o.user,
-				g.nama_gudang,
-				o.status_verification
-			FROM outstock o
-			LEFT JOIN gudang g ON g.idgudang = o.idgudang
-	
-			ORDER BY tanggal DESC, jam DESC
-		";
+        SELECT 
+            CONVERT('INSTOCK' USING utf8mb4) AS tipe,
+            CONVERT(i.instock_code USING utf8mb4) AS kode_transaksi,
+            CONVERT(i.no_manual USING utf8mb4) AS no_manual,
+            i.tgl_terima AS tanggal,
+            i.jam_terima AS jam,
+            i.distribution_date AS distribution_date,
+            CONVERT(i.kategori USING utf8mb4) AS kategori,
+            CONVERT(i.user USING utf8mb4) AS user,
+            CONVERT(g.nama_gudang USING utf8mb4) AS nama_gudang,
+            i.status_verification
+        FROM instock i
+        LEFT JOIN gudang g ON g.idgudang = i.idgudang
+
+        UNION ALL
+
+        SELECT 
+            CONVERT('OUTSTOCK' USING utf8mb4) AS tipe,
+            CONVERT(o.outstock_code USING utf8mb4) AS kode_transaksi,
+            CONVERT(o.no_manual USING utf8mb4) AS no_manual,
+            o.tgl_keluar AS tanggal,
+            o.jam_keluar AS jam,
+            o.distribution_date AS distribution_date,
+            CONVERT(o.kategori USING utf8mb4) AS kategori,
+            CONVERT(o.user USING utf8mb4) AS user,
+            CONVERT(g.nama_gudang USING utf8mb4) AS nama_gudang,
+            o.status_verification
+        FROM outstock o
+        LEFT JOIN gudang g ON g.idgudang = o.idgudang
+
+        UNION ALL
+
+        SELECT
+            CONVERT('Packing List' USING utf8mb4) AS tipe,
+            CONVERT(a.number_po USING utf8mb4) AS kode_transaksi,
+            CONVERT(a.no_manual USING utf8mb4) AS no_manual,
+            a.order_date AS tanggal,
+            a.order_time AS jam,
+            a.distribution_date AS distribution_date,
+            CONVERT(a.kategori USING utf8mb4) AS kategori,
+            CONVERT(a.user USING utf8mb4) AS user,
+            CONVERT(g.nama_gudang USING utf8mb4) AS nama_gudang,
+            a.status_verification
+        FROM analisys_po a
+        LEFT JOIN gudang g ON g.idgudang = a.idgudang
+
+        ORDER BY tanggal DESC, jam DESC
+    ";
 
 		$data['transactions'] = $this->db->query($query)->result();
+		$data['warehouse'] = $this->db->get('gudang')->result();
 		$data['title'] = 'Verification';
 
 		$this->load->view('theme/v_head', $data);
@@ -110,7 +136,7 @@ class Verification extends CI_Controller
 
 		foreach ($details as $detail) {
 			$sku = $detail->sku;
-			$jumlah = (int)$detail->jumlah;
+			$jumlah = (int) $detail->jumlah;
 
 			$product = $this->db->where('sku', $sku)->get('product')->row();
 			if (!$product) continue;
@@ -144,14 +170,27 @@ class Verification extends CI_Controller
 	public function get_details($type, $kode)
 	{
 		$type = strtolower($type);
-		if (!in_array($type, ['instock', 'outstock'])) {
+
+		// Daftar tipe valid
+		$valid_types = ['instock', 'outstock', 'packing'];
+		if (!in_array($type, $valid_types)) {
 			echo json_encode(['error' => 'Invalid type']);
 			return;
 		}
 
-		$kode_field = $type . '_code';
-		$detail_table = 'detail_' . $type;
+		if ($type == 'instock') {
+			$kode_field = 'instock_code';
+			$detail_table = 'detail_instock';
+		} elseif ($type == 'outstock') {
+			$kode_field = 'outstock_code';
+			$detail_table = 'detail_outstock';
+		} elseif ($type == 'packing') {
+			// untuk analisys_po
+			$kode_field = 'number_po';
+			$detail_table = 'detail_analisys_po';
+		}
 
+		// Query Penarik Data
 		$details = $this->db
 			->select("$detail_table.*, p.nama_produk")
 			->from($detail_table)
@@ -166,6 +205,7 @@ class Verification extends CI_Controller
 			echo json_encode(['error' => 'Data tidak ditemukan']);
 		}
 	}
+
 
 	public function reject($type, $code)
 	{

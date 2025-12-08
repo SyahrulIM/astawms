@@ -119,6 +119,31 @@
                                 <div id="modalUserPenginput"></div>
                             </div>
                         </div>
+                        <div id="poInputGroup" style="display:none;">
+                            <div class="row mb-2">
+                                <div class="col">
+                                    <label for="inputNomorPo" class="form-label">Nomor Accurate</label>
+                                    <input type="text" id="inputNomorPo" class="form-control" placeholder="Masukkan Nomor Accurate">
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col">
+                                    <label for="inputWarehouse" class="form-label">Gudang</label>
+                                    <select class="form-select" name="inputWarehouse" id="inputWarehouse">
+                                        <option value="">Pilih Gudang</option>
+                                        <?php foreach ($warehouse as $values) : ?>
+                                        <option value="<?= $values->idgudang ?>"><?= $values->nama_gudang ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col">
+                                    <label for="inputDateReceiving" class="form-label">Tanggal Diterima</label>
+                                    <input type="datetime-local" id="inputDateReceiving" class="form-control" placeholder="Masukkan Nomor PO">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Tabel Detail Stok -->
@@ -184,8 +209,29 @@
                 $('#modalTanggalDistribusi').text(distributionDate);
                 $('#modalUserPenginput').text(userInput);
 
+                // ⚡ SHOW / HIDE Input Nomor PO dan kolom distribusi/user
+                if (selectedTransactionType === 'Packing List') {
+                    $('#poInputGroup').show();
+                    // Sembunyikan Tanggal Distribusi dan User Penginput
+                    $('#modalTanggalDistribusi').closest('.col').hide();
+                    $('#modalUserPenginput').closest('.col').hide();
+                } else {
+                    $('#poInputGroup').hide();
+                    $('#inputNomorPo').val('');
+                    // Tampilkan kembali Tanggal Distribusi dan User Penginput
+                    $('#modalTanggalDistribusi').closest('.col').show();
+                    $('#modalUserPenginput').closest('.col').show();
+                }
+
+                // Normalisasi tipe
+                let ajaxType = selectedTransactionType.toLowerCase();
+
+                if (ajaxType === 'packing list') {
+                    ajaxType = 'analisys_po'; // sesuai nama tabel
+                }
+
                 $.ajax({
-                    url: '<?= base_url('verification/get_details/') ?>' + selectedTransactionType + '/' + selectedTransactionCode,
+                    url: '<?= base_url('verification/get_details/') ?>' + ajaxType + '/' + selectedTransactionCode,
                     type: 'GET',
                     dataType: 'json',
                     success: function(response) {
@@ -203,8 +249,7 @@
                             $('#detailStockTable').html('<tr><td colspan="3">Tidak ada data</td></tr>');
                         }
                     },
-                    error: function(xhr, status, error) {
-                        console.error("AJAX Error: ", error);
+                    error: function() {
                         $('#detailStockTable').html('<tr><td colspan="3">Gagal memuat data</td></tr>');
                     }
                 });
