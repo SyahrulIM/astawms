@@ -38,8 +38,8 @@ class Verification extends CI_Controller
             ->result();
 
         $packing_list = $this->db
-            ->select("'Packing List' AS tipe, a.number_po AS kode_transaksi, a.no_manual, a.order_date AS tanggal, 
-                    a.order_time AS jam, a.distribution_date, a.kategori, a.user, g.nama_gudang, a.status_verification")
+            ->select("'Packing List' AS tipe, a.number_po AS kode_transaksi, a.no_manual, a.created_date AS tanggal, 
+                    a.order_time AS jam, a.distribution_date, a.kategori, a.created_by as user, g.nama_gudang, a.status_verification")
             ->from('analisys_po a')
             ->join('gudang g', 'g.idgudang = a.idgudang', 'left')
             ->get()
