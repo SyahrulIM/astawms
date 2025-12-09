@@ -95,7 +95,7 @@
                 <h5 class="modal-title" id="verifikasiModalLabel">Konfirmasi Verifikasi</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
-            <form id="verifikasiForm" method="post">
+            <form id="verifikasiForm" method="post" action="">
                 <div class="modal-body">
                     <!-- Transaction Information -->
                     <div class="card mb-3">
@@ -150,7 +150,7 @@
                                     <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="inputWarehouse" class="form-label">Gudang <span class="text-danger">*</span></label>
-                                            <select class="form-select" name="idgudang" id="inputWarehouse">
+                                            <select class="form-select" name="idgudang" id="inputWarehouse" required>
                                                 <option value="">Pilih Gudang</option>
                                                 <?php foreach ($warehouse as $values) : ?>
                                                 <option value="<?= $values->idgudang ?>"><?= $values->nama_gudang ?></option>
@@ -161,7 +161,7 @@
                                     <div class="col-md-4">
                                         <div class="mb-3">
                                             <label for="inputDateReceiving" class="form-label">Tanggal Diterima <span class="text-danger">*</span></label>
-                                            <input type="datetime-local" id="inputDateReceiving" name="tanggal_diterima" class="form-control">
+                                            <input type="datetime-local" id="inputDateReceiving" name="tanggal_diterima" class="form-control" required>
                                         </div>
                                     </div>
                                 </div>
@@ -176,25 +176,30 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr id="detailHeaderInstockOutstock">
-                                        <th width="20%">SKU</th>
-                                        <th width="60%">Nama Produk</th>
-                                        <th width="20%" class="text-end">Jumlah</th>
-                                    </tr>
-                                    <tr id="detailHeaderPackingList" style="display:none;">
-                                        <th width="15%">SKU</th>
-                                        <th width="40%">Nama Produk</th>
-                                        <th width="15%" class="text-end">Qty Order</th>
-                                        <th width="15%" class="text-end">Qty Receive</th>
-                                        <th width="15%" class="text-end">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="detailStockTable">
-                                    <!-- Data akan diisi oleh JavaScript -->
-                                </tbody>
-                            </table>
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr id="detailHeaderInstockOutstock">
+                                            <th width="20%">SKU</th>
+                                            <th width="60%">Nama Produk</th>
+                                            <th width="20%" class="text-end">Jumlah</th>
+                                        </tr>
+                                        <tr id="detailHeaderPackingList" style="display:none;">
+                                            <th width="15%">SKU</th>
+                                            <th width="45%">Nama Produk</th>
+                                            <th width="15%" class="text-end">Qty Order</th>
+                                            <th width="25%" class="text-end">Qty Receive</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detailStockTable">
+                                        <!-- Data akan diisi oleh JavaScript -->
+                                    </tbody>
+                                    <tfoot id="detailStockTableFooter" style="display:none;">
+                                        <tr class="table-info">
+                                            <td colspan="3" class="text-end"><strong>Total Qty Receive:</strong></td>
+                                            <td class="text-end"><strong id="totalQtyReceive">0</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -214,304 +219,317 @@
         </div>
     </div>
 </div>
-    <!-- End -->
+</div>
+</div>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
-    <script src="https://cdn.datatables.net/responsive/3.0.4/js/dataTables.responsive.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="<?php echo base_url(); ?>js/scripts.js"></script>
-    <script>
-        let selectedTransactionCode = null;
-        let selectedTransactionType = null;
-        let productDetails = []; // Menyimpan detail produk untuk perhitungan
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
+<script src="https://cdn.datatables.net/responsive/3.0.4/js/dataTables.responsive.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="<?php echo base_url(); ?>js/scripts.js"></script>
+<script>
+    let selectedTransactionCode = null;
+    let selectedTransactionType = null;
+    let productDetails = [];
 
-        $(document).ready(function() {
-            new DataTable('#tableproduct', {
-                responsive: true,
-                layout: {
-                    bottomEnd: {
-                        paging: {
-                            firstLast: false
-                        }
+    $(document).ready(function() {
+        new DataTable('#tableproduct', {
+            responsive: true,
+            layout: {
+                bottomEnd: {
+                    paging: {
+                        firstLast: false
                     }
                 }
-            });
+            }
+        });
 
-$(document).on('click', '.btn-verifikasi', function() {
-    selectedTransactionCode = $(this).data('id');
-    selectedTransactionType = $(this).data('tipe');
+        $(document).on('click', '.btn-verifikasi', function() {
+            selectedTransactionCode = $(this).data('id');
+            selectedTransactionType = $(this).data('tipe');
 
-    // Get the row data
-    let row = $(this).closest('tr');
-    let distributionDate = row.find('td:eq(4)').text();
-    let userInput = row.find('td:eq(5)').text();
+            // Get the row data
+            let row = $(this).closest('tr');
+            let distributionDate = row.find('td:eq(4)').text();
+            let userInput = row.find('td:eq(5)').text();
 
-    // Reset form
-    $('#verifikasiForm')[0].reset();
-    $('#detailStockTable').empty();
-    $('#detailStockTableFooter').hide();
-
-    // Set the modal information
-    $('#modalTipeTransaksi').text(selectedTransactionType);
-    $('#modalKodeTransaksi').text(selectedTransactionCode);
-    $('#modalTanggalDistribusi').text(distributionDate || '-');
-    $('#modalUserPenginput').text(userInput || '-');
-
-    // Show/hide input fields based on transaction type
-    let normalizedType = selectedTransactionType.toLowerCase();
-    if (normalizedType === 'packing list') {
-        $('#poInputGroup').show();
-        // Set default date to now
-        let now = new Date();
-        let formattedDate = now.toISOString().slice(0, 16);
-        $('#inputDateReceiving').val(formattedDate);
-        // Make fields required
-        $('#inputNomorPo').prop('required', true);
-        $('#inputWarehouse').prop('required', true);
-        $('#inputDateReceiving').prop('required', true);
-            $('#detailHeaderInstockOutstock').hide();
-    $('#detailHeaderPackingList').show();
-    } else {
-        $('#poInputGroup').hide();
-        // Remove required attribute for non-packing list
-        $('#inputNomorPo').prop('required', false);
-        $('#inputWarehouse').prop('required', false);
-        $('#inputDateReceiving').prop('required', false);
-            $('#detailHeaderInstockOutstock').show();
-    $('#detailHeaderPackingList').hide();
-    }
-
-    // Normalisasi tipe untuk AJAX call
-    let ajaxType = selectedTransactionType.toLowerCase();
-    if (ajaxType === 'packing list') {
-        ajaxType = 'packing_list';
-    }
-
-    console.log('Fetching details for:', ajaxType, 'Code:', selectedTransactionCode);
-
-    // Show loading
-    $('#detailStockTable').html('<tr><td colspan="' + (normalizedType === 'packing list' ? '5' : '3') + '" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>');
-
-    // Fetch transaction details
-    $.ajax({
-        url: '<?= base_url('verification/get_details/') ?>' + ajaxType + '/' + selectedTransactionCode,
-        type: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            console.log('AJAX Response:', response);
-            
+            // Reset form
+            $('#verifikasiForm')[0].reset();
             $('#detailStockTable').empty();
-            
-            if (response.success && response.details && response.details.length > 0) {
-                if (normalizedType === 'packing list') {
-                    // Untuk Packing List - tampilkan qty_order dan qty_receive
-                    let totalQty = 0;
-                    response.details.forEach(function(detail, index) {
-                        let qtyOrder = detail.qty_order || 0;
-                        let qtyReceive = detail.qty_receive || 0;
-                        let price = detail.price || 0;
-                        
-                        var row = '<tr>' +
-                            '<td>' + (detail.sku || 'N/A') + '</td>' +
-                            '<td>' + (detail.nama_produk || '') + '</td>' +
-                            '<td class="text-end">' + qtyOrder + '</td>' +
-                            '<td class="text-end">' + qtyReceive + '</td>' +
-                            '<td class="text-end">' + (qtyReceive * price).toLocaleString() + '</td>' +
-                            '</tr>';
-                        $('#detailStockTable').append(row);
-                        totalQty += qtyReceive;
-                    });
-                    
-                    // Tampilkan total
-                    $('#detailStockTableFooter').show();
-                    $('#totalQtyReceive').text(totalQty.toLocaleString());
-                    
-                } else {
-                    // Untuk Instock/Outstock - tampilkan jumlah saja
-                    let totalQty = 0;
-                    response.details.forEach(function(detail) {
-                        var row = '<tr>' +
-                            '<td>' + (detail.sku || 'N/A') + '</td>' +
-                            '<td>' + (detail.nama_produk || '') + '</td>' +
-                            '<td class="text-end">' + (detail.jumlah || '0') + '</td>' +
-                            '</tr>';
-                        $('#detailStockTable').append(row);
-                        totalQty += parseInt(detail.jumlah || 0);
-                    });
-                    
-                    // Untuk Instock/Outstock, tambahkan summary
-                    if (totalQty > 0) {
-                        var summaryRow = '<tr class="table-info">' +
-                            '<td colspan="2"><strong>Total:</strong></td>' +
-                            '<td class="text-end"><strong>' + totalQty + '</strong></td>' +
-                            '</tr>';
-                        $('#detailStockTable').append(summaryRow);
-                    }
-                }
+            $('#detailStockTableFooter').hide();
+            $('#verifikasiForm').attr('action', '');
+
+            // Set the modal information
+            $('#modalTipeTransaksi').text(selectedTransactionType);
+            $('#modalKodeTransaksi').text(selectedTransactionCode);
+            $('#modalTanggalDistribusi').text(distributionDate || '-');
+            $('#modalUserPenginput').text(userInput || '-');
+
+            // Show/hide input fields based on transaction type
+            let normalizedType = selectedTransactionType.toLowerCase();
+            if (normalizedType === 'packing list') {
+                $('#poInputGroup').show();
+                // Set default date to now
+                let now = new Date();
+                let formattedDate = now.toISOString().slice(0, 16);
+                $('#inputDateReceiving').val(formattedDate);
+                // Make fields required
+                $('#inputNomorPo').prop('required', true);
+                $('#inputWarehouse').prop('required', true);
+                $('#inputDateReceiving').prop('required', true);
+                $('#detailHeaderInstockOutstock').hide();
+                $('#detailHeaderPackingList').show();
             } else {
-                let errorMsg = response.error || 'Tidak ada data detail yang ditemukan';
-                let colspan = normalizedType === 'packing list' ? 5 : 3;
-                $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center text-warning">' + errorMsg + '</td></tr>');
+                $('#poInputGroup').hide();
+                // Remove required attribute for non-packing list
+                $('#inputNomorPo').prop('required', false);
+                $('#inputWarehouse').prop('required', false);
+                $('#inputDateReceiving').prop('required', false);
+                $('#detailHeaderInstockOutstock').show();
+                $('#detailHeaderPackingList').hide();
             }
-        },
-        error: function(xhr, status, error) {
-            console.error('AJAX Error:', error, 'Status:', status, 'Response:', xhr.responseText);
-            let colspan = normalizedType === 'packing list' ? 5 : 3;
-            $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center text-danger">Gagal memuat data detail transaksi.</td></tr>');
-        }
-    });
-});
 
-            // Event listener untuk perubahan qty_receive
-            $(document).on('change', '.qty-receive-input', function() {
-                let index = $(this).data('index');
-                let newQty = parseInt($(this).val()) || 0;
-                let maxQty = parseInt($(this).attr('max')) || 0;
-                
-                // Validasi max quantity
-                if (newQty > maxQty) {
-                    alert('Quantity receive tidak boleh lebih dari quantity order (' + maxQty + ')');
-                    $(this).val(maxQty);
-                    newQty = maxQty;
+            // Normalisasi tipe untuk AJAX call
+            let ajaxType = selectedTransactionType.toLowerCase();
+            if (ajaxType === 'packing list') {
+                ajaxType = 'packing_list';
+            }
+
+            console.log('Fetching details for:', ajaxType, 'Code:', selectedTransactionCode);
+
+            // Show loading
+            let colspan = normalizedType === 'packing list' ? 4 : 3;
+            $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>');
+
+            // Fetch transaction details
+            $.ajax({
+                url: '<?= base_url('verification/get_details/') ?>' + ajaxType + '/' + selectedTransactionCode,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log('AJAX Response:', response);
+                    
+                    $('#detailStockTable').empty();
+                    productDetails = [];
+                    
+                    if (response.success && response.details && response.details.length > 0) {
+                        if (normalizedType === 'packing list') {
+                            // Untuk Packing List - tampilkan qty_order dan input qty_receive
+                            let totalQtyReceive = 0;
+                            
+                            response.details.forEach(function(detail, index) {
+                                let qtyOrder = detail.qty_order || 0;
+                                let qtyReceive = detail.qty_receive || qtyOrder;
+                                
+                                // Simpan ke productDetails
+                                productDetails[index] = {
+                                    sku: detail.sku,
+                                    idproduct: detail.idproduct,
+                                    qty_order: qtyOrder,
+                                    qty_receive: qtyReceive,
+                                    price: detail.price || 0
+                                };
+                                
+                                var row = '<tr>' +
+                                    '<td>' + (detail.sku || 'N/A') + '</td>' +
+                                    '<td>' + (detail.nama_produk || '') + '</td>' +
+                                    '<td class="text-end">' + qtyOrder.toLocaleString() + '</td>' +
+                                    '<td>' +
+                                        '<input type="number" class="form-control form-control-sm qty-receive-input" ' +
+                                        'name="qty_receive[' + detail.idproduct + ']" ' +
+                                        'value="' + qtyReceive + '" ' +
+                                        'min="0" max="' + qtyOrder + '" ' +
+                                        'data-index="' + index + '" ' +
+                                        'data-sku="' + (detail.sku || '') + '" ' +
+                                        'required>' +
+                                    '</td>' +
+                                    '</tr>';
+                                $('#detailStockTable').append(row);
+                                
+                                totalQtyReceive += qtyReceive;
+                            });
+                            
+                            // Tampilkan total
+                            $('#detailStockTableFooter').show();
+                            $('#totalQtyReceive').text(totalQtyReceive.toLocaleString());
+                            
+                        } else {
+                            // Untuk Instock/Outstock - tampilkan jumlah saja
+                            let totalQty = 0;
+                            response.details.forEach(function(detail) {
+                                var row = '<tr>' +
+                                    '<td>' + (detail.sku || 'N/A') + '</td>' +
+                                    '<td>' + (detail.nama_produk || '') + '</td>' +
+                                    '<td class="text-end">' + (detail.jumlah || '0') + '</td>' +
+                                    '</tr>';
+                                $('#detailStockTable').append(row);
+                                totalQty += parseInt(detail.jumlah || 0);
+                            });
+                            
+                            // Untuk Instock/Outstock, tambahkan summary
+                            if (totalQty > 0) {
+                                var summaryRow = '<tr class="table-info">' +
+                                    '<td colspan="2"><strong>Total:</strong></td>' +
+                                    '<td class="text-end"><strong>' + totalQty.toLocaleString() + '</strong></td>' +
+                                    '</tr>';
+                                $('#detailStockTable').append(summaryRow);
+                            }
+                        }
+                    } else {
+                        let errorMsg = response.error || 'Tidak ada data detail yang ditemukan';
+                        let colspan = normalizedType === 'packing list' ? 4 : 3;
+                        $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center text-warning">' + errorMsg + '</td></tr>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', error, 'Status:', status, 'Response:', xhr.responseText);
+                    let colspan = normalizedType === 'packing list' ? 4 : 3;
+                    $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center text-danger">Gagal memuat data detail transaksi.</td></tr>');
                 }
-                
-                // Update product details
-                if (productDetails[index]) {
-                    productDetails[index].qty_receive = newQty;
-                }
-                
-                // Update subtotal
-                let price = productDetails[index]?.price || 0;
-                let subtotal = newQty * price;
-                $('.subtotal[data-index="' + index + '"]').text(subtotal.toLocaleString());
-                
-                // Update total
-                updateTotalQtyReceive();
             });
+        });
 
-            // Fungsi untuk update total qty receive
-            function updateTotalQtyReceive() {
-                let total = 0;
-                productDetails.forEach(function(detail) {
-                    total += detail.qty_receive || 0;
-                });
-                $('#totalQtyReceive').text(total.toLocaleString());
-                
-                // Update hidden input
-                $('input[name="total_qty_receive"]').val(total);
+        // Event listener untuk perubahan qty_receive
+        $(document).on('change input', '.qty-receive-input', function() {
+            let index = $(this).data('index');
+            let newQty = parseInt($(this).val()) || 0;
+            let maxQty = parseInt($(this).attr('max')) || 0;
+            let sku = $(this).data('sku');
+            
+            // Validasi max quantity
+            if (newQty > maxQty) {
+                alert('Quantity receive untuk SKU ' + sku + ' tidak boleh lebih dari quantity order (' + maxQty + ')');
+                $(this).val(maxQty);
+                newQty = maxQty;
             }
+            
+            if (newQty < 0) {
+                alert('Quantity receive untuk SKU ' + sku + ' tidak boleh negatif');
+                $(this).val(0);
+                newQty = 0;
+            }
+            
+            // Update product details
+            if (productDetails[index]) {
+                productDetails[index].qty_receive = newQty;
+            }
+            
+            // Update total
+            updateTotalQtyReceive();
+        });
 
-            // Handle form submission
-            $('#verifikasiForm').on('submit', function(e) {
-                e.preventDefault();
-                
-                if (!selectedTransactionCode || !selectedTransactionType) {
-                    alert('Data transaksi tidak valid.');
+        // Fungsi untuk update total qty receive
+        function updateTotalQtyReceive() {
+            let total = 0;
+            productDetails.forEach(function(detail) {
+                total += detail.qty_receive || 0;
+            });
+            $('#totalQtyReceive').text(total.toLocaleString());
+        }
+
+        // Handle form submission
+        $('#verifikasiForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedTransactionCode || !selectedTransactionType) {
+                alert('Data transaksi tidak valid.');
+                return false;
+            }
+            
+            let normalizedType = selectedTransactionType.toLowerCase();
+            
+            // Validasi khusus untuk Packing List
+            if (normalizedType === 'packing list') {
+                // Validasi input utama
+                if (!$('#inputNomorPo').val().trim()) {
+                    alert('Harap masukkan Nomor Accurate.');
+                    $('#inputNomorPo').focus();
+                    return false;
+                }
+                if (!$('#inputWarehouse').val()) {
+                    alert('Harap pilih Gudang.');
+                    $('#inputWarehouse').focus();
+                    return false;
+                }
+                if (!$('#inputDateReceiving').val()) {
+                    alert('Harap pilih Tanggal Diterima.');
+                    $('#inputDateReceiving').focus();
                     return false;
                 }
                 
-                // Untuk Packing List, validasi form
-                let normalizedType = selectedTransactionType.toLowerCase();
-                if (normalizedType === 'packing list') {
-                    // Validasi input utama
-                    if (!$('#inputNomorPo').val().trim()) {
-                        alert('Harap masukkan Nomor Accurate.');
-                        $('#inputNomorPo').focus();
-                        return false;
-                    }
-                    if (!$('#inputWarehouse').val()) {
-                        alert('Harap pilih Gudang.');
-                        $('#inputWarehouse').focus();
-                        return false;
-                    }
-                    if (!$('#inputDateReceiving').val()) {
-                        alert('Harap pilih Tanggal Diterima.');
-                        $('#inputDateReceiving').focus();
+                // Validasi qty_receive tidak boleh melebihi qty_order
+                let hasInvalidQty = false;
+                $('.qty-receive-input').each(function() {
+                    let qtyReceive = parseInt($(this).val()) || 0;
+                    let maxQty = parseInt($(this).attr('max')) || 0;
+                    let sku = $(this).data('sku');
+                    
+                    if (qtyReceive > maxQty) {
+                        alert('Quantity receive untuk SKU ' + sku + ' tidak boleh lebih dari ' + maxQty + '.');
+                        $(this).focus();
+                        hasInvalidQty = true;
                         return false;
                     }
                     
-                    // Validasi qty_receive
-                    let hasInvalidQty = false;
-                    $('.qty-receive-input').each(function() {
-                        let qty = parseInt($(this).val()) || 0;
-                        let maxQty = parseInt($(this).attr('max')) || 0;
-                        let sku = $(this).data('sku');
-                        
-                        if (qty < 0) {
-                            alert('Quantity receive untuk SKU ' + sku + ' tidak boleh negatif.');
-                            $(this).focus();
-                            hasInvalidQty = true;
-                            return false;
-                        }
-                        
-                        if (qty > maxQty) {
-                            alert('Quantity receive untuk SKU ' + sku + ' tidak boleh lebih dari ' + maxQty + '.');
-                            $(this).focus();
-                            hasInvalidQty = true;
-                            return false;
-                        }
-                    });
-                    
-                    if (hasInvalidQty) return false;
-                    
-                    // Tambahkan hidden input untuk product details
-                    productDetails.forEach(function(detail, index) {
-                        $('#detailStockTable').append(
-                            '<input type="hidden" name="product_details[' + index + '][sku]" value="' + (detail.sku || '') + '">' +
-                            '<input type="hidden" name="product_details[' + index + '][idproduct]" value="' + (detail.idproduct || '') + '">' +
-                            '<input type="hidden" name="product_details[' + index + '][qty_order]" value="' + (detail.qty_order || 0) + '">' +
-                            '<input type="hidden" name="product_details[' + index + '][price]" value="' + (detail.price || 0) + '">'
-                        );
-                    });
-                }
+                    if (qtyReceive < 0) {
+                        alert('Quantity receive untuk SKU ' + sku + ' tidak boleh negatif.');
+                        $(this).focus();
+                        hasInvalidQty = true;
+                        return false;
+                    }
+                });
                 
-                // Set form action dan submit
-                let actionUrl = "<?= base_url('verification/confirm_stock/') ?>" + 
-                            encodeURIComponent(selectedTransactionType) + "/" + 
-                            encodeURIComponent(selectedTransactionCode);
-                $(this).attr('action', actionUrl);
-                this.submit();
-            });
-
-            // Handle reject button
-            $('#rejectVerifikasi').on('click', function() {
-                if (!selectedTransactionCode || !selectedTransactionType) {
-                    alert('Data transaksi tidak valid.');
-                    return;
-                }
-                
-                if (!confirm('Apakah Anda yakin ingin menolak transaksi ini?')) {
-                    return;
-                }
-                
-                // Redirect untuk reject
-                let rejectUrl = "<?= base_url('verification/reject/') ?>" + 
-                            encodeURIComponent(selectedTransactionType) + "/" + 
-                            encodeURIComponent(selectedTransactionCode);
-                window.location.href = rejectUrl;
-            });
-
-            // Filter functionality
-            $.fn.dataTable.ext.search.push(
-                function(settings, data, dataIndex) {
-                    let start = $('#filterInputStart').val();
-                    let end = $('#filterInputEnd').val();
-                    let tanggalInput = data[3].split(' ')[0]; // Kolom ke-4: "Tanggal Input"
-
-                    if (!start && !end) return true;
-
-                    if (start && tanggalInput < start) return false;
-                    if (end && tanggalInput > end) return false;
-
-                    return true;
-                }
-            );
-
-            $('#filterInputStart, #filterInputEnd').on('change', function() {
-                $('#tableproduct').DataTable().draw();
-            });
+                if (hasInvalidQty) return false;
+            }
+            
+            // Set form action
+            let actionUrl = "<?= base_url('verification/confirm_stock/') ?>" + 
+                        encodeURIComponent(selectedTransactionType) + "/" + 
+                        encodeURIComponent(selectedTransactionCode);
+            $(this).attr('action', actionUrl);
+            
+            // Submit form
+            this.submit();
         });
-    </script>
+
+        // Handle reject button
+        $('#rejectVerifikasi').on('click', function() {
+            if (!selectedTransactionCode || !selectedTransactionType) {
+                alert('Data transaksi tidak valid.');
+                return;
+            }
+            
+            if (!confirm('Apakah Anda yakin ingin menolak transaksi ini?')) {
+                return;
+            }
+            
+            // Redirect untuk reject
+            let rejectUrl = "<?= base_url('verification/reject/') ?>" + 
+                        encodeURIComponent(selectedTransactionType) + "/" + 
+                        encodeURIComponent(selectedTransactionCode);
+            window.location.href = rejectUrl;
+        });
+
+        // Filter functionality untuk DataTable
+        $.fn.dataTable.ext.search.push(
+            function(settings, data, dataIndex) {
+                let start = $('#filterInputStart').val();
+                let end = $('#filterInputEnd').val();
+                let tanggalInput = data[3].split(' ')[0]; // Kolom ke-4: "Tanggal Input"
+
+                if (!start && !end) return true;
+
+                if (start && tanggalInput < start) return false;
+                if (end && tanggalInput > end) return false;
+
+                return true;
+            }
+        );
+
+        $('#filterInputStart, #filterInputEnd').on('change', function() {
+            $('#tableproduct').DataTable().draw();
+        });
+    });
+</script>
