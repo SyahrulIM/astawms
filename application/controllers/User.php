@@ -153,12 +153,6 @@ class User extends CI_Controller
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         }
 
-        $username = 'Test01';
-
-        echo '<pre>';
-        print_r($username);
-        die;
-
         $data = [
             'full_name' => $namaLengkap,
             'username' => $username, // disimpan kembali, bisa jadi diubah
@@ -204,7 +198,7 @@ class User extends CI_Controller
                 $target = $user->handphone;
 
                 if (!empty($target)) {
-                    $token = 'EyuhsmTqzeKaDknoxdxt';
+                    $token = 'F9C6K2!5QYkZtW7j5z#M';
                     $message = 'Selamat, ' . $user->full_name . '! 🎉 Kamu sudah diverifikasi dan sekarang bisa akses Asta People.';
 
                     $curl = curl_init();

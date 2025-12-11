@@ -5,7 +5,7 @@ $username = "astahome_it";
 $password = "astawms=d17d09";
 $dbname = "astahome_wms";
 $conn = new mysqli($servername, $username, $password, $dbname);
-$token = 'EyuhsmTqzeKaDknoxdxt';
+$token = 'F9C6K2!5QYkZtW7j5z#M';
 
 $sql = "SELECT handphone FROM user WHERE email = 'chalung.izha@gmail.com' LIMIT 1";
 $result = $conn->query($sql);

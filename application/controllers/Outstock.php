@@ -78,7 +78,7 @@ class Outstock extends CI_Controller
                 'outstock_code' => $inputOutstockCode,
                 'sku' => $sku,
                 'nama_produk' => $inputNamaProduk[$key],
-                'jumlah' => (int)$inputJumlah[$key],
+                'jumlah' => (int) $inputJumlah[$key],
                 'sisa' => 0,
                 'keterangan' => $inputKeterangan[$key],
             ];
@@ -99,9 +99,8 @@ class Outstock extends CI_Controller
         $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
         if ($target !== '') {
-            $token = 'EyuhsmTqzeKaDknoxdxt';
-            $message = 'Transaksi barang keluar dengan kode outstock ' . $inputOutstockCode .
-                (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
+            $token = 'F9C6K2!5QYkZtW7j5z#M';
+            $message = 'Transaksi barang keluar dengan kode outstock ' . $inputOutstockCode . (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
                 ' telah dibuat oleh ' . $this->session->userdata('username') .
                 '. Admin Stock dimohon untuk segera melakukan pengecekan verifikasi transaksi.';
 

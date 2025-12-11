@@ -139,7 +139,7 @@ class Delivery_note extends CI_Controller
         $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
         if ($target !== '') {
-            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $token = 'F9C6K2!5QYkZtW7j5z#M';
             $message = 'Surat Jalan dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
 
             $curl = curl_init();
@@ -246,7 +246,7 @@ class Delivery_note extends CI_Controller
         $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
         if ($target !== '') {
-            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $token = 'F9C6K2!5QYkZtW7j5z#M';
             $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' sudah diverifikasi dan sekarang membutuhkan validasi dari bagian accounting di WMS. Mohon segera diproses, terima kasih.';
 
             $curl = curl_init();
@@ -323,7 +323,7 @@ class Delivery_note extends CI_Controller
         $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
         if ($target !== '') {
-            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $token = 'F9C6K2!5QYkZtW7j5z#M';
             $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' sudah divalidasi dan sekarang membutuhkan Final Dir dari superadmin di WMS. Mohon segera diproses, terima kasih.';
 
             $curl = curl_init();
@@ -671,8 +671,8 @@ class Delivery_note extends CI_Controller
                         $maxDisplayHeight = 300;
 
                         $ratio = min($maxDisplayWidth / $width, $maxDisplayHeight / $height);
-                        $displayWidth = (int)($width * $ratio);
-                        $displayHeight = (int)($height * $ratio);
+                        $displayWidth = (int) ($width * $ratio);
+                        $displayHeight = (int) ($height * $ratio);
 
                         // Track maximum dimensions for column sizing
                         $maxPhotoWidth = max($maxPhotoWidth, $displayWidth);
@@ -724,7 +724,7 @@ class Delivery_note extends CI_Controller
             // Also adjust row heights if needed for very tall images
             foreach ($photoDimensions as $dimension) {
                 $ratio = min(400 / $dimension['width'], 300 / $dimension['height']);
-                $displayHeight = (int)($dimension['height'] * $ratio);
+                $displayHeight = (int) ($dimension['height'] * $ratio);
                 $sheet->getRowDimension($dimension['row'])->setRowHeight($displayHeight + 10);
             }
         }

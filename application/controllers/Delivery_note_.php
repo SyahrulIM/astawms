@@ -132,7 +132,7 @@ class Delivery_note extends CI_Controller
         $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
         if ($target !== '') {
-            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $token = 'F9C6K2!5QYkZtW7j5z#M';
             $message = 'Surat Jalan dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
 
             $curl = curl_init();
@@ -213,7 +213,7 @@ class Delivery_note extends CI_Controller
         $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
         if ($target !== '') {
-            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $token = 'F9C6K2!5QYkZtW7j5z#M';
             $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' sudah diverifikasi dan sekarang membutuhkan validasi dari bagian accounting di WMS. Mohon segera diproses, terima kasih.';
 
             $curl = curl_init();
@@ -294,7 +294,7 @@ class Delivery_note extends CI_Controller
         $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
         if ($target !== '') {
-            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $token = 'F9C6K2!5QYkZtW7j5z#M';
             $message = 'Surat Jalan dengan nomor ' . $id . ' dibuat oleh ' . $username . ' sudah divalidasi dan sekarang membutuhkan Final Dir dari superadmin di WMS. Mohon segera diproses, terima kasih.';
 
             $curl = curl_init();

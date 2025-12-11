@@ -328,7 +328,7 @@ class Product extends CI_Controller
         $packing_list_data = $this->db
             ->select("ap.number_po AS stock_code, 
                  ap.created_date AS datetime, 
-                 ap.distribution_date, 'Packing List' AS kategori, 'PACKING LIST' AS tipe, 
+                 ap.distribution_date, 'PACKING LIST' AS kategori, 'PACKING LIST' AS tipe, 
                  0 AS instock, 0 AS outstock, 
                  COALESCE(dap.qty_receive, dap.qty_order, 0) AS packing_list, 
                  ap.user, 

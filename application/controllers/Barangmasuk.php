@@ -74,7 +74,7 @@ class Barangmasuk extends CI_Controller
                 'instock_code' => $inputInstockCode,
                 'sku' => $sku,
                 'nama_produk' => $inputNamaProduk[$key],
-                'jumlah' => (int)$inputJumlah[$key],
+                'jumlah' => (int) $inputJumlah[$key],
                 'sisa' => 0,
                 'keterangan' => $inputKeterangan[$key],
             ];
@@ -95,9 +95,8 @@ class Barangmasuk extends CI_Controller
         $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
         if ($target !== '') {
-            $token = 'EyuhsmTqzeKaDknoxdxt';
-            $message = 'Transaksi barang masuk dengan kode instock ' . $inputInstockCode .
-                (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
+            $token = 'F9C6K2!5QYkZtW7j5z#M';
+            $message = 'Transaksi barang masuk dengan kode instock ' . $inputInstockCode . (strlen($inputNo) > 0 ? ' dan nomor ' . $inputNo : '') .
                 ' telah dibuat oleh ' . $this->session->userdata('username') .
                 '. Super Admin dimohon untuk segera melakukan pengecekan verifikasi transaksi.';
 

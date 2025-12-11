@@ -139,7 +139,7 @@ class Delivery_manual extends CI_Controller
         $target = count($targets) > 1 ? implode(',', $targets) : (count($targets) === 1 ? $targets[0] : '');
 
         if ($target !== '') {
-            $token = 'EyuhsmTqzeKaDknoxdxt';
+            $token = 'F9C6K2!5QYkZtW7j5z#M';
             $message = 'Surat Jalan Manual dengan nomor ' . $no_manual . ' dibuat oleh ' . $username . ' sedang dalam pengiriman ke IV, harap ditunggu';
 
             $curl = curl_init();
