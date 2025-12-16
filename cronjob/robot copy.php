@@ -19,6 +19,7 @@ $message = "Asta Homeware Daily Report:\n\n"
     . "-Test01\n"
     . "-Test01\n"
     . "-Test01\n\n"
+    .= "━━━━━━━━━━━━━━━━━━\n"
     . "_Asta ERP_";
 
 echo nl2br($message);
