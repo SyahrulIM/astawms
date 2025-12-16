@@ -216,7 +216,7 @@ class Finish extends CI_Controller
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $id);
-        $this->db->where('d.price > 0');
+        $this->db->where('d.qty_order > 0');
         $query = $this->db->get();
 
         // Filter data (Avg Sales vs Stock < 1)

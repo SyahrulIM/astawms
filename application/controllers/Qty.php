@@ -81,26 +81,21 @@ class Qty extends CI_Controller
 
         error_log("Update analisys_po result: " . ($update_result ? 'Success' : 'Failed'));
 
-        // Process detail records
         if (!empty($qtyList) && is_array($qtyList)) {
             error_log("Processing " . count($qtyList) . " qty items");
 
             foreach ($qtyList as $detail_id => $qty) {
-                // Validate detail_id is numeric
                 if (!is_numeric($detail_id)) {
                     error_log("Skipping invalid detail_id: " . $detail_id);
                     continue;
                 }
 
-                // Convert quantity
                 $clean_qty = intval($qty);
 
-                // Get price
                 $price = isset($priceList[$detail_id]) ? $priceList[$detail_id] : 0;
                 $clean_price = 0;
 
                 if (!empty($price) && $price !== '' && $price !== '0') {
-                    // Handle decimal separator
                     $price = str_replace(',', '.', $price);
                     $clean_price = floatval($price);
                 }
@@ -115,7 +110,6 @@ class Qty extends CI_Controller
 
                 error_log("Updating detail ID {$detail_id}: " . print_r($updateData, true));
 
-                // Update the detail record
                 $this->db->where('iddetail_analisys_po', $detail_id);
                 $this->db->where('idanalisys_po', $idanalisys_po);
                 $detail_update_result = $this->db->update('detail_analisys_po', $updateData);
@@ -269,7 +263,7 @@ class Qty extends CI_Controller
                             <th class="text-center" width="100">Product</th>
                             <th class="text-center" width="100">Product Code</th>
                             <th class="text-center">Last Coming</th>
-                            <th class="text-center">Last Sales</th>
+                            <th class="text-center">L Month Sales</th>
                             <th class="text-center">Current Sales</th>
                             <th class="text-center">Balance</th>
                             <th class="text-center">Avg Ratio</th>

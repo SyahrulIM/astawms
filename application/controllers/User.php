@@ -44,6 +44,7 @@ class User extends CI_Controller
         $idrole = $this->input->post('inputRole');
         $handphone = $this->input->post('inputHandphone');
         $is_whatsapp = $this->input->post('inputWhatsapp');
+        $birth_date = $this->input->post('inputBirthDate');
 
         $cekUsername = $this->db->get_where('user', ['username' => $username])->row();
         if ($cekUsername && $cekUsername->status == 1) {
@@ -83,6 +84,7 @@ class User extends CI_Controller
             'foto' => $foto,
             'idrole' => $idrole,
             'handphone' => $handphone,
+            'birth_date' => $birth_date,
             'is_whatsapp' => $is_whatsapp,
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
@@ -107,17 +109,15 @@ class User extends CI_Controller
         $idrole = $this->input->post('editRole');
         $handphone = $this->input->post('editHandphone');
         $is_whatsapp = $this->input->post('inputWhatsapp');
-
+        $birth_date = $this->input->post('editBirthDate');
 
         // Ambil data user lama
-        $this->db->where('iduser', $iduser);
-        $oldUser = $this->db->get('user');
+        $oldUser = $this->db->get_where('user', ['iduser' => $iduser])->row();
 
         // Validasi jika username diubah, tidak boleh sama dengan user lain
-        $userId = $oldUser->row()->iduser;
         $cekUsername = $this->db
             ->where('username',  $username)
-            ->where('iduser !=', $userId)
+            ->where('iduser !=', $iduser)
             ->where('status', 1) // hanya cek ke user yang aktif
             ->get('user')
             ->row();
@@ -161,6 +161,7 @@ class User extends CI_Controller
             'foto' => $foto,
             'idrole' => $idrole,
             'handphone' => $handphone,
+            'birth_date' => $birth_date,
             'is_whatsapp' => $is_whatsapp,
             'updated_by' => $this->session->userdata('username'),
             'updated_date' => date("Y-m-d H:i:s")
