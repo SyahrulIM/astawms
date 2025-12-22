@@ -87,138 +87,146 @@
         </div>
     </div>
 
-<!-- Verification Modal -->
-<div class="modal fade" id="verifikasiModal" tabindex="-1" aria-labelledby="verifikasiModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="verifikasiModalLabel">Konfirmasi Verifikasi</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
-            </div>
-            <form id="verifikasiForm" method="post" action="">
-                <div class="modal-body">
-                    <!-- Transaction Information -->
-                    <div class="card mb-3">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0"><i class="fas fa-info-circle"></i> Informasi Transaksi</h6>
+    <!-- Verification Modal -->
+    <div class="modal fade" id="verifikasiModal" tabindex="-1" aria-labelledby="verifikasiModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="verifikasiModalLabel">Konfirmasi Verifikasi</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <form id="verifikasiForm" method="post" action="">
+                    <div class="modal-body">
+                        <!-- Info tambahan untuk instock dari packing list -->
+                        <div id="packingListInfo" style="display:none;" class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Catatan:</strong>
+                            Instock ini berasal dari Packing List. Qty Order diambil dari detail_analisys_po.
+                            Qty di detail_instock adalah 0 (sesuai proses sistem).
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="mb-2">
-                                        <small class="text-muted">Tipe Transaksi:</small>
-                                        <div id="modalTipeTransaksi" class="fw-bold"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-2">
-                                        <small class="text-muted">Kode Transaksi:</small>
-                                        <div id="modalKodeTransaksi" class="fw-bold text-primary"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-2">
-                                        <small class="text-muted">Tanggal Distribusi:</small>
-                                        <div id="modalTanggalDistribusi" class="fw-bold"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="mb-2">
-                                        <small class="text-muted">User Penginput:</small>
-                                        <div id="modalUserPenginput" class="fw-bold"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Additional Fields for Packing List -->
-                    <div id="poInputGroup" style="display:none;">
+                        <!-- Transaction Information -->
                         <div class="card mb-3">
-                            <div class="card-header bg-warning">
-                                <h6 class="mb-0"><i class="fas fa-edit"></i> Data Tambahan untuk Packing List</h6>
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Informasi Transaksi</h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label for="inputNomorPo" class="form-label">Nomor Accurate <span class="text-danger">*</span></label>
-                                            <input type="text" id="inputNomorPo" name="nomor_accurate" class="form-control" placeholder="Masukkan Nomor Accurate">
-                                            <div class="form-text">Contoh: ACC-2025-001</div>
+                                    <div class="col-md-3">
+                                        <div class="mb-2">
+                                            <small class="text-muted">Tipe Transaksi:</small>
+                                            <div id="modalTipeTransaksi" class="fw-bold"></div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label for="inputWarehouse" class="form-label">Gudang <span class="text-danger">*</span></label>
-                                            <select class="form-select" name="idgudang" id="inputWarehouse" required>
-                                                <option value="">Pilih Gudang</option>
-                                                <?php foreach ($warehouse as $values) : ?>
-                                                <option value="<?= $values->idgudang ?>"><?= $values->nama_gudang ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
+                                    <div class="col-md-3">
+                                        <div class="mb-2">
+                                            <small class="text-muted">Kode Transaksi:</small>
+                                            <div id="modalKodeTransaksi" class="fw-bold text-primary"></div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label for="inputDateReceiving" class="form-label">Tanggal Diterima <span class="text-danger">*</span></label>
-                                            <input type="datetime-local" id="inputDateReceiving" name="tanggal_diterima" class="form-control" required>
+                                    <div class="col-md-3">
+                                        <div class="mb-2">
+                                            <small class="text-muted">Tanggal Distribusi:</small>
+                                            <div id="modalTanggalDistribusi" class="fw-bold"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-2">
+                                            <small class="text-muted">User Penginput:</small>
+                                            <div id="modalUserPenginput" class="fw-bold"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Detail Items -->
-                    <div class="card">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0"><i class="fas fa-list"></i> Detail Barang</h6>
+                        <!-- Additional Fields for Packing List -->
+                        <div id="poInputGroup" style="display:none;">
+                            <div class="card mb-3">
+                                <div class="card-header bg-warning">
+                                    <h6 class="mb-0"><i class="fas fa-edit"></i> Data Tambahan untuk Packing List</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="inputNomorPo" class="form-label">Nomor Accurate <span class="text-danger">*</span></label>
+                                                <input type="text" id="inputNomorPo" name="nomor_accurate" class="form-control" placeholder="Masukkan Nomor Accurate">
+                                                <div class="form-text">Contoh: ACC-2025-001</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="inputWarehouse" class="form-label">Gudang <span class="text-danger">*</span></label>
+                                                <select class="form-select" name="idgudang" id="inputWarehouse" required>
+                                                    <option value="">Pilih Gudang</option>
+                                                    <?php foreach ($warehouse as $values) : ?>
+                                                    <option value="<?= $values->idgudang ?>"><?= $values->nama_gudang ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="inputDateReceiving" class="form-label">Tanggal Diterima <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" id="inputDateReceiving" name="tanggal_diterima" class="form-control" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="table-light">
-                                        <tr id="detailHeaderInstockOutstock">
-                                            <th width="20%">SKU</th>
-                                            <th width="60%">Nama Produk</th>
-                                            <th width="20%" class="text-end">Jumlah</th>
-                                        </tr>
-                                        <tr id="detailHeaderPackingList" style="display:none;">
-                                            <th width="15%">SKU</th>
-                                            <th width="45%">Nama Produk</th>
-                                            <th width="15%" class="text-end">Qty Order</th>
-                                            <th width="25%" class="text-end">Qty Receive</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="detailStockTable">
-                                        <!-- Data akan diisi oleh JavaScript -->
-                                    </tbody>
-                                    <tfoot id="detailStockTableFooter" style="display:none;">
-                                        <tr class="table-info">
-                                            <td colspan="3" class="text-end"><strong>Total Qty Receive:</strong></td>
-                                            <td class="text-end"><strong id="totalQtyReceive">0</strong></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+
+                        <!-- Detail Items -->
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-list"></i> Detail Barang</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr id="detailHeaderInstockOutstock">
+                                                <th width="20%">SKU</th>
+                                                <th width="60%">Nama Produk</th>
+                                                <th width="20%" class="text-end">QTY</th>
+                                            </tr>
+                                            <tr id="detailHeaderPackingList" style="display:none;">
+                                                <th width="15%">SKU</th>
+                                                <th width="45%">Nama Produk</th>
+                                                <th width="15%" class="text-end">Qty Order</th>
+                                                <th width="25%" class="text-end">Qty Packing List</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detailStockTable">
+                                            <!-- Data akan diisi oleh JavaScript -->
+                                        </tbody>
+                                        <tfoot id="detailStockTableFooter" style="display:none;">
+                                            <tr class="table-info">
+                                                <td colspan="3" class="text-end"><strong>Total Qty Receive:</strong></td>
+                                                <td class="text-end"><strong id="totalQtyReceive">0</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times"></i> Batal
-                    </button>
-                    <button type="button" class="btn btn-danger" id="rejectVerifikasi">
-                        <i class="fas fa-times-circle"></i> Tolak
-                    </button>
-                    <button type="submit" class="btn btn-primary" id="confirmVerifikasi">
-                        <i class="fas fa-check-circle"></i> Ya, Verifikasi
-                    </button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Batal
+                        </button>
+                        <button type="button" class="btn btn-danger" id="rejectVerifikasi">
+                            <i class="fas fa-times-circle"></i> Tolak
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="confirmVerifikasi">
+                            <i class="fas fa-check-circle"></i> Ya, Verifikasi
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 </div>
 </div>
 
@@ -260,6 +268,7 @@
             $('#detailStockTable').empty();
             $('#detailStockTableFooter').hide();
             $('#verifikasiForm').attr('action', '');
+            $('#packingListInfo').hide();
 
             // Set the modal information
             $('#modalTipeTransaksi').text(selectedTransactionType);
@@ -310,53 +319,83 @@
                 dataType: 'json',
                 success: function(response) {
                     console.log('AJAX Response:', response);
-                    
+
                     $('#detailStockTable').empty();
                     productDetails = [];
-                    
+
                     if (response.success && response.details && response.details.length > 0) {
-                        if (normalizedType === 'packing list') {
-                            // Untuk Packing List - tampilkan qty_order dan input qty_receive
+                        let isFromPackingList = response.is_from_packing_list || false;
+                        let normalizedType = selectedTransactionType.toLowerCase();
+
+                        if (normalizedType === 'packing list' || isFromPackingList) {
+                            // Untuk Packing List atau Instock dari Packing List
+                            let totalQtyOrder = 0;
                             let totalQtyReceive = 0;
-                            
+
+                            $('#detailHeaderInstockOutstock').hide();
+                            $('#detailHeaderPackingList').show();
+
+                            // Tampilkan keterangan jika ini instock dari packing list
+                            if (normalizedType === 'instock' && isFromPackingList) {
+                                $('#packingListInfo').show();
+                                $('#detailStockTable').append(
+                                    '<tr><td colspan="4" class="text-center bg-info text-white"><i class="fas fa-info-circle"></i> Instock ini berasal dari Packing List (Qty di detail_instock = 0)</td></tr>'
+                                );
+                            }
+
                             response.details.forEach(function(detail, index) {
                                 let qtyOrder = detail.qty_order || 0;
                                 let qtyReceive = detail.qty_receive || qtyOrder;
-                                
+
+                                // Untuk instock dari packing list, jumlah di detail_instock adalah 0
+                                let qtyInstock = detail.jumlah || 0;
+
                                 // Simpan ke productDetails
                                 productDetails[index] = {
                                     sku: detail.sku,
                                     idproduct: detail.idproduct,
                                     qty_order: qtyOrder,
                                     qty_receive: qtyReceive,
+                                    qty_instock: qtyInstock,
                                     price: detail.price || 0
                                 };
-                                
+
                                 var row = '<tr>' +
                                     '<td>' + (detail.sku || 'N/A') + '</td>' +
                                     '<td>' + (detail.nama_produk || '') + '</td>' +
                                     '<td class="text-end">' + qtyOrder.toLocaleString() + '</td>' +
                                     '<td>' +
-                                        '<input type="number" class="form-control form-control-sm qty-receive-input" ' +
-                                        'name="qty_receive[' + detail.idproduct + ']" ' +
-                                        'value="' + qtyReceive + '" ' +
-                                        'min="0" max="' + qtyOrder + '" ' +
-                                        'data-index="' + index + '" ' +
-                                        'data-sku="' + (detail.sku || '') + '" ' +
-                                        'required>' +
+                                    '<input type="number" class="form-control form-control-sm qty-receive-input" ' +
+                                    'name="qty_receive[' + detail.idproduct + ']" ' +
+                                    'value="' + qtyReceive + '" ' +
+                                    'min="0" max="' + qtyOrder + '" ' +
+                                    'data-index="' + index + '" ' +
+                                    'data-sku="' + (detail.sku || '') + '" ' +
+                                    'required>' +
                                     '</td>' +
                                     '</tr>';
                                 $('#detailStockTable').append(row);
-                                
+
+                                totalQtyOrder += qtyOrder;
                                 totalQtyReceive += qtyReceive;
                             });
-                            
+
                             // Tampilkan total
                             $('#detailStockTableFooter').show();
+                            $('#detailStockTable').append(
+                                '<tr class="table-info">' +
+                                '<td colspan="2" class="text-end"><strong>Total Qty Order:</strong></td>' +
+                                '<td class="text-end"><strong>' + totalQtyOrder.toLocaleString() + '</strong></td>' +
+                                '<td></td>' +
+                                '</tr>'
+                            );
                             $('#totalQtyReceive').text(totalQtyReceive.toLocaleString());
-                            
+
                         } else {
-                            // Untuk Instock/Outstock - tampilkan jumlah saja
+                            // Untuk Instock/Outstock biasa - tampilkan jumlah saja
+                            $('#detailHeaderInstockOutstock').show();
+                            $('#detailHeaderPackingList').hide();
+
                             let totalQty = 0;
                             response.details.forEach(function(detail) {
                                 var row = '<tr>' +
@@ -367,7 +406,7 @@
                                 $('#detailStockTable').append(row);
                                 totalQty += parseInt(detail.jumlah || 0);
                             });
-                            
+
                             // Untuk Instock/Outstock, tambahkan summary
                             if (totalQty > 0) {
                                 var summaryRow = '<tr class="table-info">' +
@@ -379,7 +418,7 @@
                         }
                     } else {
                         let errorMsg = response.error || 'Tidak ada data detail yang ditemukan';
-                        let colspan = normalizedType === 'packing list' ? 4 : 3;
+                        let colspan = (response.is_from_packing_list || selectedTransactionType.toLowerCase() === 'packing list') ? 4 : 3;
                         $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center text-warning">' + errorMsg + '</td></tr>');
                     }
                 },
@@ -397,25 +436,25 @@
             let newQty = parseInt($(this).val()) || 0;
             let maxQty = parseInt($(this).attr('max')) || 0;
             let sku = $(this).data('sku');
-            
+
             // Validasi max quantity
             if (newQty > maxQty) {
                 alert('Quantity receive untuk SKU ' + sku + ' tidak boleh lebih dari quantity order (' + maxQty + ')');
                 $(this).val(maxQty);
                 newQty = maxQty;
             }
-            
+
             if (newQty < 0) {
                 alert('Quantity receive untuk SKU ' + sku + ' tidak boleh negatif');
                 $(this).val(0);
                 newQty = 0;
             }
-            
+
             // Update product details
             if (productDetails[index]) {
                 productDetails[index].qty_receive = newQty;
             }
-            
+
             // Update total
             updateTotalQtyReceive();
         });
@@ -432,14 +471,14 @@
         // Handle form submission
         $('#verifikasiForm').on('submit', function(e) {
             e.preventDefault();
-            
+
             if (!selectedTransactionCode || !selectedTransactionType) {
                 alert('Data transaksi tidak valid.');
                 return false;
             }
-            
+
             let normalizedType = selectedTransactionType.toLowerCase();
-            
+
             // Validasi khusus untuk Packing List
             if (normalizedType === 'packing list') {
                 // Validasi input utama
@@ -458,38 +497,38 @@
                     $('#inputDateReceiving').focus();
                     return false;
                 }
-                
-                // Validasi qty_receive tidak boleh melebihi qty_order
-                let hasInvalidQty = false;
-                $('.qty-receive-input').each(function() {
-                    let qtyReceive = parseInt($(this).val()) || 0;
-                    let maxQty = parseInt($(this).attr('max')) || 0;
-                    let sku = $(this).data('sku');
-                    
-                    if (qtyReceive > maxQty) {
-                        alert('Quantity receive untuk SKU ' + sku + ' tidak boleh lebih dari ' + maxQty + '.');
-                        $(this).focus();
-                        hasInvalidQty = true;
-                        return false;
-                    }
-                    
-                    if (qtyReceive < 0) {
-                        alert('Quantity receive untuk SKU ' + sku + ' tidak boleh negatif.');
-                        $(this).focus();
-                        hasInvalidQty = true;
-                        return false;
-                    }
-                });
-                
-                if (hasInvalidQty) return false;
             }
-            
+
+            // Validasi qty_receive tidak boleh melebihi qty_order untuk packing list dan instock dari packing list
+            let hasInvalidQty = false;
+            $('.qty-receive-input').each(function() {
+                let qtyReceive = parseInt($(this).val()) || 0;
+                let maxQty = parseInt($(this).attr('max')) || 0;
+                let sku = $(this).data('sku');
+
+                if (qtyReceive > maxQty) {
+                    alert('Quantity receive untuk SKU ' + sku + ' tidak boleh lebih dari ' + maxQty + '.');
+                    $(this).focus();
+                    hasInvalidQty = true;
+                    return false;
+                }
+
+                if (qtyReceive < 0) {
+                    alert('Quantity receive untuk SKU ' + sku + ' tidak boleh negatif.');
+                    $(this).focus();
+                    hasInvalidQty = true;
+                    return false;
+                }
+            });
+
+            if (hasInvalidQty) return false;
+
             // Set form action
-            let actionUrl = "<?= base_url('verification/confirm_stock/') ?>" + 
-                        encodeURIComponent(selectedTransactionType) + "/" + 
-                        encodeURIComponent(selectedTransactionCode);
+            let actionUrl = "<?= base_url('verification/confirm_stock/') ?>" +
+                encodeURIComponent(selectedTransactionType) + "/" +
+                encodeURIComponent(selectedTransactionCode);
             $(this).attr('action', actionUrl);
-            
+
             // Submit form
             this.submit();
         });
@@ -500,15 +539,15 @@
                 alert('Data transaksi tidak valid.');
                 return;
             }
-            
+
             if (!confirm('Apakah Anda yakin ingin menolak transaksi ini?')) {
                 return;
             }
-            
+
             // Redirect untuk reject
-            let rejectUrl = "<?= base_url('verification/reject/') ?>" + 
-                        encodeURIComponent(selectedTransactionType) + "/" + 
-                        encodeURIComponent(selectedTransactionCode);
+            let rejectUrl = "<?= base_url('verification/reject/') ?>" +
+                encodeURIComponent(selectedTransactionType) + "/" +
+                encodeURIComponent(selectedTransactionCode);
             window.location.href = rejectUrl;
         });
 

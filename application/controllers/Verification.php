@@ -52,7 +52,7 @@ class Verification extends CI_Controller
         usort($all_transactions, function ($a, $b) {
             $dateA = strtotime($a->tanggal . ' ' . $a->jam);
             $dateB = strtotime($b->tanggal . ' ' . $b->jam);
-            return $dateB - $dateA; // Descending
+            return $dateB - $dateA;
         });
 
         $data['transactions'] = $all_transactions;
@@ -96,6 +96,18 @@ class Verification extends CI_Controller
                 return;
             }
 
+            // Cek apakah ini instock dari packing list
+            $is_from_packing_list = false;
+            $analisys_po_code = null;
+
+            if ($type == 'instock' && strpos($trx->kategori, 'PACKING LIST') !== false) {
+                // Ekstrak nomor PO dari kode instock
+                if (strpos($trx->instock_code, 'PL-') === 0) {
+                    $analisys_po_code = substr($trx->instock_code, 3);
+                    $is_from_packing_list = true;
+                }
+            }
+
             // Ambil tanggal transaksi
             $tanggal_field = $type === 'instock' ? 'tgl_terima' : 'tgl_keluar';
             $jam_field = $type === 'instock' ? 'jam_terima' : 'jam_keluar';
@@ -105,14 +117,14 @@ class Verification extends CI_Controller
 
             // Cek apakah ada transaksi sebelumnya yang belum diverifikasi
             $query_unverified = "
-                SELECT * FROM (
-                    SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
-                    UNION ALL
-                    SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
-                ) AS all_unverified
-                WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
-                LIMIT 1
-            ";
+            SELECT * FROM (
+                SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
+                UNION ALL
+                SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
+            ) AS all_unverified
+            WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
+            LIMIT 1
+        ";
 
             $older_unverified = $this->db->query($query_unverified)->row();
             if ($older_unverified) {
@@ -126,6 +138,17 @@ class Verification extends CI_Controller
                 $this->session->set_flashdata('error', 'Transaksi sudah diverifikasi sebelumnya.');
                 redirect('verification');
                 return;
+            }
+
+            // Ambil data qty_receive dari POST jika ini instock dari packing list
+            $qty_receive_data = [];
+            if ($is_from_packing_list) {
+                $qty_receive_data = $this->input->post('qty_receive');
+                if (empty($qty_receive_data) || !is_array($qty_receive_data)) {
+                    $this->session->set_flashdata('error', 'Data quantity receive tidak valid untuk instock dari packing list.');
+                    redirect('verification');
+                    return;
+                }
             }
 
             // Mulai transaction untuk menjaga konsistensi
@@ -143,7 +166,32 @@ class Verification extends CI_Controller
 
                 foreach ($details as $detail) {
                     $sku = $detail->sku;
+                    $idproduct = $detail->idproduct;
+
+                    // Default jumlah dari detail
                     $jumlah = (int) $detail->jumlah;
+
+                    // Jika ini instock dari packing list, gunakan qty_receive dari input
+                    if ($is_from_packing_list && $analisys_po_code && isset($qty_receive_data[$idproduct])) {
+                        $jumlah = (int) $qty_receive_data[$idproduct];
+
+                        // Validasi qty_receive tidak negatif
+                        if ($jumlah < 0) {
+                            throw new Exception("Quantity receive untuk product ID $idproduct tidak boleh negatif.");
+                        }
+
+                        // Update qty_receive di detail_analisys_po
+                        $analisys_po_data = $this->db->where('number_po', $analisys_po_code)
+                            ->get('analisys_po')
+                            ->row();
+
+                        if ($analisys_po_data) {
+                            $this->db->set('qty_receive', $jumlah)
+                                ->where('idanalisys_po', $analisys_po_data->idanalisys_po)
+                                ->where('idproduct', $idproduct)
+                                ->update('detail_analisys_po');
+                        }
+                    }
 
                     // Skip jika jumlah 0
                     if ($jumlah <= 0) continue;
@@ -190,7 +238,7 @@ class Verification extends CI_Controller
                 $this->session->set_flashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
             }
         } elseif ($type == 'packing_list') {
-            // KODE UNTUK PACKING LIST
+            // KODE UNTUK PACKING LIST DENGAN INSERT KE INSTOCK
             $main_table = 'analisys_po';
             $kode_field = 'number_po';
 
@@ -244,7 +292,35 @@ class Verification extends CI_Controller
 
                 $this->db->where($kode_field, $code)->update($main_table, $update_data);
 
-                // Update detail_analisys_po dengan qty_receive
+                // Buat data instock baru
+                $instock_code = 'PL-' . $trx->number_po; // Prefix PL untuk packing list
+
+                // Cek apakah instock dengan kode ini sudah ada (untuk prevent duplicate)
+                $existing_instock = $this->db->where('instock_code', $instock_code)->get('instock')->row();
+                if ($existing_instock) {
+                    throw new Exception('Data instock untuk packing list ini sudah ada sebelumnya.');
+                }
+
+                $instock_data = [
+                    'idgudang' => $idgudang,
+                    'instock_code' => $instock_code,
+                    'tgl_terima' => date('Y-m-d'),
+                    'jam_terima' => date('H:i:s'),
+                    'datetime' => date('Y-m-d H:i:s'),
+                    'user' => $this->session->userdata('username'),
+                    'kategori' => 'PACKING LIST',
+                    'no_manual' => $nomor_accurate,
+                    'distribution_date' => $tanggal_diterima,
+                    'created_by' => $this->session->userdata('username'),
+                    'created_date' => date('Y-m-d H:i:s'),
+                    'status_verification' => 1 // Langsung verified karena berasal dari verifikasi packing list
+                ];
+
+                // Insert ke tabel instock
+                $this->db->insert('instock', $instock_data);
+                $idinstock = $this->db->insert_id();
+
+                // Update detail_analisys_po dengan qty_receive dan insert ke detail_instock
                 foreach ($qty_receive_data as $idproduct => $qty_receive) {
                     $qty_receive = (int) $qty_receive;
                     $idproduct = (int) $idproduct;
@@ -254,11 +330,33 @@ class Verification extends CI_Controller
                         throw new Exception("Quantity receive untuk product ID $idproduct tidak boleh negatif.");
                     }
 
+                    // Get product info
+                    $product = $this->db->select('sku, nama_produk')
+                        ->where('idproduct', $idproduct)
+                        ->get('product')
+                        ->row();
+
+                    if (!$product) {
+                        continue; // Skip jika product tidak ditemukan
+                    }
+
                     // Update qty_receive di detail_analisys_po
                     $this->db->set('qty_receive', $qty_receive)
                         ->where('idanalisys_po', $trx->idanalisys_po)
                         ->where('idproduct', $idproduct)
                         ->update('detail_analisys_po');
+
+                    // Insert ke detail_instock dengan qty 0
+                    $detail_instock_data = [
+                        'instock_code' => $instock_code,
+                        'sku' => $product->sku,
+                        'nama_produk' => $product->nama_produk,
+                        'jumlah' => 0, // QTY 0 di detail_instock
+                        'sisa' => 0,
+                        'keterangan' => 'Dari Packing List: ' . $trx->number_po . ' (Qty Receive: ' . $qty_receive . ')'
+                    ];
+
+                    $this->db->insert('detail_instock', $detail_instock_data);
 
                     // Update stok hanya jika qty_receive > 0
                     if ($qty_receive > 0) {
@@ -288,7 +386,7 @@ class Verification extends CI_Controller
                     throw new Exception('Gagal memperbarui database.');
                 }
 
-                $this->session->set_flashdata('success', 'Packing List berhasil diverifikasi dan stok diperbarui.');
+                $this->session->set_flashdata('success', 'Packing List berhasil diverifikasi, stok diperbarui, dan data telah masuk ke sistem Instock (QTY 0).');
             } catch (Exception $e) {
                 $this->db->trans_rollback();
                 $this->session->set_flashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -302,12 +400,10 @@ class Verification extends CI_Controller
     {
         $type = strtolower($type);
 
-        // Normalisasi tipe
         if ($type == 'packing list') {
             $type = 'packing_list';
         }
 
-        // Validasi tipe
         $valid_types = ['instock', 'outstock', 'packing_list'];
         if (!in_array($type, $valid_types)) {
             echo json_encode(['success' => false, 'error' => 'Tipe tidak valid: ' . $type]);
@@ -316,21 +412,30 @@ class Verification extends CI_Controller
 
         try {
             if ($type == 'instock' || $type == 'outstock') {
-                // KODE UNTUK INSTOCK DAN OUTSTOCK
                 $main_table = $type;
                 $kode_field = $type . '_code';
                 $detail_table = 'detail_' . $type;
 
-                // Cek apakah transaksi utama ada
                 $main_data = $this->db->where($kode_field, $kode)->get($main_table)->row();
                 if (!$main_data) {
                     echo json_encode(['success' => false, 'error' => 'Transaksi tidak ditemukan']);
                     return;
                 }
 
-                // Ambil detail dengan JOIN product
+                // Cek apakah ini instock dari packing list
+                $is_from_packing_list = false;
+                $analisys_po_code = null;
+
+                if ($type == 'instock' && strpos($main_data->kategori, 'PACKING LIST') !== false) {
+                    // Ekstrak nomor PO dari kode instock
+                    if (strpos($main_data->instock_code, 'PL-') === 0) {
+                        $analisys_po_code = substr($main_data->instock_code, 3);
+                        $is_from_packing_list = true;
+                    }
+                }
+
                 $details = $this->db
-                    ->select("$detail_table.*, p.sku, p.nama_produk")
+                    ->select("$detail_table.*, p.sku, p.nama_produk, p.idproduct")
                     ->from($detail_table)
                     ->join('product p', "$detail_table.sku = p.sku", 'left')
                     ->where("$detail_table.$kode_field", $kode)
@@ -341,17 +446,46 @@ class Verification extends CI_Controller
                 // Format data
                 $formatted_details = [];
                 foreach ($details as $detail) {
+                    $qty_order = (int) $detail->jumlah;
+                    $qty_receive = (int) $detail->jumlah;
+
+                    // Jika ini instock dari packing list, ambil qty_order dari analisys_po
+                    if ($is_from_packing_list && $analisys_po_code) {
+                        $analisys_po_data = $this->db->where('number_po', $analisys_po_code)
+                            ->get('analisys_po')
+                            ->row();
+
+                        if ($analisys_po_data) {
+                            $detail_po = $this->db
+                                ->where('idanalisys_po', $analisys_po_data->idanalisys_po)
+                                ->where('idproduct', $detail->idproduct)
+                                ->get('detail_analisys_po')
+                                ->row();
+
+                            if ($detail_po) {
+                                $qty_order = (int) $detail_po->qty_order;
+                                $qty_receive = (int) $detail_po->qty_receive;
+                            }
+                        }
+                    }
+
                     $formatted_details[] = [
                         'sku' => $detail->sku ?: 'N/A',
                         'nama_produk' => $detail->nama_produk ?: 'N/A',
+                        'idproduct' => $detail->idproduct,
                         'jumlah' => (int) $detail->jumlah,
-                        'qty_order' => (int) $detail->jumlah,
-                        'qty_receive' => (int) $detail->jumlah
+                        'qty_order' => $qty_order,
+                        'qty_receive' => $qty_receive,
+                        'is_from_packing_list' => $is_from_packing_list
                     ];
                 }
 
                 if (!empty($formatted_details)) {
-                    echo json_encode(['success' => true, 'details' => $formatted_details]);
+                    echo json_encode([
+                        'success' => true,
+                        'details' => $formatted_details,
+                        'is_from_packing_list' => $is_from_packing_list
+                    ]);
                 } else {
                     echo json_encode(['success' => false, 'error' => 'Tidak ada data detail dengan quantity > 0']);
                 }
@@ -386,12 +520,17 @@ class Verification extends CI_Controller
                         'idproduct' => $detail->idproduct,
                         'qty_order' => (int) $detail->qty_order,
                         'qty_receive' => (int) $default_qty_receive,
-                        'price' => (int) $detail->price
+                        'price' => (int) $detail->price,
+                        'is_from_packing_list' => true
                     ];
                 }
 
                 if (!empty($formatted_details)) {
-                    echo json_encode(['success' => true, 'details' => $formatted_details]);
+                    echo json_encode([
+                        'success' => true,
+                        'details' => $formatted_details,
+                        'is_from_packing_list' => true
+                    ]);
                 } else {
                     echo json_encode(['success' => false, 'error' => 'Tidak ada data detail dengan quantity > 0']);
                 }
