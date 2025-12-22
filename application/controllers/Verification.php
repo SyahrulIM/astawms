@@ -85,13 +85,257 @@ public function confirm_stock($type, $code)
     }
 
     if ($type == 'instock') {
-        // ... kode untuk instock tetap sama ...
+        // ===================================================
+        // KODE UNTUK INSTOCK - DIPERBAIKI
+        // ===================================================
+        $main_table = 'instock';
+        $kode_field = 'instock_code';
+
+        $trx = $this->db->where($kode_field, $code)->get($main_table)->row();
+        if (!$trx) {
+            $this->session->set_flashdata('error', 'Instock tidak ditemukan.');
+            redirect('verification');
+            return;
+        }
+
+        // Ambil data qty_instock dari POST
+        $qty_instock_data = $this->input->post('qty_instock');
+
+        // Cek apakah ini instock dari packing list
+        $is_from_packing_list = false;
+        $analisys_po_code = null;
+
+        if (strpos($trx->kategori, 'PACKING LIST') !== false || strpos($trx->instock_code, 'PL-') === 0) {
+            if (strpos($trx->instock_code, 'PL-') === 0) {
+                $analisys_po_code = substr($trx->instock_code, 3);
+                $is_from_packing_list = true;
+            }
+        }
+
+        // Cek transaksi sebelumnya yang belum diverifikasi
+        $tanggal = $trx->tgl_terima;
+        $jam = $trx->jam_terima;
+
+        $query_unverified = "
+        SELECT * FROM (
+            SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
+            UNION ALL
+            SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
+            UNION ALL
+            SELECT created_date AS tanggal, TIME(created_date) AS jam FROM analisys_po WHERE status_verification = 0
+        ) AS all_unverified
+        WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
+        LIMIT 1
+        ";
+
+        $older_unverified = $this->db->query($query_unverified)->row();
+        if ($older_unverified) {
+            $this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi. Harap verifikasi berdasarkan urutan waktu.');
+            redirect('verification');
+            return;
+        }
+
+        // Cek status verifikasi
+        if ($trx->status_verification != 0) {
+            $this->session->set_flashdata('error', 'Transaksi sudah diverifikasi sebelumnya.');
+            redirect('verification');
+            return;
+        }
+
+        // Validasi input
+        if (empty($qty_instock_data) || !is_array($qty_instock_data)) {
+            $this->session->set_flashdata('error', 'Tidak ada data produk yang akan diverifikasi.');
+            redirect('verification');
+            return;
+        }
+
+        // Mulai transaction
+        $this->db->trans_start();
+
+        try {
+            // Update status verifikasi instock
+            $this->db->set('status_verification', 1)
+                ->where($kode_field, $code)
+                ->update($main_table);
+
+            $idgudang = $trx->idgudang;
+            $detail_table = 'detail_instock';
+            
+            // Update detail_instock dengan nilai dari input
+            foreach ($qty_instock_data as $idproduct => $qty_instock_input) {
+                $idproduct = (int) $idproduct;
+                $qty_instock = (int) $qty_instock_input;
+                
+                if ($qty_instock < 0) {
+                    throw new Exception('Qty Instock tidak boleh negatif untuk ID Produk: ' . $idproduct);
+                }
+
+                // Cari produk berdasarkan idproduct
+                $product = $this->db->where('idproduct', $idproduct)->get('product')->row();
+                if (!$product) continue;
+
+                // Update detail_instock.jumlah
+                $this->db->set('jumlah', $qty_instock)
+                    ->where('instock_code', $code)
+                    ->where('sku', $product->sku)
+                    ->update($detail_table);
+
+                // Update stok hanya jika qty_instock > 0
+                if ($qty_instock > 0) {
+                    $stock = $this->db->where('idproduct', $idproduct)
+                        ->where('idgudang', $idgudang)
+                        ->get('product_stock')
+                        ->row();
+
+                    if (!$stock) {
+                        $this->db->insert('product_stock', [
+                            'idproduct' => $idproduct,
+                            'idgudang' => $idgudang,
+                            'stok' => $qty_instock
+                        ]);
+                    } else {
+                        $this->db->set('stok', "stok + {$qty_instock}", false)
+                            ->where('idproduct', $idproduct)
+                            ->where('idgudang', $idgudang)
+                            ->update('product_stock');
+                    }
+                }
+
+                // Jika ini instock dari packing list, update qty_packing_list di detail_analisys_po
+                if ($is_from_packing_list && $analisys_po_code) {
+                    $analisys_po_data = $this->db->where('number_po', $analisys_po_code)
+                        ->get('analisys_po')
+                        ->row();
+
+                    if ($analisys_po_data) {
+                        // Update qty_packing_list dengan nilai qty_instock yang baru
+                        $this->db->set('qty_packing_list', $qty_instock)
+                            ->where('idanalisys_po', $analisys_po_data->idanalisys_po)
+                            ->where('idproduct', $idproduct)
+                            ->update('detail_analisys_po');
+                    }
+                }
+            }
+
+            $this->db->trans_complete();
+
+            if ($this->db->trans_status() === FALSE) {
+                throw new Exception('Gagal memperbarui database.');
+            }
+
+            $this->session->set_flashdata('success', 'Instock berhasil diverifikasi dan stok diperbarui.');
+        } catch (Exception $e) {
+            $this->db->trans_rollback();
+            $this->session->set_flashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
         
     } elseif ($type == 'outstock') {
-        // ... kode untuk outstock tetap sama ...
+        // ===================================================
+        // KODE UNTUK OUTSTOCK
+        // ===================================================
+        $main_table = 'outstock';
+        $kode_field = 'outstock_code';
+
+        $trx = $this->db->where($kode_field, $code)->get($main_table)->row();
+        if (!$trx) {
+            $this->session->set_flashdata('error', 'Outstock tidak ditemukan.');
+            redirect('verification');
+            return;
+        }
+
+        // Cek transaksi sebelumnya yang belum diverifikasi
+        $tanggal = $trx->tgl_keluar;
+        $jam = $trx->jam_keluar;
+
+        $query_unverified = "
+        SELECT * FROM (
+            SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
+            UNION ALL
+            SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
+            UNION ALL
+            SELECT created_date AS tanggal, TIME(created_date) AS jam FROM analisys_po WHERE status_verification = 0
+        ) AS all_unverified
+        WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
+        LIMIT 1
+        ";
+
+        $older_unverified = $this->db->query($query_unverified)->row();
+        if ($older_unverified) {
+            $this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi. Harap verifikasi berdasarkan urutan waktu.');
+            redirect('verification');
+            return;
+        }
+
+        // Cek status verifikasi
+        if ($trx->status_verification != 0) {
+            $this->session->set_flashdata('error', 'Transaksi sudah diverifikasi sebelumnya.');
+            redirect('verification');
+            return;
+        }
+
+        // Mulai transaction
+        $this->db->trans_start();
+
+        try {
+            // Update status verifikasi outstock
+            $this->db->set('status_verification', 1)
+                ->where($kode_field, $code)
+                ->update($main_table);
+
+            $idgudang = $trx->idgudang;
+            $detail_table = 'detail_outstock';
+            $details = $this->db->where('outstock_code', $code)->get($detail_table)->result();
+
+            foreach ($details as $detail) {
+                $sku = $detail->sku;
+                $jumlah = (int) $detail->jumlah;
+
+                // Skip jika jumlah 0
+                if ($jumlah <= 0) continue;
+
+                $product = $this->db->where('sku', $sku)->get('product')->row();
+                if (!$product) continue;
+
+                $idproduct = $product->idproduct;
+
+                // Update stok (mengurangi)
+                $stock = $this->db->where('idproduct', $idproduct)
+                    ->where('idgudang', $idgudang)
+                    ->get('product_stock')
+                    ->row();
+
+                if (!$stock) {
+                    // Jika stok belum ada, buat dengan nilai negatif
+                    $this->db->insert('product_stock', [
+                        'idproduct' => $idproduct,
+                        'idgudang' => $idgudang,
+                        'stok' => -$jumlah
+                    ]);
+                } else {
+                    // Kurangi stok yang ada
+                    $this->db->set('stok', "stok - {$jumlah}", false)
+                        ->where('idproduct', $idproduct)
+                        ->where('idgudang', $idgudang)
+                        ->update('product_stock');
+                }
+            }
+
+            $this->db->trans_complete();
+
+            if ($this->db->trans_status() === FALSE) {
+                throw new Exception('Gagal memperbarui database.');
+            }
+
+            $this->session->set_flashdata('success', 'Outstock berhasil diverifikasi dan stok diperbarui.');
+        } catch (Exception $e) {
+            $this->db->trans_rollback();
+            $this->session->set_flashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
         
     } elseif ($type == 'packing_list') {
+        // ===================================================
         // KODE UNTUK PACKING LIST
+        // ===================================================
         $main_table = 'analisys_po';
         $kode_field = 'number_po';
 
@@ -125,9 +369,8 @@ public function confirm_stock($type, $code)
 
         // Cek transaksi sebelumnya yang belum diverifikasi
         $tanggal = $trx->created_date;
-        $jam = date('H:i:s', strtotime($trx->created_date)); // Ambil jam dari created_date
+        $jam = date('H:i:s', strtotime($trx->created_date));
 
-        // PERBAIKAN QUERY: Gunakan TIME(created_date) untuk analisys_po
         $query_unverified = "
         SELECT * FROM (
             SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
@@ -171,7 +414,7 @@ public function confirm_stock($type, $code)
             $this->db->where($kode_field, $code)->update($main_table, $update_data);
 
             // Buat data instock baru
-            $instock_code = 'PL-' . $trx->number_po; // Prefix PL untuk packing list
+            $instock_code = 'PL-' . $trx->number_po;
 
             // Cek apakah instock dengan kode ini sudah ada
             $existing_instock = $this->db->where('instock_code', $instock_code)->get('instock')->row();
@@ -179,7 +422,7 @@ public function confirm_stock($type, $code)
                 throw new Exception('Data instock untuk packing list ini sudah ada sebelumnya.');
             }
 
-            // INSERT KE TABEL INSTOCK (HEADER) - DIUBAH: status_verification menjadi 0
+            // INSERT KE TABEL INSTOCK (HEADER)
             $instock_data = [
                 'idgudang' => $idgudang,
                 'instock_code' => $instock_code,
@@ -192,7 +435,7 @@ public function confirm_stock($type, $code)
                 'distribution_date' => $tanggal_diterima,
                 'created_by' => $this->session->userdata('username'),
                 'created_date' => date('Y-m-d H:i:s'),
-                'status_verification' => 0 // DIUBAH: Menjadi 0 (belum diverifikasi)
+                'status_verification' => 0
             ];
 
             $this->db->insert('instock', $instock_data);
@@ -285,9 +528,6 @@ public function confirm_stock($type, $code)
                 ];
 
                 $this->db->insert('detail_instock', $detail_instock_data);
-
-                // DIHAPUS: Update stok di sini karena instock belum diverifikasi
-                // Stok akan diupdate nanti saat instock diverifikasi secara terpisah
             }
 
             $this->db->trans_complete();
