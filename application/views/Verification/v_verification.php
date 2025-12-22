@@ -97,14 +97,6 @@
                 </div>
                 <form id="verifikasiForm" method="post" action="">
                     <div class="modal-body">
-                        <!-- Info tambahan untuk instock dari packing list -->
-                        <div id="packingListInfo" style="display:none;" class="alert alert-info mb-3">
-                            <i class="fas fa-info-circle"></i>
-                            <strong>Catatan:</strong>
-                            Instock ini berasal dari Packing List. Qty Order diambil dari detail_analisys_po.
-                            Qty di detail_instock adalah 0 (sesuai proses sistem).
-                        </div>
-
                         <!-- Transaction Information -->
                         <div class="card mb-3">
                             <div class="card-header bg-light">
@@ -177,10 +169,10 @@
                             </div>
                         </div>
 
-                        <!-- Detail Items -->
-                        <div class="card">
+                        <!-- Detail Items (Produk yang ada di order) -->
+                        <div class="card mb-3">
                             <div class="card-header bg-light">
-                                <h6 class="mb-0"><i class="fas fa-list"></i> Detail Barang</h6>
+                                <h6 class="mb-0"><i class="fas fa-list"></i> Detail Barang (Dalam Order)</h6>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
@@ -193,9 +185,10 @@
                                             </tr>
                                             <tr id="detailHeaderPackingList" style="display:none;">
                                                 <th width="15%">SKU</th>
-                                                <th width="45%">Nama Produk</th>
+                                                <th width="40%">Nama Produk</th>
                                                 <th width="15%" class="text-end">Qty Order</th>
-                                                <th width="25%" class="text-end">Qty Packing List</th>
+                                                <th width="20%" class="text-end">Qty Packing List</th>
+                                                <th width="10%" class="text-center">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="detailStockTable">
@@ -205,9 +198,85 @@
                                             <tr class="table-info">
                                                 <td colspan="3" class="text-end"><strong>Total Qty Receive:</strong></td>
                                                 <td class="text-end"><strong id="totalQtyReceive">0</strong></td>
+                                                <td></td>
                                             </tr>
                                         </tfoot>
                                     </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabel Penambahan Produk di Luar Order -->
+                        <div id="additionalProductsContainer" style="display:none;">
+                            <div class="card">
+                                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0"><i class="fas fa-plus-circle"></i> Tambah Produk di Luar Order</h6>
+                                    <button type="button" class="btn btn-sm btn-light" id="btnTambahProdukLuarOrder">
+                                        <i class="fas fa-plus me-1"></i> Tambah Produk
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Form Search untuk Produk -->
+                                    <div class="row mb-3" id="searchProductForm" style="display:none;">
+                                        <div class="col-md-8">
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                                <input type="text" class="form-control" id="searchProduct" placeholder="Cari produk berdasarkan SKU atau nama...">
+                                                <button class="btn btn-outline-secondary" type="button" id="btnClearSearch">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                            <small class="text-muted">Ketik untuk mencari produk</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="d-flex align-items-end">
+                                                <button type="button" class="btn btn-secondary me-2" id="btnBatalCariProduk">
+                                                    <i class="fas fa-times"></i> Batal
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Daftar Produk Hasil Pencarian -->
+                                    <div id="productSearchResults" class="mb-3" style="display:none; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem;">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th width="20%">SKU</th>
+                                                    <th width="60%">Nama Produk</th>
+                                                    <th width="20%">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="productList">
+                                                <!-- Daftar produk akan diisi di sini -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Tabel Produk yang sudah ditambahkan -->
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover mb-0">
+                                            <thead class="table-warning">
+                                                <tr>
+                                                    <th width="5%">No</th>
+                                                    <th width="25%">SKU</th>
+                                                    <th width="40%">Nama Produk</th>
+                                                    <th width="15%">Qty</th>
+                                                    <th width="15%" class="text-center">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="additionalProductsTable">
+                                                <!-- Produk yang ditambahkan akan muncul di sini -->
+                                            </tbody>
+                                            <tfoot id="additionalProductsFooter" style="display:none;">
+                                                <tr class="table-success">
+                                                    <td colspan="3" class="text-end"><strong>Total Produk Tambahan:</strong></td>
+                                                    <td class="text-end"><strong id="totalAdditionalQty">0</strong></td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -241,6 +310,10 @@
     let selectedTransactionCode = null;
     let selectedTransactionType = null;
     let productDetails = [];
+    let additionalProducts = [];
+    let allProducts = [];
+    let filteredProducts = [];
+    let additionalProductCounter = 0;
 
     $(document).ready(function() {
         new DataTable('#tableproduct', {
@@ -258,33 +331,24 @@
             selectedTransactionCode = $(this).data('id');
             selectedTransactionType = $(this).data('tipe');
 
-            // Get the row data
             let row = $(this).closest('tr');
             let distributionDate = row.find('td:eq(4)').text();
             let userInput = row.find('td:eq(5)').text();
 
-            // Reset form
-            $('#verifikasiForm')[0].reset();
-            $('#detailStockTable').empty();
-            $('#detailStockTableFooter').hide();
-            $('#verifikasiForm').attr('action', '');
-            $('#packingListInfo').hide();
+            resetForm();
 
-            // Set the modal information
             $('#modalTipeTransaksi').text(selectedTransactionType);
             $('#modalKodeTransaksi').text(selectedTransactionCode);
             $('#modalTanggalDistribusi').text(distributionDate || '-');
             $('#modalUserPenginput').text(userInput || '-');
 
-            // Show/hide input fields based on transaction type
             let normalizedType = selectedTransactionType.toLowerCase();
             if (normalizedType === 'packing list') {
                 $('#poInputGroup').show();
-                // Set default date to now
+                $('#additionalProductsContainer').show();
                 let now = new Date();
                 let formattedDate = now.toISOString().slice(0, 16);
                 $('#inputDateReceiving').val(formattedDate);
-                // Make fields required
                 $('#inputNomorPo').prop('required', true);
                 $('#inputWarehouse').prop('required', true);
                 $('#inputDateReceiving').prop('required', true);
@@ -292,183 +356,542 @@
                 $('#detailHeaderPackingList').show();
             } else {
                 $('#poInputGroup').hide();
-                // Remove required attribute for non-packing list
+                $('#additionalProductsContainer').hide();
                 $('#inputNomorPo').prop('required', false);
                 $('#inputWarehouse').prop('required', false);
                 $('#inputDateReceiving').prop('required', false);
-                $('#detailHeaderInstockOutstock').show();
+                $('#detailHeaderInstockOutstock').hide();
                 $('#detailHeaderPackingList').hide();
             }
 
-            // Normalisasi tipe untuk AJAX call
             let ajaxType = selectedTransactionType.toLowerCase();
             if (ajaxType === 'packing list') {
                 ajaxType = 'packing_list';
             }
 
-            console.log('Fetching details for:', ajaxType, 'Code:', selectedTransactionCode);
-
-            // Show loading
-            let colspan = normalizedType === 'packing list' ? 4 : 3;
+            let colspan = normalizedType === 'packing list' ? 5 : 3;
             $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>');
 
-            // Fetch transaction details
             $.ajax({
                 url: '<?= base_url('verification/get_details/') ?>' + ajaxType + '/' + selectedTransactionCode,
                 type: 'GET',
                 dataType: 'json',
                 success: function(response) {
-                    console.log('AJAX Response:', response);
-
                     $('#detailStockTable').empty();
                     productDetails = [];
+                    additionalProducts = [];
+                    additionalProductCounter = 0;
+                    $('#additionalProductsTable').empty();
+                    $('#additionalProductsFooter').hide();
 
-                    if (response.success && response.details && response.details.length > 0) {
-                        let isFromPackingList = response.is_from_packing_list || false;
+                    if (response.success) {
+                        if (response.products) {
+                            allProducts = response.products;
+                            filteredProducts = [...allProducts];
+                        }
+
                         let normalizedType = selectedTransactionType.toLowerCase();
 
-                        if (normalizedType === 'packing list' || isFromPackingList) {
-                            // Untuk Packing List atau Instock dari Packing List
+                        if (normalizedType === 'packing list') {
                             let totalQtyOrder = 0;
-                            let totalQtyReceive = 0;
+                            let totalQtyPackingList = 0;
+                            let displayedProductsCount = 0;
 
                             $('#detailHeaderInstockOutstock').hide();
                             $('#detailHeaderPackingList').show();
 
-                            // Tampilkan keterangan jika ini instock dari packing list
-                            if (normalizedType === 'instock' && isFromPackingList) {
-                                $('#packingListInfo').show();
-                                $('#detailStockTable').append(
-                                    '<tr><td colspan="4" class="text-center bg-info text-white"><i class="fas fa-info-circle"></i> Instock ini berasal dari Packing List (Qty di detail_instock = 0)</td></tr>'
-                                );
+                            if (response.details && response.details.length > 0) {
+                                response.details.forEach(function(detail, index) {
+                                    let qtyOrder = detail.qty_order || 0;
+                                    let qtyPackingList = detail.qty_packing_list || 0;
+
+                                    // FILTER: Hanya tampilkan produk dengan qty_order > 0
+                                    if (qtyOrder <= 0) {
+                                        return; // Skip produk ini
+                                    }
+
+                                    let isAdditional = detail.is_additional || false;
+
+                                    productDetails[index] = {
+                                        sku: detail.sku,
+                                        idproduct: detail.idproduct,
+                                        qty_order: qtyOrder,
+                                        qty_packing_list: qtyPackingList,
+                                        price: detail.price || 0,
+                                        is_existing: true,
+                                        is_additional: isAdditional
+                                    };
+
+                                    displayedProductsCount++;
+
+                                    var row = '<tr data-product-id="' + detail.idproduct + '" data-is-existing="true">' +
+                                        '<td>' + (detail.sku || 'N/A') + '</td>' +
+                                        '<td>' + (detail.nama_produk || '') + '</td>' +
+                                        '<td class="text-end">' + qtyOrder.toLocaleString() + '</td>' +
+                                        '<td>' +
+                                        '<input type="number" class="form-control form-control-sm qty-packing-list-input" ' +
+                                        'name="qty_packing_list[' + detail.idproduct + ']" ' +
+                                        'value="' + qtyPackingList + '" ' +
+                                        'min="0" ' +
+                                        'data-index="' + index + '" ' +
+                                        'data-sku="' + (detail.sku || '') + '" ' +
+                                        'data-idproduct="' + detail.idproduct + '" ' +
+                                        'data-is-existing="true" ' +
+                                        'data-is-additional="' + (isAdditional ? 'true' : 'false') + '" ' +
+                                        'required>' +
+                                        '</td>' +
+                                        '<td class="text-center">' +
+                                        '<button type="button" class="btn btn-sm btn-danger btn-hapus-produk" data-index="' + index + '" data-is-existing="true" title="Hapus">' +
+                                        '<i class="fas fa-trash"></i>' +
+                                        '</button>' +
+                                        '</td>' +
+                                        '</tr>';
+                                    $('#detailStockTable').append(row);
+
+                                    totalQtyOrder += qtyOrder;
+                                    totalQtyPackingList += qtyPackingList;
+                                });
                             }
 
-                            response.details.forEach(function(detail, index) {
-                                let qtyOrder = detail.qty_order || 0;
-                                let qtyReceive = detail.qty_receive || qtyOrder;
+                            // Tampilkan pesan jika tidak ada produk dengan qty_order > 0
+                            if (displayedProductsCount === 0) {
+                                $('#detailStockTable').html('<tr><td colspan="5" class="text-center text-warning">Tidak ada produk dengan Qty Order lebih dari 0</td></tr>');
+                                $('#detailStockTableFooter').hide();
+                            } else {
+                                $('#detailStockTableFooter').show();
+                                $('#detailStockTable').append(
+                                    '<tr class="table-info">' +
+                                    '<td colspan="2" class="text-end"><strong>Total Qty Order:</strong></td>' +
+                                    '<td class="text-end"><strong>' + totalQtyOrder.toLocaleString() + '</strong></td>' +
+                                    '<td class="text-end"><strong id="totalQtyPackingList">' + totalQtyPackingList.toLocaleString() + '</strong></td>' +
+                                    '<td></td>' +
+                                    '</tr>'
+                                );
+                            }
+                            $('#totalQtyReceive').text(totalQtyPackingList.toLocaleString());
 
-                                // Untuk instock dari packing list, jumlah di detail_instock adalah 0
-                                let qtyInstock = detail.jumlah || 0;
+                        } else if (normalizedType === 'instock') {
+                            let isInstockFromPackingList = response.is_from_packing_list || false;
 
-                                // Simpan ke productDetails
-                                productDetails[index] = {
-                                    sku: detail.sku,
-                                    idproduct: detail.idproduct,
-                                    qty_order: qtyOrder,
-                                    qty_receive: qtyReceive,
-                                    qty_instock: qtyInstock,
-                                    price: detail.price || 0
-                                };
+                            if (isInstockFromPackingList) {
+                                $('#detailHeaderInstockOutstock').hide();
+                                $('#detailHeaderPackingList').hide();
 
-                                var row = '<tr>' +
-                                    '<td>' + (detail.sku || 'N/A') + '</td>' +
-                                    '<td>' + (detail.nama_produk || '') + '</td>' +
-                                    '<td class="text-end">' + qtyOrder.toLocaleString() + '</td>' +
-                                    '<td>' +
-                                    '<input type="number" class="form-control form-control-sm qty-receive-input" ' +
-                                    'name="qty_receive[' + detail.idproduct + ']" ' +
-                                    'value="' + qtyReceive + '" ' +
-                                    'min="0" max="' + qtyOrder + '" ' +
-                                    'data-index="' + index + '" ' +
-                                    'data-sku="' + (detail.sku || '') + '" ' +
-                                    'required>' +
-                                    '</td>' +
+                                let customHeader = '<tr id="detailHeaderInstockPackingList">' +
+                                    '<th width="20%">SKU</th>' +
+                                    '<th width="40%">Nama Produk</th>' +
+                                    '<th width="20%" class="text-end">Qty Packing List</th>' +
+                                    '<th width="20%" class="text-end">Qty Instock</th>' +
                                     '</tr>';
-                                $('#detailStockTable').append(row);
 
-                                totalQtyOrder += qtyOrder;
-                                totalQtyReceive += qtyReceive;
-                            });
+                                $('thead tr').not('.table-light').remove();
+                                $('thead').append(customHeader);
 
-                            // Tampilkan total
-                            $('#detailStockTableFooter').show();
-                            $('#detailStockTable').append(
-                                '<tr class="table-info">' +
-                                '<td colspan="2" class="text-end"><strong>Total Qty Order:</strong></td>' +
-                                '<td class="text-end"><strong>' + totalQtyOrder.toLocaleString() + '</strong></td>' +
-                                '<td></td>' +
-                                '</tr>'
-                            );
-                            $('#totalQtyReceive').text(totalQtyReceive.toLocaleString());
+                                let totalQtyPackingList = 0;
+                                let totalQtyInstock = 0;
+                                let displayedProductsCount = 0;
 
-                        } else {
-                            // Untuk Instock/Outstock biasa - tampilkan jumlah saja
+                                if (response.details && response.details.length > 0) {
+                                    response.details.forEach(function(detail) {
+                                        let qtyPackingList = detail.qty_packing_list || 0;
+                                        let qtyInstock = detail.qty_instock || 0;
+                                        let isAdditional = detail.is_additional || false;
+                                        let qtyOrder = detail.qty_order || 0;
+
+                                        // FILTER: Hanya tampilkan produk dengan qty_order > 0
+                                        if (qtyOrder <= 0) {
+                                            return; // Skip produk ini
+                                        }
+
+                                        displayedProductsCount++;
+
+                                        var row = '<tr>' +
+                                            '<td>' + (detail.sku || 'N/A') + '</td>' +
+                                            '<td>' + (detail.nama_produk || '') + '</td>' +
+                                            '<td class="text-end">' + qtyPackingList.toLocaleString() + '</td>' +
+                                            '<td class="text-end">' + qtyInstock.toLocaleString() + '</td>' +
+                                            '</tr>';
+                                        $('#detailStockTable').append(row);
+
+                                        totalQtyPackingList += qtyPackingList;
+                                        totalQtyInstock += qtyInstock;
+                                    });
+                                }
+
+                                // Tampilkan pesan jika tidak ada produk
+                                if (displayedProductsCount === 0) {
+                                    $('#detailStockTable').html('<tr><td colspan="4" class="text-center text-warning">Tidak ada produk dengan Qty Order lebih dari 0</td></tr>');
+                                } else if (totalQtyPackingList > 0 || totalQtyInstock > 0) {
+                                    $('#detailStockTable').append(
+                                        '<tr class="table-info">' +
+                                        '<td colspan="2" class="text-end"><strong>Total:</strong></td>' +
+                                        '<td class="text-end"><strong>' + totalQtyPackingList.toLocaleString() + '</strong></td>' +
+                                        '<td class="text-end"><strong>' + totalQtyInstock.toLocaleString() + '</strong></td>' +
+                                        '</tr>'
+                                    );
+                                }
+                            } else {
+                                $('#detailHeaderInstockOutstock').show();
+                                $('#detailHeaderPackingList').hide();
+
+                                $('#detailHeaderInstockOutstock').html(
+                                    '<th width="20%">SKU</th>' +
+                                    '<th width="60%">Nama Produk</th>' +
+                                    '<th width="20%" class="text-end">Qty Instock</th>'
+                                );
+
+                                let totalQtyInstock = 0;
+                                let displayedProductsCount = 0;
+
+                                if (response.details && response.details.length > 0) {
+                                    response.details.forEach(function(detail) {
+                                        let qtyInstock = parseInt(detail.qty_instock || 0);
+
+                                        // Skip jika qty instock 0 (opsional)
+                                        if (qtyInstock <= 0) {
+                                            return;
+                                        }
+
+                                        displayedProductsCount++;
+
+                                        var row = '<tr>' +
+                                            '<td>' + (detail.sku || 'N/A') + '</td>' +
+                                            '<td>' + (detail.nama_produk || '') + '</td>' +
+                                            '<td class="text-end">' + qtyInstock + '</td>' +
+                                            '</tr>';
+                                        $('#detailStockTable').append(row);
+                                        totalQtyInstock += qtyInstock;
+                                    });
+                                }
+
+                                // Tampilkan pesan jika tidak ada produk
+                                if (displayedProductsCount === 0) {
+                                    $('#detailStockTable').html('<tr><td colspan="3" class="text-center text-warning">Tidak ada produk dengan Qty Instock lebih dari 0</td></tr>');
+                                } else if (totalQtyInstock > 0) {
+                                    var summaryRow = '<tr class="table-info">' +
+                                        '<td colspan="2"><strong>Total Qty Instock:</strong></td>' +
+                                        '<td class="text-end"><strong>' + totalQtyInstock.toLocaleString() + '</strong></td>' +
+                                        '</tr>';
+                                    $('#detailStockTable').append(summaryRow);
+                                }
+                            }
+
+                        } else if (normalizedType === 'outstock') {
                             $('#detailHeaderInstockOutstock').show();
                             $('#detailHeaderPackingList').hide();
 
-                            let totalQty = 0;
-                            response.details.forEach(function(detail) {
-                                var row = '<tr>' +
-                                    '<td>' + (detail.sku || 'N/A') + '</td>' +
-                                    '<td>' + (detail.nama_produk || '') + '</td>' +
-                                    '<td class="text-end">' + (detail.jumlah || '0') + '</td>' +
-                                    '</tr>';
-                                $('#detailStockTable').append(row);
-                                totalQty += parseInt(detail.jumlah || 0);
-                            });
+                            $('#detailHeaderInstockOutstock').html(
+                                '<th width="20%">SKU</th>' +
+                                '<th width="60%">Nama Produk</th>' +
+                                '<th width="20%" class="text-end">Qty Outstock</th>'
+                            );
 
-                            // Untuk Instock/Outstock, tambahkan summary
-                            if (totalQty > 0) {
+                            let totalQtyOutstock = 0;
+                            let displayedProductsCount = 0;
+
+                            if (response.details && response.details.length > 0) {
+                                response.details.forEach(function(detail) {
+                                    let qtyOutstock = parseInt(detail.qty_outstock || 0);
+
+                                    // Skip jika qty outstock 0 (opsional)
+                                    if (qtyOutstock <= 0) {
+                                        return;
+                                    }
+
+                                    displayedProductsCount++;
+
+                                    var row = '<tr>' +
+                                        '<td>' + (detail.sku || 'N/A') + '</td>' +
+                                        '<td>' + (detail.nama_produk || '') + '</td>' +
+                                        '<td class="text-end">' + qtyOutstock + '</td>' +
+                                        '</tr>';
+                                    $('#detailStockTable').append(row);
+                                    totalQtyOutstock += qtyOutstock;
+                                });
+                            }
+
+                            // Tampilkan pesan jika tidak ada produk
+                            if (displayedProductsCount === 0) {
+                                $('#detailStockTable').html('<tr><td colspan="3" class="text-center text-warning">Tidak ada produk dengan Qty Outstock lebih dari 0</td></tr>');
+                            } else if (totalQtyOutstock > 0) {
                                 var summaryRow = '<tr class="table-info">' +
-                                    '<td colspan="2"><strong>Total:</strong></td>' +
-                                    '<td class="text-end"><strong>' + totalQty.toLocaleString() + '</strong></td>' +
+                                    '<td colspan="2"><strong>Total Qty Outstock:</strong></td>' +
+                                    '<td class="text-end"><strong>' + totalQtyOutstock.toLocaleString() + '</strong></td>' +
                                     '</tr>';
                                 $('#detailStockTable').append(summaryRow);
                             }
                         }
                     } else {
                         let errorMsg = response.error || 'Tidak ada data detail yang ditemukan';
-                        let colspan = (response.is_from_packing_list || selectedTransactionType.toLowerCase() === 'packing list') ? 4 : 3;
+                        let colspan = normalizedType === 'packing list' ? 5 : 3;
                         $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center text-warning">' + errorMsg + '</td></tr>');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('AJAX Error:', error, 'Status:', status, 'Response:', xhr.responseText);
-                    let colspan = normalizedType === 'packing list' ? 4 : 3;
+                    let colspan = normalizedType === 'packing list' ? 5 : 3;
                     $('#detailStockTable').html('<tr><td colspan="' + colspan + '" class="text-center text-danger">Gagal memuat data detail transaksi.</td></tr>');
                 }
             });
         });
 
-        // Event listener untuk perubahan qty_receive
-        $(document).on('change input', '.qty-receive-input', function() {
-            let index = $(this).data('index');
-            let newQty = parseInt($(this).val()) || 0;
-            let maxQty = parseInt($(this).attr('max')) || 0;
-            let sku = $(this).data('sku');
+        function resetForm() {
+            $('#verifikasiForm')[0].reset();
+            $('#detailStockTable').empty();
+            $('#detailStockTableFooter').hide();
+            $('#searchProductForm').hide();
+            $('#productSearchResults').hide();
+            $('#productList').empty();
+            $('#searchProduct').val('');
+            $('#additionalProductsTable').empty();
+            $('#additionalProductsFooter').hide();
+            $('#verifikasiForm').attr('action', '');
+            productDetails = [];
+            additionalProducts = [];
+            allProducts = [];
+            filteredProducts = [];
+            additionalProductCounter = 0;
+        }
 
-            // Validasi max quantity
-            if (newQty > maxQty) {
-                alert('Quantity receive untuk SKU ' + sku + ' tidak boleh lebih dari quantity order (' + maxQty + ')');
-                $(this).val(maxQty);
-                newQty = maxQty;
-            }
-
-            if (newQty < 0) {
-                alert('Quantity receive untuk SKU ' + sku + ' tidak boleh negatif');
-                $(this).val(0);
-                newQty = 0;
-            }
-
-            // Update product details
-            if (productDetails[index]) {
-                productDetails[index].qty_receive = newQty;
-            }
-
-            // Update total
-            updateTotalQtyReceive();
+        $('#btnTambahProdukLuarOrder').on('click', function() {
+            $('#searchProductForm').show();
+            $('#productSearchResults').show();
+            populateProductList();
+            $(this).prop('disabled', true);
         });
 
-        // Fungsi untuk update total qty receive
-        function updateTotalQtyReceive() {
+        function populateProductList() {
+            $('#productList').empty();
+
+            if (filteredProducts.length === 0) {
+                $('#productList').html('<tr><td colspan="3" class="text-center text-muted py-3">Tidak ada produk tersedia</td></tr>');
+                return;
+            }
+
+            let existingProductIds = [];
+            $('tr[data-product-id]').each(function() {
+                existingProductIds.push($(this).data('product-id').toString());
+            });
+            additionalProducts.forEach(function(product) {
+                existingProductIds.push(product.idproduct.toString());
+            });
+
+            filteredProducts.forEach(function(product) {
+                if (existingProductIds.includes(product.id.toString())) {
+                    return;
+                }
+
+                let row = '<tr class="product-item" data-product-id="' + product.id + '" data-sku="' + product.sku + '" data-nama="' + product.nama + '">' +
+                    '<td><strong>' + product.sku + '</strong></td>' +
+                    '<td>' + product.nama + '</td>' +
+                    '<td class="text-center">' +
+                    '<button type="button" class="btn btn-sm btn-primary btn-pilih-produk-luar-order" title="Tambahkan produk ini">' +
+                    '<i class="fas fa-plus me-1"></i> Tambah' +
+                    '</button>' +
+                    '</td>' +
+                    '</tr>';
+                $('#productList').append(row);
+            });
+        }
+
+        $('#searchProduct').on('input', function() {
+            let searchTerm = $(this).val().toLowerCase();
+
+            if (!searchTerm) {
+                filteredProducts = [...allProducts];
+            } else {
+                filteredProducts = allProducts.filter(function(product) {
+                    return product.sku.toLowerCase().includes(searchTerm) ||
+                        product.nama.toLowerCase().includes(searchTerm) ||
+                        product.text.toLowerCase().includes(searchTerm);
+                });
+            }
+
+            populateProductList();
+        });
+
+        $('#btnClearSearch').on('click', function() {
+            $('#searchProduct').val('');
+            filteredProducts = [...allProducts];
+            populateProductList();
+        });
+
+        $('#btnBatalCariProduk').on('click', function() {
+            $('#searchProductForm').hide();
+            $('#productSearchResults').hide();
+            $('#searchProduct').val('');
+            $('#btnTambahProdukLuarOrder').prop('disabled', false);
+            filteredProducts = [...allProducts];
+        });
+
+        $(document).on('click', '.btn-pilih-produk-luar-order', function() {
+            let row = $(this).closest('tr');
+            let productId = row.data('product-id');
+            let sku = row.data('sku');
+            let nama = row.data('nama');
+
+            let isDuplicate = additionalProducts.some(function(product) {
+                return product.idproduct.toString() === productId.toString();
+            });
+
+            if (isDuplicate) {
+                alert('Produk ini sudah ditambahkan ke dalam daftar produk tambahan.');
+                return;
+            }
+
+            additionalProductCounter++;
+            let newIndex = additionalProducts.length;
+
+            additionalProducts.push({
+                id: additionalProductCounter,
+                idproduct: productId,
+                sku: sku,
+                nama_produk: nama,
+                qty_packing_list: 1
+            });
+
+            let newRow = '<tr data-product-id="' + productId + '" data-additional-id="' + additionalProductCounter + '">' +
+                '<td>' + additionalProductCounter + '</td>' +
+                '<td>' + sku + '</td>' +
+                '<td>' + nama + '</td>' +
+                '<td>' +
+                '<input type="number" class="form-control form-control-sm additional-qty-packing-list-input" ' +
+                'name="additional_products[' + newIndex + '][qty_packing_list]" ' +
+                'value="1" ' +
+                'min="1" ' +
+                'data-index="' + newIndex + '" ' +
+                'data-sku="' + sku + '" ' +
+                'data-idproduct="' + productId + '" ' +
+                'required>' +
+                '<input type="hidden" name="additional_products[' + newIndex + '][idproduct]" value="' + productId + '">' +
+                '</td>' +
+                '<td class="text-center">' +
+                '<button type="button" class="btn btn-sm btn-danger btn-hapus-produk-tambahan" data-index="' + newIndex + '" data-additional-id="' + additionalProductCounter + '" title="Hapus">' +
+                '<i class="fas fa-trash"></i>' +
+                '</button>' +
+                '</td>' +
+                '</tr>';
+
+            $('#additionalProductsTable').append(newRow);
+
+            if (additionalProducts.length > 0) {
+                $('#additionalProductsFooter').show();
+            }
+
+            updateTotalAdditionalQty();
+            row.remove();
+            populateProductList();
+        });
+
+        $(document).on('click', '.btn-hapus-produk-tambahan', function() {
+            let index = $(this).data('index');
+            let additionalId = $(this).data('additional-id');
+
+            if (!confirm('Apakah Anda yakin ingin menghapus produk tambahan ini?')) {
+                return;
+            }
+
+            additionalProducts = additionalProducts.filter(function(product) {
+                return product.id !== additionalId;
+            });
+
+            $(this).closest('tr').remove();
+
+            $('#additionalProductsTable tr').each(function(i) {
+                let row = $(this);
+                if (row.find('.additional-qty-packing-list-input').length > 0) {
+                    let newIndex = i - 1;
+                    row.find('.additional-qty-packing-list-input').attr('name', 'additional_products[' + newIndex + '][qty_packing_list]')
+                        .data('index', newIndex);
+                    row.find('input[type="hidden"]').attr('name', 'additional_products[' + newIndex + '][idproduct]');
+                    row.find('.btn-hapus-produk-tambahan').data('index', newIndex);
+                    row.find('td:first').text(newIndex + 1);
+                }
+            });
+
+            if (additionalProducts.length === 0) {
+                $('#additionalProductsFooter').hide();
+            }
+
+            updateTotalAdditionalQty();
+            populateProductList();
+        });
+
+        $(document).on('click', '.btn-hapus-produk', function() {
+            let index = $(this).data('index');
+            let isExisting = $(this).data('is-existing') || false;
+
+            if (!confirm('Apakah Anda yakin ingin menghapus produk ini dari daftar?')) {
+                return;
+            }
+
+            if (isExisting && productDetails[index]) {
+                // Set qty_packing_list menjadi 0 untuk produk yang ada di database
+                productDetails[index].qty_packing_list = 0;
+
+                // Update input field menjadi 0
+                $('.qty-packing-list-input[data-index="' + index + '"]').val(0);
+
+                // Update total
+                updateTotalQtyPackingList();
+
+                alert('Produk telah dihapus dari daftar verifikasi (Qty Packing List diubah menjadi 0).');
+            }
+        });
+
+        $(document).on('change input', '.additional-qty-packing-list-input', function() {
+            let index = $(this).data('index');
+            let newQtyPackingList = parseInt($(this).val()) || 1;
+            let sku = $(this).data('sku');
+
+            if (newQtyPackingList < 1) {
+                alert('QTY Packing List untuk produk tambahan minimal 1.');
+                $(this).val(1);
+                newQtyPackingList = 1;
+            }
+
+            if (additionalProducts[index]) {
+                additionalProducts[index].qty_packing_list = newQtyPackingList;
+            }
+
+            updateTotalAdditionalQty();
+        });
+
+        $(document).on('change input', '.qty-packing-list-input', function() {
+            let index = $(this).data('index');
+            let newQtyPackingList = parseInt($(this).val()) || 0;
+            let sku = $(this).data('sku');
+            let isExisting = $(this).data('is-existing') || false;
+
+            if (newQtyPackingList < 0) {
+                alert('QTY Packing List untuk SKU ' + sku + ' tidak boleh negatif');
+                $(this).val(0);
+                newQtyPackingList = 0;
+            }
+
+            if (isExisting && productDetails[index]) {
+                productDetails[index].qty_packing_list = newQtyPackingList;
+            }
+
+            updateTotalQtyPackingList();
+        });
+
+        function updateTotalQtyPackingList() {
             let total = 0;
             productDetails.forEach(function(detail) {
-                total += detail.qty_receive || 0;
+                total += detail.qty_packing_list || 0;
             });
+            $('#totalQtyPackingList').text(total.toLocaleString());
             $('#totalQtyReceive').text(total.toLocaleString());
         }
 
-        // Handle form submission
+        function updateTotalAdditionalQty() {
+            let total = 0;
+            additionalProducts.forEach(function(product) {
+                total += product.qty_packing_list || 0;
+            });
+            $('#totalAdditionalQty').text(total.toLocaleString());
+        }
+
         $('#verifikasiForm').on('submit', function(e) {
             e.preventDefault();
 
@@ -479,9 +902,7 @@
 
             let normalizedType = selectedTransactionType.toLowerCase();
 
-            // Validasi khusus untuk Packing List
             if (normalizedType === 'packing list') {
-                // Validasi input utama
                 if (!$('#inputNomorPo').val().trim()) {
                     alert('Harap masukkan Nomor Accurate.');
                     $('#inputNomorPo').focus();
@@ -497,24 +918,60 @@
                     $('#inputDateReceiving').focus();
                     return false;
                 }
+
+                // Validasi: minimal ada 1 produk dengan qty_packing_list > 0
+                let hasValidProduct = false;
+                let totalQtyPackingList = 0;
+
+                // Cek produk yang ada di order
+                $('.qty-packing-list-input').each(function() {
+                    let qtyPackingList = parseInt($(this).val()) || 0;
+                    totalQtyPackingList += qtyPackingList;
+                    if (qtyPackingList > 0) {
+                        hasValidProduct = true;
+                    }
+                });
+
+                // Cek produk tambahan
+                $('.additional-qty-packing-list-input').each(function() {
+                    let qtyPackingList = parseInt($(this).val()) || 0;
+                    totalQtyPackingList += qtyPackingList;
+                    if (qtyPackingList > 0) {
+                        hasValidProduct = true;
+                    }
+                });
+
+                if (!hasValidProduct) {
+                    alert('Harap setidaknya ada 1 produk dengan Qty Packing List lebih dari 0.');
+                    return false;
+                }
+
+                if (totalQtyPackingList <= 0) {
+                    alert('Total Qty Packing List harus lebih dari 0.');
+                    return false;
+                }
             }
 
-            // Validasi qty_receive tidak boleh melebihi qty_order untuk packing list dan instock dari packing list
             let hasInvalidQty = false;
-            $('.qty-receive-input').each(function() {
-                let qtyReceive = parseInt($(this).val()) || 0;
-                let maxQty = parseInt($(this).attr('max')) || 0;
+
+            $('.qty-packing-list-input').each(function() {
+                let qtyPackingList = parseInt($(this).val()) || 0;
                 let sku = $(this).data('sku');
 
-                if (qtyReceive > maxQty) {
-                    alert('Quantity receive untuk SKU ' + sku + ' tidak boleh lebih dari ' + maxQty + '.');
+                if (qtyPackingList < 0) {
+                    alert('QTY Packing List untuk SKU ' + sku + ' tidak boleh negatif.');
                     $(this).focus();
                     hasInvalidQty = true;
                     return false;
                 }
+            });
 
-                if (qtyReceive < 0) {
-                    alert('Quantity receive untuk SKU ' + sku + ' tidak boleh negatif.');
+            $('.additional-qty-packing-list-input').each(function() {
+                let qtyPackingList = parseInt($(this).val()) || 1;
+                let sku = $(this).data('sku');
+
+                if (qtyPackingList < 1) {
+                    alert('QTY Packing List untuk produk tambahan ' + sku + ' minimal 1.');
                     $(this).focus();
                     hasInvalidQty = true;
                     return false;
@@ -523,17 +980,14 @@
 
             if (hasInvalidQty) return false;
 
-            // Set form action
             let actionUrl = "<?= base_url('verification/confirm_stock/') ?>" +
                 encodeURIComponent(selectedTransactionType) + "/" +
                 encodeURIComponent(selectedTransactionCode);
             $(this).attr('action', actionUrl);
 
-            // Submit form
             this.submit();
         });
 
-        // Handle reject button
         $('#rejectVerifikasi').on('click', function() {
             if (!selectedTransactionCode || !selectedTransactionType) {
                 alert('Data transaksi tidak valid.');
@@ -544,19 +998,17 @@
                 return;
             }
 
-            // Redirect untuk reject
             let rejectUrl = "<?= base_url('verification/reject/') ?>" +
                 encodeURIComponent(selectedTransactionType) + "/" +
                 encodeURIComponent(selectedTransactionCode);
             window.location.href = rejectUrl;
         });
 
-        // Filter functionality untuk DataTable
         $.fn.dataTable.ext.search.push(
             function(settings, data, dataIndex) {
                 let start = $('#filterInputStart').val();
                 let end = $('#filterInputEnd').val();
-                let tanggalInput = data[3].split(' ')[0]; // Kolom ke-4: "Tanggal Input"
+                let tanggalInput = data[3].split(' ')[0];
 
                 if (!start && !end) return true;
 
