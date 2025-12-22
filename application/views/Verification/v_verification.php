@@ -299,7 +299,6 @@
 </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
 <script src="https://cdn.datatables.net/rowreorder/1.5.0/js/dataTables.rowReorder.js"></script>
@@ -496,18 +495,25 @@
                                         let qtyPackingList = detail.qty_packing_list || 0;
                                         let qtyInstock = detail.qty_instock || 0;
                                         let isAdditional = detail.is_additional || false;
-                                        let qtyOrder = detail.qty_order || 0;
 
-                                        // FILTER: Hanya tampilkan produk dengan qty_order > 0
-                                        if (qtyOrder <= 0) {
-                                            return; // Skip produk ini
+                                        // PERUBAHAN PENTING: HAPUS FILTER qty_order > 0
+                                        // Tampilkan semua produk yang memiliki qty_packing_list > 0
+                                        // Backend sudah memfilter dengan qty_packing_list > 0
+                                        if (qtyPackingList <= 0) {
+                                            return; // Skip jika qty_packing_list = 0
                                         }
 
                                         displayedProductsCount++;
 
+                                        // Tambahkan label untuk produk tambahan
+                                        let productName = detail.nama_produk || '';
+                                        if (isAdditional) {
+                                            productName += ' <span class="badge bg-success ms-2">Produk Tambahan</span>';
+                                        }
+
                                         var row = '<tr>' +
                                             '<td>' + (detail.sku || 'N/A') + '</td>' +
-                                            '<td>' + (detail.nama_produk || '') + '</td>' +
+                                            '<td>' + productName + '</td>' +
                                             '<td class="text-end">' + qtyPackingList.toLocaleString() + '</td>' +
                                             '<td class="text-end">' + qtyInstock.toLocaleString() + '</td>' +
                                             '</tr>';
@@ -520,8 +526,8 @@
 
                                 // Tampilkan pesan jika tidak ada produk
                                 if (displayedProductsCount === 0) {
-                                    $('#detailStockTable').html('<tr><td colspan="4" class="text-center text-warning">Tidak ada produk dengan Qty Order lebih dari 0</td></tr>');
-                                } else if (totalQtyPackingList > 0 || totalQtyInstock > 0) {
+                                    $('#detailStockTable').html('<tr><td colspan="4" class="text-center text-warning">Tidak ada produk dengan Qty Packing List lebih dari 0</td></tr>');
+                                } else {
                                     $('#detailStockTable').append(
                                         '<tr class="table-info">' +
                                         '<td colspan="2" class="text-end"><strong>Total:</strong></td>' +
@@ -547,7 +553,7 @@
                                     response.details.forEach(function(detail) {
                                         let qtyInstock = parseInt(detail.qty_instock || 0);
 
-                                        // Skip jika qty instock 0 (opsional)
+                                        // Skip jika qty instock 0
                                         if (qtyInstock <= 0) {
                                             return;
                                         }
@@ -593,7 +599,7 @@
                                 response.details.forEach(function(detail) {
                                     let qtyOutstock = parseInt(detail.qty_outstock || 0);
 
-                                    // Skip jika qty outstock 0 (opsional)
+                                    // Skip jika qty outstock 0
                                     if (qtyOutstock <= 0) {
                                         return;
                                     }
