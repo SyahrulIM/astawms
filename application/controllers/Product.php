@@ -29,23 +29,21 @@ class Product extends CI_Controller
             $skuToIdProduct[$p->sku] = $p->idproduct;
         }
 
-        // Get stock movement summary (INCLUDE PACKING LIST)
+        // Get stock movement summary (HANYA INSTOCK DAN OUTSTOCK)
         $query = "
     SELECT
         sku,
         idgudang,
         SUM(instock) AS total_in,
         SUM(outstock) AS total_out,
-        SUM(packing_list) AS total_packing_list,
-        SUM(instock) + SUM(packing_list) - SUM(outstock) AS total_stok
+        SUM(instock) - SUM(outstock) AS total_stok
     FROM (
-        -- Instock data
+        -- Instock data (termasuk yang dari packing list)
         SELECT
             detail_instock.sku,
             instock.idgudang,
             detail_instock.jumlah AS instock,
-            0 AS outstock,
-            0 AS packing_list
+            0 AS outstock
         FROM detail_instock
         LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
         WHERE instock.status_verification = 1
@@ -57,26 +55,10 @@ class Product extends CI_Controller
             detail_outstock.sku,
             outstock.idgudang,
             0 AS instock,
-            detail_outstock.jumlah AS outstock,
-            0 AS packing_list
+            detail_outstock.jumlah AS outstock
         FROM detail_outstock
         LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
         WHERE outstock.status_verification = 1
-
-        UNION ALL
-
-        -- Packing List data
-        SELECT
-            p.sku,
-            ap.idgudang,
-            0 AS instock,
-            0 AS outstock,
-            IFNULL(dap.qty_receive, dap.qty_order) AS packing_list
-        FROM detail_analisys_po dap
-        LEFT JOIN product p ON p.idproduct = dap.idproduct
-        LEFT JOIN analisys_po ap ON ap.idanalisys_po = dap.idanalisys_po
-        WHERE ap.status_verification = 1
-        AND (dap.qty_receive > 0 OR dap.qty_order > 0)
     ) AS stock_movements
     GROUP BY sku, idgudang
     ";
@@ -85,7 +67,7 @@ class Product extends CI_Controller
 
         // Create stokMap using idproduct instead of sku
         $stokMap = [];
-        $totalStokAllGudang = []; // New array to store total stock across all warehouses
+        $totalStokAllGudang = [];
         foreach ($stock_data as $row) {
             if (isset($skuToIdProduct[$row->sku])) {
                 $idproduct = $skuToIdProduct[$row->sku];
@@ -104,7 +86,7 @@ class Product extends CI_Controller
             'product' => $products,
             'gudang' => $gudangs,
             'stokMap' => $stokMap,
-            'totalStokAllGudang' => $totalStokAllGudang // Pass to the view
+            'totalStokAllGudang' => $totalStokAllGudang
         ];
 
         $this->load->view('theme/v_head', $data);
@@ -294,13 +276,11 @@ class Product extends CI_Controller
             show_error('Produk tidak ditemukan.');
         }
 
-        $idproduct = $product->idproduct;
-
         // Query terpisah untuk menghindari masalah collation
         $instock_data = $this->db
             ->select("di.instock_code AS stock_code, i.datetime, i.distribution_date, i.kategori, 
-                 'INSTOCK' AS tipe, di.jumlah AS instock, 0 AS outstock, 0 AS packing_list, 
-                 i.user, di.keterangan, i.distribution_date AS order_date")
+             'INSTOCK' AS tipe, di.jumlah AS instock, 0 AS outstock, 
+             i.user, di.keterangan")
             ->from('detail_instock di')
             ->join('instock i', 'i.instock_code = di.instock_code')
             ->where('di.sku', $sku)
@@ -313,8 +293,8 @@ class Product extends CI_Controller
 
         $outstock_data = $this->db
             ->select("do.outstock_code AS stock_code, o.datetime, o.distribution_date, o.kategori, 
-                 'OUTSTOCK' AS tipe, 0 AS instock, do.jumlah AS outstock, 0 AS packing_list, 
-                 o.user, do.keterangan, o.distribution_date AS order_date")
+             'OUTSTOCK' AS tipe, 0 AS instock, do.jumlah AS outstock, 
+             o.user, do.keterangan")
             ->from('detail_outstock do')
             ->join('outstock o', 'o.outstock_code = do.outstock_code')
             ->where('do.sku', $sku)
@@ -325,28 +305,8 @@ class Product extends CI_Controller
         }
         $outstock_data = $outstock_data->get()->result();
 
-        $packing_list_data = $this->db
-            ->select("ap.number_po AS stock_code, 
-                 ap.created_date AS datetime, 
-                 ap.distribution_date, 'PACKING LIST' AS kategori, 'PACKING LIST' AS tipe, 
-                 0 AS instock, 0 AS outstock, 
-                 COALESCE(dap.qty_receive, dap.qty_order, 0) AS packing_list, 
-                 ap.user, 
-                 CONCAT('Qty Order: ', COALESCE(dap.qty_order, 0), ', Qty Receive: ', COALESCE(dap.qty_receive, 0)) AS keterangan,
-                 ap.order_date")
-            ->from('detail_analisys_po dap')
-            ->join('analisys_po ap', 'ap.idanalisys_po = dap.idanalisys_po')
-            ->where('dap.idproduct', $idproduct)
-            ->where('ap.status_verification', 1)
-            ->where('(dap.qty_receive > 0 OR dap.qty_order > 0)', null, false);
-
-        if ($idgudang) {
-            $packing_list_data->where('ap.idgudang', $idgudang);
-        }
-        $packing_list_data = $packing_list_data->get()->result();
-
         // Gabungkan semua data
-        $all_transactions = array_merge($instock_data, $outstock_data, $packing_list_data);
+        $all_transactions = array_merge($instock_data, $outstock_data);
 
         // Urutkan berdasarkan tanggal distribusi dan datetime
         usort($all_transactions, function ($a, $b) {
@@ -360,7 +320,7 @@ class Product extends CI_Controller
         // Hitung saldo berjalan
         $saldo = 0;
         foreach ($all_transactions as $transaction) {
-            $saldo += ($transaction->instock + $transaction->packing_list - $transaction->outstock);
+            $saldo += ($transaction->instock - $transaction->outstock);
             $transaction->sisa = $saldo;
         }
 
@@ -382,7 +342,7 @@ class Product extends CI_Controller
     {
         $title = 'Kartu Stok';
         $sku = $this->input->get('sku');
-        $idgudang = $this->input->get('idgudang');  // Get selected warehouse ID
+        $idgudang = $this->input->get('idgudang');
 
         $product = $this->db->where('sku', $sku)->get('product')->row();
 
@@ -391,79 +351,55 @@ class Product extends CI_Controller
         }
 
         $query = "
+    SELECT 
+        stock_code,
+        datetime,
+        distribution_date,
+        kategori,
+        tipe,
+        instock,
+        outstock,
+        @saldo := @saldo + IFNULL(instock,0) - IFNULL(outstock,0) AS sisa,
+        user,
+        keterangan
+    FROM (
+        -- Instock data
         SELECT 
-            stock_code,
-            datetime,
-            distribution_date,
-            kategori,
-            tipe,
-            instock,
-            outstock,
-            packing_list,
-            @saldo := @saldo + IFNULL(instock,0) + IFNULL(packing_list,0) - IFNULL(outstock,0) AS sisa,
-            user,
-            keterangan
-        FROM (
-            -- Instock data
-            SELECT 
-                detail_instock.instock_code AS stock_code,
-                instock.datetime,
-                instock.distribution_date,
-                instock.kategori,
-                'INSTOCK' AS tipe,
-                detail_instock.jumlah AS instock,
-                NULL AS outstock,
-                NULL AS packing_list,
-                instock.user,
-                detail_instock.keterangan AS keterangan
-            FROM detail_instock
-            LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
-            WHERE detail_instock.sku = ? AND instock.idgudang = ? AND instock.status_verification = 1
+            detail_instock.instock_code AS stock_code,
+            instock.datetime,
+            instock.distribution_date,
+            instock.kategori,
+            'INSTOCK' AS tipe,
+            detail_instock.jumlah AS instock,
+            NULL AS outstock,
+            instock.user,
+            detail_instock.keterangan AS keterangan
+        FROM detail_instock
+        LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
+        WHERE detail_instock.sku = ? AND instock.idgudang = ? AND instock.status_verification = 1
 
-            UNION ALL
+        UNION ALL
 
-            -- Outstock data
-            SELECT 
-                detail_outstock.outstock_code AS stock_code,
-                outstock.datetime,
-                outstock.distribution_date,
-                outstock.kategori,
-                'OUTSTOCK' AS tipe,
-                NULL AS instock,
-                detail_outstock.jumlah AS outstock,
-                NULL AS packing_list,
-                outstock.user,
-                detail_outstock.keterangan AS keterangan
-            FROM detail_outstock
-            LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
-            WHERE detail_outstock.sku = ? AND outstock.idgudang = ? AND outstock.status_verification = 1
-
-            UNION ALL
-
-            -- Packing List data
-            SELECT 
-                ap.number_po AS stock_code,
-                CONCAT(ap.order_date, ' ', ap.order_time) AS datetime,
-                ap.distribution_date,
-                ap.kategori,
-                'PACKING LIST' AS tipe,
-                NULL AS instock,
-                NULL AS outstock,
-                IFNULL(dap.qty_receive, dap.qty_order) AS packing_list,
-                ap.user,
-                CONCAT('Qty Order: ', dap.qty_order, ', Qty Receive: ', IFNULL(dap.qty_receive, 0)) AS keterangan
-            FROM detail_analisys_po dap
-            LEFT JOIN product p ON p.idproduct = dap.idproduct
-            LEFT JOIN analisys_po ap ON ap.idanalisys_po = dap.idanalisys_po
-            WHERE p.sku = ? AND ap.idgudang = ? AND ap.status_verification = 1
-            AND (dap.qty_receive > 0 OR dap.qty_order > 0)
-        ) AS stock_transaction
-        JOIN (SELECT @saldo := 0) AS vars
-        ORDER BY distribution_date ASC, datetime ASC
+        -- Outstock data
+        SELECT 
+            detail_outstock.outstock_code AS stock_code,
+            outstock.datetime,
+            outstock.distribution_date,
+            outstock.kategori,
+            'OUTSTOCK' AS tipe,
+            NULL AS instock,
+            detail_outstock.jumlah AS outstock,
+            outstock.user,
+            detail_outstock.keterangan AS keterangan
+        FROM detail_outstock
+        LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
+        WHERE detail_outstock.sku = ? AND outstock.idgudang = ? AND outstock.status_verification = 1
+    ) AS stock_transaction
+    JOIN (SELECT @saldo := 0) AS vars
+    ORDER BY distribution_date ASC, datetime ASC
     ";
 
         $transaction_stock = $this->db->query($query, [
-            $sku, $idgudang,
             $sku, $idgudang,
             $sku, $idgudang
         ])->result();
@@ -489,79 +425,55 @@ class Product extends CI_Controller
         }
 
         $query = "
+    SELECT 
+        stock_code,
+        datetime,
+        distribution_date,
+        kategori,
+        tipe,
+        instock,
+        outstock,
+        @saldo := @saldo + IFNULL(instock,0) - IFNULL(outstock,0) AS sisa,
+        user,
+        keterangan
+    FROM (
+        -- Instock data
         SELECT 
-            stock_code,
-            datetime,
-            distribution_date,
-            kategori,
-            tipe,
-            instock,
-            outstock,
-            packing_list,
-            @saldo := @saldo + IFNULL(instock,0) + IFNULL(packing_list,0) - IFNULL(outstock,0) AS sisa,
-            user,
-            keterangan
-        FROM (
-            -- Instock data
-            SELECT 
-                detail_instock.instock_code AS stock_code,
-                instock.datetime,
-                instock.distribution_date,
-                instock.kategori,
-                'INSTOCK' AS tipe,
-                detail_instock.jumlah AS instock,
-                NULL AS outstock,
-                NULL AS packing_list,
-                instock.user,
-                detail_instock.keterangan AS keterangan
-            FROM detail_instock
-            LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
-            WHERE detail_instock.sku = ? AND instock.idgudang = ? AND instock.status_verification = 1
+            detail_instock.instock_code AS stock_code,
+            instock.datetime,
+            instock.distribution_date,
+            instock.kategori,
+            'INSTOCK' AS tipe,
+            detail_instock.jumlah AS instock,
+            NULL AS outstock,
+            instock.user,
+            detail_instock.keterangan AS keterangan
+        FROM detail_instock
+        LEFT JOIN instock ON instock.instock_code = detail_instock.instock_code
+        WHERE detail_instock.sku = ? AND instock.idgudang = ? AND instock.status_verification = 1
 
-            UNION ALL
+        UNION ALL
 
-            -- Outstock data
-            SELECT 
-                detail_outstock.outstock_code AS stock_code,
-                outstock.datetime,
-                outstock.distribution_date,
-                outstock.kategori,
-                'OUTSTOCK' AS tipe,
-                NULL AS instock,
-                detail_outstock.jumlah AS outstock,
-                NULL AS packing_list,
-                outstock.user,
-                detail_outstock.keterangan AS keterangan
-            FROM detail_outstock
-            LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
-            WHERE detail_outstock.sku = ? AND outstock.idgudang = ? AND outstock.status_verification = 1
-
-            UNION ALL
-
-            -- Packing List data
-            SELECT 
-                ap.number_po AS stock_code,
-                CONCAT(ap.order_date, ' ', ap.order_time) AS datetime,
-                ap.distribution_date,
-                ap.kategori,
-                'PACKING LIST' AS tipe,
-                NULL AS instock,
-                NULL AS outstock,
-                IFNULL(dap.qty_receive, dap.qty_order) AS packing_list,
-                ap.user,
-                CONCAT('Qty Order: ', dap.qty_order, ', Qty Receive: ', IFNULL(dap.qty_receive, 0)) AS keterangan
-            FROM detail_analisys_po dap
-            LEFT JOIN product p ON p.idproduct = dap.idproduct
-            LEFT JOIN analisys_po ap ON ap.idanalisys_po = dap.idanalisys_po
-            WHERE p.sku = ? AND ap.idgudang = ? AND ap.status_verification = 1
-            AND (dap.qty_receive > 0 OR dap.qty_order > 0)
-        ) AS stock_transaction
-        JOIN (SELECT @saldo := 0) AS vars
-        ORDER BY distribution_date ASC, datetime ASC
+        -- Outstock data
+        SELECT 
+            detail_outstock.outstock_code AS stock_code,
+            outstock.datetime,
+            outstock.distribution_date,
+            outstock.kategori,
+            'OUTSTOCK' AS tipe,
+            NULL AS instock,
+            detail_outstock.jumlah AS outstock,
+            outstock.user,
+            detail_outstock.keterangan AS keterangan
+        FROM detail_outstock
+        LEFT JOIN outstock ON outstock.outstock_code = detail_outstock.outstock_code
+        WHERE detail_outstock.sku = ? AND outstock.idgudang = ? AND outstock.status_verification = 1
+    ) AS stock_transaction
+    JOIN (SELECT @saldo := 0) AS vars
+    ORDER BY distribution_date ASC, datetime ASC
     ";
 
         $transaction_stock = $this->db->query($query, [
-            $sku, $idgudang,
             $sku, $idgudang,
             $sku, $idgudang
         ])->result();
@@ -580,12 +492,12 @@ class Product extends CI_Controller
         $sheet->mergeCells('A3:J3');
         $sheet->setCellValue('A3', "Nama Produk: {$product->nama_produk}");
 
-        // Table headers
-        $headers = ['No', 'Kode Transaksi', 'Tipe', 'Tanggal Input', 'Tanggal Distribusi', 'Kategori', 'Stock In', 'Stock Out', 'Packing List', 'Sisa', 'User', 'Keterangan'];
+        // Table headers (dihapus kolom Packing List)
+        $headers = ['No', 'Kode Transaksi', 'Tipe', 'Tanggal Input', 'Tanggal Distribusi', 'Kategori', 'Stock In', 'Stock Out', 'Sisa', 'User', 'Keterangan'];
         $sheet->fromArray($headers, null, 'A5');
-        $sheet->getStyle('A5:L5')->getFont()->setBold(true);
-        $sheet->getStyle('A5:L5')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A5:L5')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle('A5:K5')->getFont()->setBold(true);
+        $sheet->getStyle('A5:K5')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A5:K5')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
         // Fill data
         $rowNum = 6;
@@ -599,19 +511,18 @@ class Product extends CI_Controller
             $sheet->setCellValue("F{$rowNum}", $row->kategori);
             $sheet->setCellValue("G{$rowNum}", $row->instock !== null ? $row->instock : '-');
             $sheet->setCellValue("H{$rowNum}", $row->outstock !== null ? $row->outstock : '-');
-            $sheet->setCellValue("I{$rowNum}", $row->packing_list !== null ? $row->packing_list : '-');
-            $sheet->setCellValue("J{$rowNum}", $row->sisa);
-            $sheet->setCellValue("K{$rowNum}", $row->user);
-            $sheet->setCellValue("L{$rowNum}", $row->keterangan);
+            $sheet->setCellValue("I{$rowNum}", $row->sisa);
+            $sheet->setCellValue("J{$rowNum}", $row->user);
+            $sheet->setCellValue("K{$rowNum}", $row->keterangan);
 
-            $sheet->getStyle("A{$rowNum}:L{$rowNum}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle("A{$rowNum}:K{$rowNum}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
             $rowNum++;
             $no++;
         }
 
         // Auto size columns
-        foreach (range('A', 'L') as $col) {
+        foreach (range('A', 'K') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
