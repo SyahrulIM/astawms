@@ -63,620 +63,635 @@ class Verification extends CI_Controller
         $this->load->view('Verification/v_verification', $data);
     }
 
-public function confirm_stock($type, $code)
-{
-    // Decode URL parameter
-    $type = urldecode($type);
-    $original_type = $type;
-    $type = strtolower($type);
+    public function confirm_stock($type, $code)
+    {
+        // Decode URL parameter
+        $type = urldecode($type);
+        $original_type = $type;
+        $type = strtolower($type);
 
-    // Normalisasi tipe
-    if ($type == 'packing list') {
-        $type = 'packing_list';
-    }
+        // Normalisasi tipe
+        if ($type == 'packing list') {
+            $type = 'packing_list';
+        }
 
-    error_log("Confirm Stock - Original Type: $original_type, Normalized: $type, Code: $code");
+        error_log("Confirm Stock - Original Type: $original_type, Normalized: $type, Code: $code");
 
-    // Validasi tipe
-    if (!in_array($type, ['instock', 'outstock', 'packing_list'])) {
-        $this->session->set_flashdata('error', 'Tipe transaksi tidak valid: ' . $original_type);
-        redirect('verification');
-        return;
-    }
-
-    if ($type == 'instock') {
-        // ===================================================
-        // KODE UNTUK INSTOCK - DIPERBAIKI
-        // ===================================================
-        $main_table = 'instock';
-        $kode_field = 'instock_code';
-
-        $trx = $this->db->where($kode_field, $code)->get($main_table)->row();
-        if (!$trx) {
-            $this->session->set_flashdata('error', 'Instock tidak ditemukan.');
+        // Validasi tipe
+        if (!in_array($type, ['instock', 'outstock', 'packing_list'])) {
+            $this->session->set_flashdata('error', 'Tipe transaksi tidak valid: ' . $original_type);
             redirect('verification');
             return;
         }
 
-        // Ambil data qty_instock dari POST
-        $qty_instock_data = $this->input->post('qty_instock');
+        if ($type == 'instock') {
+            // ===================================================
+            // KODE UNTUK INSTOCK - DIPERBAIKI
+            // ===================================================
+            $main_table = 'instock';
+            $kode_field = 'instock_code';
 
-        // Cek apakah ini instock dari packing list
-        $is_from_packing_list = false;
-        $analisys_po_code = null;
-
-        if (strpos($trx->kategori, 'PACKING LIST') !== false || strpos($trx->instock_code, 'PL-') === 0) {
-            if (strpos($trx->instock_code, 'PL-') === 0) {
-                $analisys_po_code = substr($trx->instock_code, 3);
-                $is_from_packing_list = true;
+            $trx = $this->db->where($kode_field, $code)->get($main_table)->row();
+            if (!$trx) {
+                $this->session->set_flashdata('error', 'Instock tidak ditemukan.');
+                redirect('verification');
+                return;
             }
-        }
 
-        // Cek transaksi sebelumnya yang belum diverifikasi
-        $tanggal = $trx->tgl_terima;
-        $jam = $trx->jam_terima;
+            // Ambil data qty_instock dari POST
+            $qty_instock_data = $this->input->post('qty_instock');
 
-        $query_unverified = "
-        SELECT * FROM (
-            SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
-            UNION ALL
-            SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
-            UNION ALL
-            SELECT created_date AS tanggal, TIME(created_date) AS jam FROM analisys_po WHERE status_verification = 0
-        ) AS all_unverified
-        WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
-        LIMIT 1
-        ";
+            // Cek apakah ini instock dari packing list
+            $is_from_packing_list = false;
+            $analisys_po_code = null;
 
-        $older_unverified = $this->db->query($query_unverified)->row();
-        if ($older_unverified) {
-            $this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi. Harap verifikasi berdasarkan urutan waktu.');
-            redirect('verification');
-            return;
-        }
+            if (strpos($trx->kategori, 'PACKING LIST') !== false || strpos($trx->instock_code, 'PL-') === 0) {
+                if (strpos($trx->instock_code, 'PL-') === 0) {
+                    $analisys_po_code = substr($trx->instock_code, 3);
+                    $is_from_packing_list = true;
+                }
+            }
 
-        // Cek status verifikasi
-        if ($trx->status_verification != 0) {
-            $this->session->set_flashdata('error', 'Transaksi sudah diverifikasi sebelumnya.');
-            redirect('verification');
-            return;
-        }
+            // Cek transaksi sebelumnya yang belum diverifikasi
+            $tanggal = $trx->tgl_terima;
+            $jam = $trx->jam_terima;
 
-        // Validasi input
-        if (empty($qty_instock_data) || !is_array($qty_instock_data)) {
-            $this->session->set_flashdata('error', 'Tidak ada data produk yang akan diverifikasi.');
-            redirect('verification');
-            return;
-        }
+            $query_unverified = "
+            SELECT * FROM (
+                SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
+                UNION ALL
+                SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
+                UNION ALL
+                SELECT created_date AS tanggal, TIME(created_date) AS jam FROM analisys_po WHERE status_verification = 0
+            ) AS all_unverified
+            WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
+            LIMIT 1
+            ";
 
-        // Mulai transaction
-        $this->db->trans_start();
+            $older_unverified = $this->db->query($query_unverified)->row();
+            if ($older_unverified) {
+                $this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi. Harap verifikasi berdasarkan urutan waktu.');
+                redirect('verification');
+                return;
+            }
 
-        try {
-            // Update status verifikasi instock
-            $this->db->set('status_verification', 1)
-                ->where($kode_field, $code)
-                ->update($main_table);
+            // Cek status verifikasi
+            if ($trx->status_verification != 0) {
+                $this->session->set_flashdata('error', 'Transaksi sudah diverifikasi sebelumnya.');
+                redirect('verification');
+                return;
+            }
 
-            $idgudang = $trx->idgudang;
-            $detail_table = 'detail_instock';
-            
-            // Update detail_instock dengan nilai dari input
-            foreach ($qty_instock_data as $idproduct => $qty_instock_input) {
-                $idproduct = (int) $idproduct;
-                $qty_instock = (int) $qty_instock_input;
-                
-                if ($qty_instock < 0) {
-                    throw new Exception('Qty Instock tidak boleh negatif untuk ID Produk: ' . $idproduct);
+            // Validasi input
+            if (empty($qty_instock_data) || !is_array($qty_instock_data)) {
+                $this->session->set_flashdata('error', 'Tidak ada data produk yang akan diverifikasi.');
+                redirect('verification');
+                return;
+            }
+
+            // Mulai transaction
+            $this->db->trans_start();
+
+            try {
+                // Update status verifikasi instock
+                $this->db->set('status_verification', 1)
+                    ->where($kode_field, $code)
+                    ->update($main_table);
+
+                $idgudang = $trx->idgudang;
+                $detail_table = 'detail_instock';
+
+                // Update detail_instock dengan nilai dari input
+                foreach ($qty_instock_data as $idproduct => $qty_instock_input) {
+                    $idproduct = (int) $idproduct;
+                    $qty_instock = (int) $qty_instock_input;
+
+                    if ($qty_instock < 0) {
+                        throw new Exception('Qty Instock tidak boleh negatif untuk ID Produk: ' . $idproduct);
+                    }
+
+                    // Cari produk berdasarkan idproduct
+                    $product = $this->db->where('idproduct', $idproduct)->get('product')->row();
+                    if (!$product) continue;
+
+                    // Update detail_instock.jumlah
+                    $this->db->set('jumlah', $qty_instock)
+                        ->where('instock_code', $code)
+                        ->where('sku', $product->sku)
+                        ->update($detail_table);
+
+                    // Update stok hanya jika qty_instock > 0
+                    if ($qty_instock > 0) {
+                        $stock = $this->db->where('idproduct', $idproduct)
+                            ->where('idgudang', $idgudang)
+                            ->get('product_stock')
+                            ->row();
+
+                        if (!$stock) {
+                            $this->db->insert('product_stock', [
+                                'idproduct' => $idproduct,
+                                'idgudang' => $idgudang,
+                                'stok' => $qty_instock
+                            ]);
+                        } else {
+                            $this->db->set('stok', "stok + {$qty_instock}", false)
+                                ->where('idproduct', $idproduct)
+                                ->where('idgudang', $idgudang)
+                                ->update('product_stock');
+                        }
+                    }
+
+                    // Jika ini instock dari packing list, update qty_packing_list di detail_analisys_po
+                    if ($is_from_packing_list && $analisys_po_code) {
+                        $analisys_po_data = $this->db->where('number_po', $analisys_po_code)
+                            ->get('analisys_po')
+                            ->row();
+
+                        if ($analisys_po_data) {
+                            // Update qty_packing_list dengan nilai qty_instock yang baru
+                            $this->db->set('qty_packing_list', $qty_instock)
+                                ->where('idanalisys_po', $analisys_po_data->idanalisys_po)
+                                ->where('idproduct', $idproduct)
+                                ->update('detail_analisys_po');
+                        }
+                    }
                 }
 
-                // Cari produk berdasarkan idproduct
-                $product = $this->db->where('idproduct', $idproduct)->get('product')->row();
-                if (!$product) continue;
+                $this->db->trans_complete();
 
-                // Update detail_instock.jumlah
-                $this->db->set('jumlah', $qty_instock)
-                    ->where('instock_code', $code)
-                    ->where('sku', $product->sku)
-                    ->update($detail_table);
+                if ($this->db->trans_status() === FALSE) {
+                    throw new Exception('Gagal memperbarui database.');
+                }
 
-                // Update stok hanya jika qty_instock > 0
-                if ($qty_instock > 0) {
+                $this->session->set_flashdata('success', 'Instock berhasil diverifikasi dan stok diperbarui.');
+            } catch (Exception $e) {
+                $this->db->trans_rollback();
+                $this->session->set_flashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            }
+        } elseif ($type == 'outstock') {
+            // ===================================================
+            // KODE UNTUK OUTSTOCK
+            // ===================================================
+            $main_table = 'outstock';
+            $kode_field = 'outstock_code';
+
+            $trx = $this->db->where($kode_field, $code)->get($main_table)->row();
+            if (!$trx) {
+                $this->session->set_flashdata('error', 'Outstock tidak ditemukan.');
+                redirect('verification');
+                return;
+            }
+
+            // Cek transaksi sebelumnya yang belum diverifikasi
+            $tanggal = $trx->tgl_keluar;
+            $jam = $trx->jam_keluar;
+
+            $query_unverified = "
+            SELECT * FROM (
+                SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
+                UNION ALL
+                SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
+                UNION ALL
+                SELECT created_date AS tanggal, TIME(created_date) AS jam FROM analisys_po WHERE status_verification = 0
+            ) AS all_unverified
+            WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
+            LIMIT 1
+            ";
+
+            $older_unverified = $this->db->query($query_unverified)->row();
+            if ($older_unverified) {
+                $this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi. Harap verifikasi berdasarkan urutan waktu.');
+                redirect('verification');
+                return;
+            }
+
+            // Cek status verifikasi
+            if ($trx->status_verification != 0) {
+                $this->session->set_flashdata('error', 'Transaksi sudah diverifikasi sebelumnya.');
+                redirect('verification');
+                return;
+            }
+
+            // Mulai transaction
+            $this->db->trans_start();
+
+            try {
+                // Update status verifikasi outstock
+                $this->db->set('status_verification', 1)
+                    ->where($kode_field, $code)
+                    ->update($main_table);
+
+                $idgudang = $trx->idgudang;
+                $detail_table = 'detail_outstock';
+                $details = $this->db->where('outstock_code', $code)->get($detail_table)->result();
+
+                foreach ($details as $detail) {
+                    $sku = $detail->sku;
+                    $jumlah = (int) $detail->jumlah;
+
+                    // Skip jika jumlah 0
+                    if ($jumlah <= 0) continue;
+
+                    $product = $this->db->where('sku', $sku)->get('product')->row();
+                    if (!$product) continue;
+
+                    $idproduct = $product->idproduct;
+
+                    // Update stok (mengurangi)
                     $stock = $this->db->where('idproduct', $idproduct)
                         ->where('idgudang', $idgudang)
                         ->get('product_stock')
                         ->row();
 
                     if (!$stock) {
+                        // Jika stok belum ada, buat dengan nilai negatif
                         $this->db->insert('product_stock', [
                             'idproduct' => $idproduct,
                             'idgudang' => $idgudang,
-                            'stok' => $qty_instock
+                            'stok' => -$jumlah
                         ]);
                     } else {
-                        $this->db->set('stok', "stok + {$qty_instock}", false)
+                        // Kurangi stok yang ada
+                        $this->db->set('stok', "stok - {$jumlah}", false)
                             ->where('idproduct', $idproduct)
                             ->where('idgudang', $idgudang)
                             ->update('product_stock');
                     }
                 }
 
-                // Jika ini instock dari packing list, update qty_packing_list di detail_analisys_po
-                if ($is_from_packing_list && $analisys_po_code) {
-                    $analisys_po_data = $this->db->where('number_po', $analisys_po_code)
-                        ->get('analisys_po')
-                        ->row();
+                $this->db->trans_complete();
 
-                    if ($analisys_po_data) {
-                        // Update qty_packing_list dengan nilai qty_instock yang baru
-                        $this->db->set('qty_packing_list', $qty_instock)
-                            ->where('idanalisys_po', $analisys_po_data->idanalisys_po)
-                            ->where('idproduct', $idproduct)
-                            ->update('detail_analisys_po');
-                    }
+                if ($this->db->trans_status() === FALSE) {
+                    throw new Exception('Gagal memperbarui database.');
                 }
+
+                $this->session->set_flashdata('success', 'Outstock berhasil diverifikasi dan stok diperbarui.');
+            } catch (Exception $e) {
+                $this->db->trans_rollback();
+                $this->session->set_flashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            }
+        } elseif ($type == 'packing_list') {
+            // ===================================================
+            // KODE UNTUK PACKING LIST
+            // ===================================================
+            $main_table = 'analisys_po';
+            $kode_field = 'number_po';
+
+            $trx = $this->db->where($kode_field, $code)->get($main_table)->row();
+            if (!$trx) {
+                $this->session->set_flashdata('error', 'Packing List tidak ditemukan.');
+                redirect('verification');
+                return;
             }
 
-            $this->db->trans_complete();
+            // Ambil data dari POST - gunakan qty_packing_list
+            $nomor_accurate = $this->input->post('nomor_accurate');
+            $idgudang = $this->input->post('idgudang');
+            $tanggal_diterima = $this->input->post('tanggal_diterima');
+            $qty_packing_list_data = $this->input->post('qty_packing_list');
+            $additional_products_data = $this->input->post('additional_products');
 
-            if ($this->db->trans_status() === FALSE) {
-                throw new Exception('Gagal memperbarui database.');
+            // Validasi input dari modal
+            if (!$nomor_accurate || !$idgudang || !$tanggal_diterima) {
+                $this->session->set_flashdata('error', 'Harap isi semua field: Nomor Accurate, Gudang, dan Tanggal Diterima.');
+                redirect('verification');
+                return;
             }
 
-            $this->session->set_flashdata('success', 'Instock berhasil diverifikasi dan stok diperbarui.');
-        } catch (Exception $e) {
-            $this->db->trans_rollback();
-            $this->session->set_flashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
-        
-    } elseif ($type == 'outstock') {
-        // ===================================================
-        // KODE UNTUK OUTSTOCK
-        // ===================================================
-        $main_table = 'outstock';
-        $kode_field = 'outstock_code';
+            // Validasi minimal ada data produk
+            if (empty($qty_packing_list_data) && empty($additional_products_data)) {
+                $this->session->set_flashdata('error', 'Tidak ada data produk yang akan diverifikasi.');
+                redirect('verification');
+                return;
+            }
 
-        $trx = $this->db->where($kode_field, $code)->get($main_table)->row();
-        if (!$trx) {
-            $this->session->set_flashdata('error', 'Outstock tidak ditemukan.');
-            redirect('verification');
-            return;
-        }
+            // Cek transaksi sebelumnya yang belum diverifikasi
+            $tanggal = $trx->created_date;
+            $jam = date('H:i:s', strtotime($trx->created_date));
 
-        // Cek transaksi sebelumnya yang belum diverifikasi
-        $tanggal = $trx->tgl_keluar;
-        $jam = $trx->jam_keluar;
+            $query_unverified = "
+            SELECT * FROM (
+                SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
+                UNION ALL
+                SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
+                UNION ALL
+                SELECT created_date AS tanggal, TIME(created_date) AS jam FROM analisys_po WHERE status_verification = 0
+            ) AS all_unverified
+            WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
+            LIMIT 1
+            ";
 
-        $query_unverified = "
-        SELECT * FROM (
-            SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
-            UNION ALL
-            SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
-            UNION ALL
-            SELECT created_date AS tanggal, TIME(created_date) AS jam FROM analisys_po WHERE status_verification = 0
-        ) AS all_unverified
-        WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
-        LIMIT 1
-        ";
+            $older_unverified = $this->db->query($query_unverified)->row();
+            if ($older_unverified) {
+                $this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi. Harap verifikasi berdasarkan urutan waktu.');
+                redirect('verification');
+                return;
+            }
 
-        $older_unverified = $this->db->query($query_unverified)->row();
-        if ($older_unverified) {
-            $this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi. Harap verifikasi berdasarkan urutan waktu.');
-            redirect('verification');
-            return;
-        }
+            // Cek status verifikasi
+            if ($trx->status_verification != 0) {
+                $this->session->set_flashdata('error', 'Packing List sudah diverifikasi sebelumnya.');
+                redirect('verification');
+                return;
+            }
 
-        // Cek status verifikasi
-        if ($trx->status_verification != 0) {
-            $this->session->set_flashdata('error', 'Transaksi sudah diverifikasi sebelumnya.');
-            redirect('verification');
-            return;
-        }
+            // Mulai transaction
+            $this->db->trans_start();
 
-        // Mulai transaction
-        $this->db->trans_start();
+            try {
+                // Update analisys_po dengan data baru
+                $update_data = [
+                    'status_verification' => 1,
+                    'no_manual' => $nomor_accurate,
+                    'idgudang' => $idgudang,
+                    'distribution_date' => $tanggal_diterima,
+                    'updated_by' => $this->session->userdata('username'),
+                    'updated_date' => date('Y-m-d H:i:s')
+                ];
 
-        try {
-            // Update status verifikasi outstock
-            $this->db->set('status_verification', 1)
-                ->where($kode_field, $code)
-                ->update($main_table);
+                $this->db->where($kode_field, $code)->update($main_table, $update_data);
 
-            $idgudang = $trx->idgudang;
-            $detail_table = 'detail_outstock';
-            $details = $this->db->where('outstock_code', $code)->get($detail_table)->result();
+                // Buat data instock baru
+                $instock_code = 'PL-' . $trx->number_po;
 
-            foreach ($details as $detail) {
-                $sku = $detail->sku;
-                $jumlah = (int) $detail->jumlah;
-
-                // Skip jika jumlah 0
-                if ($jumlah <= 0) continue;
-
-                $product = $this->db->where('sku', $sku)->get('product')->row();
-                if (!$product) continue;
-
-                $idproduct = $product->idproduct;
-
-                // Update stok (mengurangi)
-                $stock = $this->db->where('idproduct', $idproduct)
-                    ->where('idgudang', $idgudang)
-                    ->get('product_stock')
-                    ->row();
-
-                if (!$stock) {
-                    // Jika stok belum ada, buat dengan nilai negatif
-                    $this->db->insert('product_stock', [
-                        'idproduct' => $idproduct,
-                        'idgudang' => $idgudang,
-                        'stok' => -$jumlah
-                    ]);
-                } else {
-                    // Kurangi stok yang ada
-                    $this->db->set('stok', "stok - {$jumlah}", false)
-                        ->where('idproduct', $idproduct)
-                        ->where('idgudang', $idgudang)
-                        ->update('product_stock');
+                // Cek apakah instock dengan kode ini sudah ada
+                $existing_instock = $this->db->where('instock_code', $instock_code)->get('instock')->row();
+                if ($existing_instock) {
+                    throw new Exception('Data instock untuk packing list ini sudah ada sebelumnya.');
                 }
-            }
 
-            $this->db->trans_complete();
+                // INSERT KE TABEL INSTOCK (HEADER)
+                $instock_data = [
+                    'idgudang' => $idgudang,
+                    'instock_code' => $instock_code,
+                    'tgl_terima' => date('Y-m-d'),
+                    'jam_terima' => date('H:i:s'),
+                    'datetime' => date('Y-m-d H:i:s'),
+                    'user' => $this->session->userdata('username'),
+                    'kategori' => 'PACKING LIST',
+                    'no_manual' => $nomor_accurate,
+                    'distribution_date' => $tanggal_diterima,
+                    'created_by' => $this->session->userdata('username'),
+                    'created_date' => date('Y-m-d H:i:s'),
+                    'status_verification' => 0
+                ];
 
-            if ($this->db->trans_status() === FALSE) {
-                throw new Exception('Gagal memperbarui database.');
-            }
+                $this->db->insert('instock', $instock_data);
+                $idinstock = $this->db->insert_id();
 
-            $this->session->set_flashdata('success', 'Outstock berhasil diverifikasi dan stok diperbarui.');
-        } catch (Exception $e) {
-            $this->db->trans_rollback();
-            $this->session->set_flashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
-        
-    } elseif ($type == 'packing_list') {
-        // ===================================================
-        // KODE UNTUK PACKING LIST
-        // ===================================================
-        $main_table = 'analisys_po';
-        $kode_field = 'number_po';
+                // Array untuk menyimpan semua product yang akan diproses
+                $all_products_to_process = [];
+                $processed_products = [];
 
-        $trx = $this->db->where($kode_field, $code)->get($main_table)->row();
-        if (!$trx) {
-            $this->session->set_flashdata('error', 'Packing List tidak ditemukan.');
-            redirect('verification');
-            return;
-        }
-
-        // Ambil data dari POST - gunakan qty_packing_list
-        $nomor_accurate = $this->input->post('nomor_accurate');
-        $idgudang = $this->input->post('idgudang');
-        $tanggal_diterima = $this->input->post('tanggal_diterima');
-        $qty_packing_list_data = $this->input->post('qty_packing_list');
-        $additional_products_data = $this->input->post('additional_products');
-
-        // Validasi input dari modal
-        if (!$nomor_accurate || !$idgudang || !$tanggal_diterima) {
-            $this->session->set_flashdata('error', 'Harap isi semua field: Nomor Accurate, Gudang, dan Tanggal Diterima.');
-            redirect('verification');
-            return;
-        }
-
-        // Validasi minimal ada data produk
-        if (empty($qty_packing_list_data) && empty($additional_products_data)) {
-            $this->session->set_flashdata('error', 'Tidak ada data produk yang akan diverifikasi.');
-            redirect('verification');
-            return;
-        }
-
-        // Cek transaksi sebelumnya yang belum diverifikasi
-        $tanggal = $trx->created_date;
-        $jam = date('H:i:s', strtotime($trx->created_date));
-
-        $query_unverified = "
-        SELECT * FROM (
-            SELECT tgl_terima AS tanggal, jam_terima AS jam FROM instock WHERE status_verification = 0
-            UNION ALL
-            SELECT tgl_keluar AS tanggal, jam_keluar AS jam FROM outstock WHERE status_verification = 0
-            UNION ALL
-            SELECT created_date AS tanggal, TIME(created_date) AS jam FROM analisys_po WHERE status_verification = 0
-        ) AS all_unverified
-        WHERE (tanggal < '$tanggal') OR (tanggal = '$tanggal' AND jam < '$jam')
-        LIMIT 1
-        ";
-
-        $older_unverified = $this->db->query($query_unverified)->row();
-        if ($older_unverified) {
-            $this->session->set_flashdata('error', 'Terdapat transaksi sebelumnya yang belum diverifikasi. Harap verifikasi berdasarkan urutan waktu.');
-            redirect('verification');
-            return;
-        }
-
-        // Cek status verifikasi
-        if ($trx->status_verification != 0) {
-            $this->session->set_flashdata('error', 'Packing List sudah diverifikasi sebelumnya.');
-            redirect('verification');
-            return;
-        }
-
-        // Mulai transaction
-        $this->db->trans_start();
-
-        try {
-            // Update analisys_po dengan data baru
-            $update_data = [
-                'status_verification' => 1,
-                'no_manual' => $nomor_accurate,
-                'idgudang' => $idgudang,
-                'distribution_date' => $tanggal_diterima,
-                'updated_by' => $this->session->userdata('username'),
-                'updated_date' => date('Y-m-d H:i:s')
-            ];
-
-            $this->db->where($kode_field, $code)->update($main_table, $update_data);
-
-            // Buat data instock baru
-            $instock_code = 'PL-' . $trx->number_po;
-
-            // Cek apakah instock dengan kode ini sudah ada
-            $existing_instock = $this->db->where('instock_code', $instock_code)->get('instock')->row();
-            if ($existing_instock) {
-                throw new Exception('Data instock untuk packing list ini sudah ada sebelumnya.');
-            }
-
-            // INSERT KE TABEL INSTOCK (HEADER)
-            $instock_data = [
-                'idgudang' => $idgudang,
-                'instock_code' => $instock_code,
-                'tgl_terima' => date('Y-m-d'),
-                'jam_terima' => date('H:i:s'),
-                'datetime' => date('Y-m-d H:i:s'),
-                'user' => $this->session->userdata('username'),
-                'kategori' => 'PACKING LIST',
-                'no_manual' => $nomor_accurate,
-                'distribution_date' => $tanggal_diterima,
-                'created_by' => $this->session->userdata('username'),
-                'created_date' => date('Y-m-d H:i:s'),
-                'status_verification' => 0
-            ];
-
-            $this->db->insert('instock', $instock_data);
-            $idinstock = $this->db->insert_id();
-
-            // Array untuk menyimpan semua product yang akan diproses
-            $all_products_to_process = [];
-            $processed_products = [];
-
-            // 1. Tambahkan produk yang sudah ada di detail_analisys_po (menggunakan qty_packing_list)
-            if (!empty($qty_packing_list_data) && is_array($qty_packing_list_data)) {
-                foreach ($qty_packing_list_data as $idproduct => $qty_packing_list) {
-                    $idproduct = (int) $idproduct;
-                    $qty_packing_list = (int) $qty_packing_list;
-
-                    if ($qty_packing_list >= 0 && !isset($processed_products[$idproduct])) {
-                        $all_products_to_process[] = [
-                            'idproduct' => $idproduct,
-                            'qty_packing_list' => $qty_packing_list,
-                            'is_additional' => false
-                        ];
-                        $processed_products[$idproduct] = true;
-                    }
-                }
-            }
-
-            // 2. Tambahkan produk tambahan
-            if (!empty($additional_products_data) && is_array($additional_products_data)) {
-                foreach ($additional_products_data as $additional_product) {
-                    if (!empty($additional_product['idproduct']) && isset($additional_product['qty_packing_list'])) {
-                        $idproduct = (int) $additional_product['idproduct'];
-                        $qty_packing_list = (int) $additional_product['qty_packing_list'];
+                // 1. Tambahkan produk yang sudah ada di detail_analisys_po (menggunakan qty_packing_list)
+                if (!empty($qty_packing_list_data) && is_array($qty_packing_list_data)) {
+                    foreach ($qty_packing_list_data as $idproduct => $qty_packing_list) {
+                        $idproduct = (int) $idproduct;
+                        $qty_packing_list = (int) $qty_packing_list;
 
                         if ($qty_packing_list >= 0 && !isset($processed_products[$idproduct])) {
                             $all_products_to_process[] = [
                                 'idproduct' => $idproduct,
                                 'qty_packing_list' => $qty_packing_list,
-                                'is_additional' => true
+                                'is_additional' => false
                             ];
                             $processed_products[$idproduct] = true;
                         }
                     }
                 }
-            }
 
-            // Proses semua produk
-            foreach ($all_products_to_process as $product_data) {
-                $idproduct = $product_data['idproduct'];
-                $qty_packing_list = $product_data['qty_packing_list'];
-                $is_additional = $product_data['is_additional'];
+                // 2. Tambahkan produk tambahan
+                if (!empty($additional_products_data) && is_array($additional_products_data)) {
+                    foreach ($additional_products_data as $additional_product) {
+                        if (!empty($additional_product['idproduct']) && isset($additional_product['qty_packing_list'])) {
+                            $idproduct = (int) $additional_product['idproduct'];
+                            $qty_packing_list = (int) $additional_product['qty_packing_list'];
 
-                // Get product info
-                $product = $this->db->select('sku, nama_produk')
-                    ->where('idproduct', $idproduct)
-                    ->get('product')
-                    ->row();
-
-                if (!$product) {
-                    continue;
-                }
-
-                if ($is_additional) {
-                    // INSERT KE DETAIL_ANALISYS_PO UNTUK PRODUK TAMBAHAN
-                    $new_detail_data = [
-                        'idanalisys_po' => $trx->idanalisys_po,
-                        'idproduct' => $idproduct,
-                        'product_name_en' => $product->nama_produk,
-                        'qty_order' => 0,
-                        'qty_packing_list' => $qty_packing_list,
-                        'price' => 0
-                    ];
-                    $this->db->insert('detail_analisys_po', $new_detail_data);
-                } else {
-                    // UPDATE DETAIL_ANALISYS_PO - update qty_packing_list
-                    $this->db->set('qty_packing_list', $qty_packing_list)
-                        ->where('idanalisys_po', $trx->idanalisys_po)
-                        ->where('idproduct', $idproduct)
-                        ->update('detail_analisys_po');
-                }
-
-                // INSERT KE DETAIL_INSTOCK
-                $detail_instock_data = [
-                    'instock_code' => $instock_code,
-                    'sku' => $product->sku,
-                    'nama_produk' => $product->nama_produk,
-                    'jumlah' => $qty_packing_list,
-                    'sisa' => 0,
-                    'keterangan' => 'Dari Packing List: ' . $trx->number_po .
-                        ' (Qty Packing List: ' . $qty_packing_list . ')' . ($is_additional ? ' [Produk Tambahan]' : '')
-                ];
-
-                $this->db->insert('detail_instock', $detail_instock_data);
-            }
-
-            $this->db->trans_complete();
-
-            if ($this->db->trans_status() === FALSE) {
-                throw new Exception('Gagal memperbarui database.');
-            }
-
-            // Hitung total produk
-            $total_products = count($all_products_to_process);
-            $additional_products_count = count(array_filter($all_products_to_process, function ($item) {
-                return $item['is_additional'];
-            }));
-
-            $message = 'Packing List berhasil diverifikasi dan data telah masuk ke sistem Instock.';
-            $message .= ' Instock dengan kode ' . $instock_code . ' telah dibuat dan menunggu verifikasi.';
-            if ($additional_products_count > 0) {
-                $message .= " Terdapat $additional_products_count produk tambahan.";
-            }
-
-            $this->session->set_flashdata('success', $message);
-        } catch (Exception $e) {
-            $this->db->trans_rollback();
-            $this->session->set_flashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
-    }
-
-    redirect('verification');
-}
-
-public function get_details($type, $kode)
-{
-    $type = strtolower($type);
-
-    if ($type == 'packing list') {
-        $type = 'packing_list';
-    }
-
-    $valid_types = ['instock', 'outstock', 'packing_list'];
-    if (!in_array($type, $valid_types)) {
-        echo json_encode(['success' => false, 'error' => 'Tipe tidak valid: ' . $type]);
-        return;
-    }
-
-    try {
-        if ($type == 'instock') {
-            // ===================================================
-            // CASE 1: INSTOCK
-            // ===================================================
-            $main_data = $this->db->where('instock_code', $kode)->get('instock')->row();
-            if (!$main_data) {
-                echo json_encode(['success' => false, 'error' => 'Instock tidak ditemukan']);
-                return;
-            }
-
-            // Cek apakah ini instock dari packing list (lihat prefix PL-)
-            $is_from_packing_list = false;
-            $packing_list_number = null;
-            
-            if (strpos($main_data->instock_code, 'PL-') === 0) {
-                $is_from_packing_list = true;
-                $packing_list_number = substr($main_data->instock_code, 3); // Hilangkan prefix "PL-"
-            }
-
-            // Ambil detail instock
-            $details = $this->db
-                ->select('di.*, p.idproduct, p.nama_produk')
-                ->from('detail_instock di')
-                ->join('product p', 'di.sku = p.sku', 'left')
-                ->where('di.instock_code', $kode)
-                ->get()
-                ->result();
-
-            $formatted_details = [];
-            
-            if ($is_from_packing_list && $packing_list_number) {
-                // Ambil data packing list
-                $packing_list_data = $this->db->where('number_po', $packing_list_number)->get('analisys_po')->row();
-                
-                if ($packing_list_data) {
-                    // PERUBAHAN PENTING: Ambil semua produk dari detail_analisys_po untuk packing list ini
-                    // TANPA FILTER qty_order > 0, hanya filter qty_packing_list > 0
-                    $packing_list_details = $this->db
-                        ->select('dap.*, p.sku, p.nama_produk, p.idproduct')
-                        ->from('detail_analisys_po dap')
-                        ->join('product p', 'dap.idproduct = p.idproduct', 'left')
-                        ->where('dap.idanalisys_po', $packing_list_data->idanalisys_po)
-                        ->where('dap.qty_packing_list >', 0) // Hanya yang memiliki qty_packing_list > 0
-                        ->get()
-                        ->result();
-                    
-                    // Jika ada data di detail_analisys_po dengan qty_packing_list > 0
-                    if (!empty($packing_list_details)) {
-                        foreach ($packing_list_details as $pl_detail) {
-                            // Cari detail instock yang sesuai berdasarkan SKU
-                            $instock_detail = null;
-                            foreach ($details as $detail) {
-                                if ($detail->sku == $pl_detail->sku) {
-                                    $instock_detail = $detail;
-                                    break;
-                                }
+                            if ($qty_packing_list >= 0 && !isset($processed_products[$idproduct])) {
+                                $all_products_to_process[] = [
+                                    'idproduct' => $idproduct,
+                                    'qty_packing_list' => $qty_packing_list,
+                                    'is_additional' => true
+                                ];
+                                $processed_products[$idproduct] = true;
                             }
-                            
-                            $qty_order = (int) $pl_detail->qty_order;
-                            $qty_packing_list = (int) $pl_detail->qty_packing_list;
-                            $qty_instock = $instock_detail ? (int) $instock_detail->jumlah : $qty_packing_list;
-                            
-                            // Tampilkan SEMUA produk yang memiliki qty_packing_list > 0
-                            // TIDAK ADA FILTER qty_order > 0 di sini
-                            
-                            $formatted_details[] = [
-                                'sku' => $pl_detail->sku ?: 'N/A',
-                                'nama_produk' => $pl_detail->nama_produk ?: ($pl_detail->product_name_en ?: 'N/A'),
-                                'idproduct' => $pl_detail->idproduct,
-                                'qty_order' => $qty_order,
-                                'qty_packing_list' => $qty_packing_list,
-                                'qty_instock' => $qty_instock,
-                                'is_additional' => ($qty_order == 0 && $qty_packing_list > 0)
-                            ];
+                        }
+                    }
+                }
+
+                // Proses semua produk
+                foreach ($all_products_to_process as $product_data) {
+                    $idproduct = $product_data['idproduct'];
+                    $qty_packing_list = $product_data['qty_packing_list'];
+                    $is_additional = $product_data['is_additional'];
+
+                    // Get product info
+                    $product = $this->db->select('sku, nama_produk')
+                        ->where('idproduct', $idproduct)
+                        ->get('product')
+                        ->row();
+
+                    if (!$product) {
+                        continue;
+                    }
+
+                    if ($is_additional) {
+                        // INSERT KE DETAIL_ANALISYS_PO UNTUK PRODUK TAMBAHAN
+                        $new_detail_data = [
+                            'idanalisys_po' => $trx->idanalisys_po,
+                            'idproduct' => $idproduct,
+                            'product_name_en' => $product->nama_produk,
+                            'qty_order' => 0,
+                            'qty_packing_list' => $qty_packing_list,
+                            'price' => 0
+                        ];
+                        $this->db->insert('detail_analisys_po', $new_detail_data);
+                    } else {
+                        // UPDATE DETAIL_ANALISYS_PO - update qty_packing_list
+                        $this->db->set('qty_packing_list', $qty_packing_list)
+                            ->where('idanalisys_po', $trx->idanalisys_po)
+                            ->where('idproduct', $idproduct)
+                            ->update('detail_analisys_po');
+                    }
+
+                    // INSERT KE DETAIL_INSTOCK
+                    $detail_instock_data = [
+                        'instock_code' => $instock_code,
+                        'sku' => $product->sku,
+                        'nama_produk' => $product->nama_produk,
+                        'jumlah' => $qty_packing_list,
+                        'sisa' => 0,
+                        'keterangan' => 'Dari Packing List: ' . $trx->number_po .
+                            ' (Qty Packing List: ' . $qty_packing_list . ')' . ($is_additional ? ' [Produk Tambahan]' : '')
+                    ];
+
+                    $this->db->insert('detail_instock', $detail_instock_data);
+                }
+
+                $this->db->trans_complete();
+
+                if ($this->db->trans_status() === FALSE) {
+                    throw new Exception('Gagal memperbarui database.');
+                }
+
+                // Hitung total produk
+                $total_products = count($all_products_to_process);
+                $additional_products_count = count(array_filter($all_products_to_process, function ($item) {
+                    return $item['is_additional'];
+                }));
+
+                $message = 'Packing List berhasil diverifikasi dan data telah masuk ke sistem Instock.';
+                $message .= ' Instock dengan kode ' . $instock_code . ' telah dibuat dan menunggu verifikasi.';
+                if ($additional_products_count > 0) {
+                    $message .= " Terdapat $additional_products_count produk tambahan.";
+                }
+
+                $this->session->set_flashdata('success', $message);
+            } catch (Exception $e) {
+                $this->db->trans_rollback();
+                $this->session->set_flashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            }
+        }
+
+        redirect('verification');
+    }
+
+    public function get_details($type, $kode)
+    {
+        $type = strtolower($type);
+
+        if ($type == 'packing list') {
+            $type = 'packing_list';
+        }
+
+        $valid_types = ['instock', 'outstock', 'packing_list'];
+        if (!in_array($type, $valid_types)) {
+            echo json_encode(['success' => false, 'error' => 'Tipe tidak valid: ' . $type]);
+            return;
+        }
+
+        try {
+            if ($type == 'instock') {
+                // ===================================================
+                // CASE 1: INSTOCK
+                // ===================================================
+                $main_data = $this->db->where('instock_code', $kode)->get('instock')->row();
+                if (!$main_data) {
+                    echo json_encode(['success' => false, 'error' => 'Instock tidak ditemukan']);
+                    return;
+                }
+
+                // Cek apakah ini instock dari packing list (lihat prefix PL-)
+                $is_from_packing_list = false;
+                $packing_list_number = null;
+
+                if (strpos($main_data->instock_code, 'PL-') === 0) {
+                    $is_from_packing_list = true;
+                    $packing_list_number = substr($main_data->instock_code, 3); // Hilangkan prefix "PL-"
+                }
+
+                // Ambil detail instock
+                $details = $this->db
+                    ->select('di.*, p.idproduct, p.nama_produk')
+                    ->from('detail_instock di')
+                    ->join('product p', 'di.sku = p.sku', 'left')
+                    ->where('di.instock_code', $kode)
+                    ->get()
+                    ->result();
+
+                $formatted_details = [];
+
+                if ($is_from_packing_list && $packing_list_number) {
+                    // Ambil data packing list
+                    $packing_list_data = $this->db->where('number_po', $packing_list_number)->get('analisys_po')->row();
+
+                    if ($packing_list_data) {
+                        // PERUBAHAN PENTING: Ambil semua produk dari detail_analisys_po untuk packing list ini
+                        // TANPA FILTER qty_order > 0, hanya filter qty_packing_list > 0
+                        $packing_list_details = $this->db
+                            ->select('dap.*, p.sku, p.nama_produk, p.idproduct')
+                            ->from('detail_analisys_po dap')
+                            ->join('product p', 'dap.idproduct = p.idproduct', 'left')
+                            ->where('dap.idanalisys_po', $packing_list_data->idanalisys_po)
+                            ->where('dap.qty_packing_list >', 0) // Hanya yang memiliki qty_packing_list > 0
+                            ->get()
+                            ->result();
+
+                        // Jika ada data di detail_analisys_po dengan qty_packing_list > 0
+                        if (!empty($packing_list_details)) {
+                            foreach ($packing_list_details as $pl_detail) {
+                                // Cari detail instock yang sesuai berdasarkan SKU
+                                $instock_detail = null;
+                                foreach ($details as $detail) {
+                                    if ($detail->sku == $pl_detail->sku) {
+                                        $instock_detail = $detail;
+                                        break;
+                                    }
+                                }
+
+                                $qty_order = (int) $pl_detail->qty_order;
+                                $qty_packing_list = (int) $pl_detail->qty_packing_list;
+                                $qty_instock = $instock_detail ? (int) $instock_detail->jumlah : $qty_packing_list;
+
+                                // Tampilkan SEMUA produk yang memiliki qty_packing_list > 0
+                                // TIDAK ADA FILTER qty_order > 0 di sini
+
+                                $formatted_details[] = [
+                                    'sku' => $pl_detail->sku ?: 'N/A',
+                                    'nama_produk' => $pl_detail->nama_produk ?: ($pl_detail->product_name_en ?: 'N/A'),
+                                    'idproduct' => $pl_detail->idproduct,
+                                    'qty_order' => $qty_order,
+                                    'qty_packing_list' => $qty_packing_list,
+                                    'qty_instock' => $qty_instock,
+                                    'is_additional' => ($qty_order == 0 && $qty_packing_list > 0)
+                                ];
+                            }
+                        } else {
+                            // Jika tidak ada data di detail_analisys_po, ambil dari detail_instock
+                            foreach ($details as $detail) {
+                                $qty_instock = (int) $detail->jumlah;
+
+                                if ($qty_instock <= 0) {
+                                    continue;
+                                }
+
+                                $formatted_details[] = [
+                                    'sku' => $detail->sku ?: 'N/A',
+                                    'nama_produk' => $detail->nama_produk ?: 'N/A',
+                                    'idproduct' => $detail->idproduct,
+                                    'qty_order' => 0,
+                                    'qty_packing_list' => $qty_instock,
+                                    'qty_instock' => $qty_instock,
+                                    'is_additional' => false
+                                ];
+                            }
                         }
                     } else {
-                        // Jika tidak ada data di detail_analisys_po, ambil dari detail_instock
+                        // Jika packing list tidak ditemukan, ambil dari detail_instock
                         foreach ($details as $detail) {
                             $qty_instock = (int) $detail->jumlah;
-                            
+
                             if ($qty_instock <= 0) {
                                 continue;
                             }
-                            
+
                             $formatted_details[] = [
                                 'sku' => $detail->sku ?: 'N/A',
                                 'nama_produk' => $detail->nama_produk ?: 'N/A',
                                 'idproduct' => $detail->idproduct,
-                                'qty_order' => 0,
-                                'qty_packing_list' => $qty_instock,
-                                'qty_instock' => $qty_instock,
-                                'is_additional' => false
+                                'qty_instock' => $qty_instock
                             ];
                         }
                     }
                 } else {
-                    // Jika packing list tidak ditemukan, ambil dari detail_instock
+                    // Jika bukan dari packing list, tampilkan data instock biasa
                     foreach ($details as $detail) {
                         $qty_instock = (int) $detail->jumlah;
-                        
+
                         if ($qty_instock <= 0) {
                             continue;
                         }
-                        
+
                         $formatted_details[] = [
                             'sku' => $detail->sku ?: 'N/A',
                             'nama_produk' => $detail->nama_produk ?: 'N/A',
@@ -685,133 +700,115 @@ public function get_details($type, $kode)
                         ];
                     }
                 }
-            } else {
-                // Jika bukan dari packing list, tampilkan data instock biasa
+
+                echo json_encode([
+                    'success' => true,
+                    'details' => $formatted_details,
+                    'is_from_packing_list' => $is_from_packing_list,
+                    'main_data' => [
+                        'kode_transaksi' => $main_data->instock_code,
+                        'tipe' => 'INSTOCK',
+                        'kategori' => $main_data->kategori,
+                        'no_manual' => $main_data->no_manual,
+                        'distribution_date' => $main_data->distribution_date,
+                        'user' => $main_data->user,
+                        'status_verification' => $main_data->status_verification,
+                        'idgudang' => $main_data->idgudang
+                    ]
+                ]);
+            } elseif ($type == 'outstock') {
+                // ... kode untuk outstock tetap sama ...
+
+            } elseif ($type == 'packing_list') {
+                // ===================================================
+                // CASE 3: PACKING LIST (ANALISYS_PO)
+                // ===================================================
+                $main_data = $this->db->where('number_po', $kode)->get('analisys_po')->row();
+                if (!$main_data) {
+                    echo json_encode(['success' => false, 'error' => 'Packing List tidak ditemukan']);
+                    return;
+                }
+
+                // Ambil semua produk dari detail_analisys_po
+                // Untuk packing list, tampilkan produk dengan qty_order > 0 ATAU qty_packing_list > 0
+                $details = $this->db
+                    ->select('dap.*, p.sku, p.nama_produk, p.idproduct')
+                    ->from('detail_analisys_po dap')
+                    ->join('product p', 'dap.idproduct = p.idproduct', 'left')
+                    ->where('dap.idanalisys_po', $main_data->idanalisys_po)
+                    ->where('(dap.qty_order > 0 OR dap.qty_packing_list > 0)', null, false)
+                    ->get()
+                    ->result();
+
+                // Ambil semua produk untuk dropdown (produk tambahan)
+                $products = $this->db
+                    ->select('idproduct, sku, nama_produk')
+                    ->from('product')
+                    ->order_by('nama_produk', 'asc')
+                    ->get()
+                    ->result();
+
+                $formatted_details = [];
                 foreach ($details as $detail) {
-                    $qty_instock = (int) $detail->jumlah;
-                    
-                    if ($qty_instock <= 0) {
+                    $qty_packing_list = (int) $detail->qty_packing_list;
+
+                    // Untuk packing list, hanya tampilkan produk dengan qty_order > 0
+                    // (ini sesuai dengan logika JavaScript yang ada)
+                    if ($detail->qty_order <= 0) {
                         continue;
                     }
-                    
+
                     $formatted_details[] = [
                         'sku' => $detail->sku ?: 'N/A',
-                        'nama_produk' => $detail->nama_produk ?: 'N/A',
+                        'nama_produk' => $detail->nama_produk ?: ($detail->product_name_en ?: 'N/A'),
                         'idproduct' => $detail->idproduct,
-                        'qty_instock' => $qty_instock
+                        'qty_order' => (int) $detail->qty_order,
+                        'qty_packing_list' => $qty_packing_list,
+                        'price' => (int) $detail->price,
+                        'is_additional' => ($detail->qty_order == 0 && $qty_packing_list > 0)
                     ];
                 }
-            }
 
-            echo json_encode([
-                'success' => true,
-                'details' => $formatted_details,
-                'is_from_packing_list' => $is_from_packing_list,
-                'main_data' => [
-                    'kode_transaksi' => $main_data->instock_code,
-                    'tipe' => 'INSTOCK',
-                    'kategori' => $main_data->kategori,
-                    'no_manual' => $main_data->no_manual,
-                    'distribution_date' => $main_data->distribution_date,
-                    'user' => $main_data->user,
-                    'status_verification' => $main_data->status_verification,
-                    'idgudang' => $main_data->idgudang
-                ]
-            ]);
-            
-        } elseif ($type == 'outstock') {
-            // ... kode untuk outstock tetap sama ...
-            
-        } elseif ($type == 'packing_list') {
-            // ===================================================
-            // CASE 3: PACKING LIST (ANALISYS_PO)
-            // ===================================================
-            $main_data = $this->db->where('number_po', $kode)->get('analisys_po')->row();
-            if (!$main_data) {
-                echo json_encode(['success' => false, 'error' => 'Packing List tidak ditemukan']);
-                return;
-            }
-
-            // Ambil semua produk dari detail_analisys_po
-            // Untuk packing list, tampilkan produk dengan qty_order > 0 ATAU qty_packing_list > 0
-            $details = $this->db
-                ->select('dap.*, p.sku, p.nama_produk, p.idproduct')
-                ->from('detail_analisys_po dap')
-                ->join('product p', 'dap.idproduct = p.idproduct', 'left')
-                ->where('dap.idanalisys_po', $main_data->idanalisys_po)
-                ->where('(dap.qty_order > 0 OR dap.qty_packing_list > 0)', null, false)
-                ->get()
-                ->result();
-
-            // Ambil semua produk untuk dropdown (produk tambahan)
-            $products = $this->db
-                ->select('idproduct, sku, nama_produk')
-                ->from('product')
-                ->order_by('nama_produk', 'asc')
-                ->get()
-                ->result();
-
-            $formatted_details = [];
-            foreach ($details as $detail) {
-                $qty_packing_list = (int) $detail->qty_packing_list;
-                
-                // Untuk packing list, hanya tampilkan produk dengan qty_order > 0
-                // (ini sesuai dengan logika JavaScript yang ada)
-                if ($detail->qty_order <= 0) {
-                    continue;
+                // Format produk untuk dropdown
+                $formatted_products = [];
+                foreach ($products as $product) {
+                    $formatted_products[] = [
+                        'id' => $product->idproduct,
+                        'sku' => $product->sku,
+                        'nama' => $product->nama_produk,
+                        'text' => $product->sku . ' - ' . $product->nama_produk
+                    ];
                 }
 
-                $formatted_details[] = [
-                    'sku' => $detail->sku ?: 'N/A',
-                    'nama_produk' => $detail->nama_produk ?: ($detail->product_name_en ?: 'N/A'),
-                    'idproduct' => $detail->idproduct,
-                    'qty_order' => (int) $detail->qty_order,
-                    'qty_packing_list' => $qty_packing_list,
-                    'price' => (int) $detail->price,
-                    'is_additional' => ($detail->qty_order == 0 && $qty_packing_list > 0)
-                ];
-            }
-
-            // Format produk untuk dropdown
-            $formatted_products = [];
-            foreach ($products as $product) {
-                $formatted_products[] = [
-                    'id' => $product->idproduct,
-                    'sku' => $product->sku,
-                    'nama' => $product->nama_produk,
-                    'text' => $product->sku . ' - ' . $product->nama_produk
-                ];
-            }
-
-            echo json_encode([
-                'success' => true,
-                'details' => $formatted_details,
-                'products' => $formatted_products,
-                'main_data' => [
-                    'kode_transaksi' => $main_data->number_po,
-                    'tipe' => 'PACKING LIST',
-                    'kategori' => $main_data->kategori,
-                    'no_manual' => $main_data->no_manual,
-                    'distribution_date' => $main_data->distribution_date,
-                    'created_by' => $main_data->created_by,
-                    'status_verification' => $main_data->status_verification,
-                    'idgudang' => $main_data->idgudang
-                ],
-                'columns' => [
-                    'packing_list' => [
-                        'sku' => 'SKU',
-                        'nama_produk' => 'Nama Produk',
-                        'qty_order' => 'Qty Order',
-                        'qty_packing_list' => 'Qty Packing List'
+                echo json_encode([
+                    'success' => true,
+                    'details' => $formatted_details,
+                    'products' => $formatted_products,
+                    'main_data' => [
+                        'kode_transaksi' => $main_data->number_po,
+                        'tipe' => 'PACKING LIST',
+                        'kategori' => $main_data->kategori,
+                        'no_manual' => $main_data->no_manual,
+                        'distribution_date' => $main_data->distribution_date,
+                        'created_by' => $main_data->created_by,
+                        'status_verification' => $main_data->status_verification,
+                        'idgudang' => $main_data->idgudang
+                    ],
+                    'columns' => [
+                        'packing_list' => [
+                            'sku' => 'SKU',
+                            'nama_produk' => 'Nama Produk',
+                            'qty_order' => 'Qty Order',
+                            'qty_packing_list' => 'Qty Packing List'
+                        ]
                     ]
-                ]
-            ]);
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("Error in get_details: " . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
-    } catch (Exception $e) {
-        error_log("Error in get_details: " . $e->getMessage());
-        echo json_encode(['success' => false, 'error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
     }
-}
 
     public function reject($type, $code)
     {
