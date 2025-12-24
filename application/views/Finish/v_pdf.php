@@ -159,13 +159,13 @@
                     <th width="30">No</th>
                     <th width="110">Image</th>
                     <th>Product Name</th>
-                    <th width="80">SKU</th>
-                    <th width="80">SGS Type</th>
-                    <th width="80">Unit Type</th>
+                    <th width="50">SKU</th>
+                    <th width="50">SGS Type</th>
+                    <th width="60">Unit Type</th>
                     <th width="80">Price</th>
                     <th width="60">Order Qty</th>
                     <th width="100">Total Value</th>
-                    <th width="80">Description</th>
+                    <th width="400">Description</th>
                 </tr>
             </thead>
 
@@ -178,9 +178,8 @@
                     <td>
                         <img src="<?= base_url('assets/image/' . $item['row']->gambar) ?>" class="product-image">
                     </td>
-                    <td class="text-left">
+                    <td class="text-center">
                         <?= htmlspecialchars(translate_to_english($item['row']->nama_produk)) ?><br>
-                        <small>SKU: <?= htmlspecialchars($item['row']->sku) ?></small>
                     </td>
                     <td><?= htmlspecialchars($item['row']->sku) ?></td>
                     <td><?= htmlspecialchars(strtoupper($item['row']->type_sgs)) ?></td>

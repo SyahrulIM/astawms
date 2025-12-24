@@ -92,7 +92,7 @@
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="verifikasiModalLabel">Konfirmasi Verifikasi</h5>
+                    <h5 class="modal-title" id="verifikasiModalLabel">Form Barang Masuk</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <form id="verifikasiForm" method="post" action="">
@@ -112,16 +112,16 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="mb-2">
-                                            <small class="text-muted">Kode Transaksi:</small>
+                                            <small class="text-muted">Nomor PO:</small>
                                             <div id="modalKodeTransaksi" class="fw-bold text-primary"></div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <!-- <div class="col-md-3">
                                         <div class="mb-2">
                                             <small class="text-muted">Tanggal Distribusi:</small>
                                             <div id="modalTanggalDistribusi" class="fw-bold"></div>
                                         </div>
-                                    </div>
+                                    </div> -->
                                     <div class="col-md-3">
                                         <div class="mb-2">
                                             <small class="text-muted">User Penginput:</small>
@@ -160,7 +160,7 @@
                                         </div>
                                         <div class="col-md-4">
                                             <div class="mb-3">
-                                                <label for="inputDateReceiving" class="form-label">Tanggal Diterima <span class="text-danger">*</span></label>
+                                                <label for="inputDateReceiving" class="form-label">Tanggal PL Diinput <span class="text-danger">*</span></label>
                                                 <input type="datetime-local" id="inputDateReceiving" name="tanggal_diterima" class="form-control" required>
                                             </div>
                                         </div>
@@ -377,7 +377,7 @@
                 dataType: 'json',
                 success: function(response) {
                     console.log('Response from server:', response);
-                    
+
                     $('#detailStockTable').empty();
                     productDetails = [];
                     additionalProducts = [];
@@ -874,14 +874,14 @@
                 let inputField = $(this).closest('tr').find('.qty-instock-input, .qty-packing-list-input');
                 if (inputField.length > 0) {
                     inputField.val(0);
-                    
+
                     // Update total
                     if (inputField.hasClass('qty-instock-input')) {
                         updateTotalQtyInstock();
                     } else if (inputField.hasClass('qty-packing-list-input')) {
                         updateTotalQtyPackingList();
                     }
-                    
+
                     alert('Produk telah dihapus dari daftar verifikasi (Qty diubah menjadi 0).');
                 }
             }

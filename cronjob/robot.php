@@ -11,8 +11,8 @@ if ($conn->connect_error) {
 }
 
 $token = 'ZsZ2Dp71dyKrgz3YAQKg';
-$targets = '6281331090331-1528429522@g.us';
-// $targets = '6285156340619';
+// $targets = '6281331090331-1528429522@g.us';
+$targets = '6285156340619';
 
 // ===============================================
 // 1. DATA ASTA WMS - TANPA FILTER PERIODE
@@ -195,7 +195,7 @@ $result_final_dm = $conn->query($sql_final_delivery_manual);
 $total_final_dm = $result_final_dm->fetch_assoc()['total'];
 
 // ===============================================
-// 2. DATA ASTA ACOL DENGAN PERIODE KHUSUS
+// 2. DATA ASTA ACOL DENGAN PERIODE KHUSUS - DENGAN KOTIME
 // ===============================================
 
 // **PERIODE ACOL: tanggal 1 bulan sekarang sampai kemarin**
@@ -204,7 +204,7 @@ $current_month_end = date('Y-m-d', strtotime('-1 day')); // Sampai kemarin
 
 $ratio_limit = 30;
 
-// 2.2 Query untuk data Acol dengan periode tertentu - SESUAI CONTROLLER
+// 2.2 Query untuk data Acol dengan periode tertentu - INCLUDE KOTIME
 $sql_acol_detail = "
     SELECT
         asd.no_faktur,
@@ -238,7 +238,7 @@ $sql_acol_detail = "
     AND aad.payment IS NOT NULL
     AND asd.total_faktur > 0
     AND asd.status = 1
-    AND s.is_kotime = 0  -- Hanya ASTA, bukan Kotime
+    -- REMOVE Kotime filter: include both ASTA and Kotime
     GROUP BY asd.no_faktur
 
     UNION
@@ -275,7 +275,7 @@ $sql_acol_detail = "
     AND aad.payment IS NOT NULL
     AND atd.total_faktur > 0
     AND atd.status = 1
-    AND t.is_kotime = 0  -- Hanya ASTA, bukan Kotime
+    -- REMOVE Kotime filter: include both ASTA and Kotime
     GROUP BY atd.no_faktur
 
     UNION
@@ -312,7 +312,7 @@ $sql_acol_detail = "
     AND aad.payment IS NOT NULL
     AND ald.total_faktur > 0
     AND ald.status = 1
-    AND l.is_kotime = 0  -- Hanya ASTA, bukan Kotime
+    -- REMOVE Kotime filter: include both ASTA and Kotime
     GROUP BY ald.no_faktur
 
     ORDER BY no_faktur ASC
@@ -320,9 +320,9 @@ $sql_acol_detail = "
 
 $result_acol = $conn->query($sql_acol_detail);
 
-// Inisialisasi data Acol
+// Inisialisasi data Acol untuk ASTA dan Kotime terpisah
 $acol_data = [
-    'shopee' => [
+    'asta_shopee' => [
         'total_faktur' => 0,
         'belum_note' => 0,
         'belum_check' => 0,
@@ -335,7 +335,7 @@ $acol_data = [
         'total_invoice_retur' => 0,
         'total_diterima_retur' => 0
     ],
-    'tiktok' => [
+    'asta_tiktok' => [
         'total_faktur' => 0,
         'belum_note' => 0,
         'belum_check' => 0,
@@ -348,7 +348,46 @@ $acol_data = [
         'total_invoice_retur' => 0,
         'total_diterima_retur' => 0
     ],
-    'lazada' => [
+    'asta_lazada' => [
+        'total_faktur' => 0,
+        'belum_note' => 0,
+        'belum_check' => 0,
+        'butuh_final_dir' => 0,
+        'total_invoice' => 0,
+        'total_diterima' => 0,
+        'ratio_exceed' => 0,
+        'total_selisih' => 0,
+        'total_faktur_retur' => 0,
+        'total_invoice_retur' => 0,
+        'total_diterima_retur' => 0
+    ],
+    'kotime_shopee' => [
+        'total_faktur' => 0,
+        'belum_note' => 0,
+        'belum_check' => 0,
+        'butuh_final_dir' => 0,
+        'total_invoice' => 0,
+        'total_diterima' => 0,
+        'ratio_exceed' => 0,
+        'total_selisih' => 0,
+        'total_faktur_retur' => 0,
+        'total_invoice_retur' => 0,
+        'total_diterima_retur' => 0
+    ],
+    'kotime_tiktok' => [
+        'total_faktur' => 0,
+        'belum_note' => 0,
+        'belum_check' => 0,
+        'butuh_final_dir' => 0,
+        'total_invoice' => 0,
+        'total_diterima' => 0,
+        'ratio_exceed' => 0,
+        'total_selisih' => 0,
+        'total_faktur_retur' => 0,
+        'total_invoice_retur' => 0,
+        'total_diterima_retur' => 0
+    ],
+    'kotime_lazada' => [
         'total_faktur' => 0,
         'belum_note' => 0,
         'belum_check' => 0,
@@ -369,21 +408,25 @@ $all_invoices = [];
 if ($result_acol) {
     while ($row = $result_acol->fetch_assoc()) {
         $source = $row['source'];
+        $is_kotime = $row['is_kotime'] == 1;
+        $brand_prefix = $is_kotime ? 'kotime_' : 'asta_';
+        $data_key = $brand_prefix . $source;
+
         $is_retur = ($row['shopee_refund'] ?? 0) < 0;
         $shopee = (float) ($row['shopee_total_faktur'] ?? 0);
         $accurate = (float) ($row['accurate_payment'] ?? 0);
 
         // Hitung data dasar
-        $acol_data[$source]['total_faktur']++;
-        $acol_data[$source]['total_invoice'] += $shopee;
-        $acol_data[$source]['total_diterima'] += $accurate;
-        $acol_data[$source]['total_selisih'] += ($shopee - $accurate);
+        $acol_data[$data_key]['total_faktur']++;
+        $acol_data[$data_key]['total_invoice'] += $shopee;
+        $acol_data[$data_key]['total_diterima'] += $accurate;
+        $acol_data[$data_key]['total_selisih'] += ($shopee - $accurate);
 
         // Hitung retur
         if ($is_retur) {
-            $acol_data[$source]['total_faktur_retur']++;
-            $acol_data[$source]['total_invoice_retur'] += $shopee;
-            $acol_data[$source]['total_diterima_retur'] += $accurate;
+            $acol_data[$data_key]['total_faktur_retur']++;
+            $acol_data[$data_key]['total_invoice_retur'] += $shopee;
+            $acol_data[$data_key]['total_diterima_retur'] += $accurate;
         }
 
         // Cek apakah ratio melebihi 30%
@@ -391,24 +434,24 @@ if ($result_acol) {
         $is_ratio_exceed = $ratio > $ratio_limit && !$is_retur; // Hanya untuk non-retur
 
         if ($is_ratio_exceed) {
-            $acol_data[$source]['ratio_exceed']++;
+            $acol_data[$data_key]['ratio_exceed']++;
 
             // Kategori 1: Belum Note (ratio >30% DAN note empty)
             $is_note_empty = empty($row['note']);
             if ($is_note_empty) {
-                $acol_data[$source]['belum_note']++;
+                $acol_data[$data_key]['belum_note']++;
                 $category = 'Belum Note';
             }
             // Kategori 2: Belum Check (ratio >30% DAN note NOT empty DAN is_check = 0)
             elseif (!$is_note_empty && $row['is_check'] == 0) {
-                $acol_data[$source]['belum_check']++;
+                $acol_data[$data_key]['belum_check']++;
                 $category = 'Belum Check';
             }
             // Kategori 3: Butuh Final DIR (ratio >30% DAN note NOT empty DAN is_check = 1 DAN status_dir bukan 'Final DIR')
             elseif (
                 !$is_note_empty && $row['is_check'] == 1 && ($row['status_dir'] === null || $row['status_dir'] != 'Final DIR')
             ) {
-                $acol_data[$source]['butuh_final_dir']++;
+                $acol_data[$data_key]['butuh_final_dir']++;
                 $category = 'Butuh Final DIR';
             } else {
                 $category = 'Lainnya';
@@ -418,6 +461,7 @@ if ($result_acol) {
             $critical_invoices[] = [
                 'no_faktur' => $row['no_faktur'],
                 'source' => ucfirst($source),
+                'brand' => $is_kotime ? 'Kotime' : 'ASTA',
                 'category' => $category,
                 'ratio_diference' => $ratio,
                 'note_status' => $is_note_empty ? 'Empty' : 'Filled',
@@ -431,52 +475,97 @@ if ($result_acol) {
 }
 
 // ===============================================
-// 3. HITUNG ADDITIONAL REVENUE
+// 3. HITUNG ADDITIONAL REVENUE UNTUK ASTA & KOTIME
 // ===============================================
 
-$additional_revenue = 0;
+$additional_revenue_asta = 0;
+$additional_revenue_kotime = 0;
 
-// Shopee ASTA (non-kotime)
-$sql_additional_shopee = "
+// Shopee ASTA
+$sql_additional_shopee_asta = "
     SELECT SUM(additional_revenue) as total
     FROM acc_shopee_additional 
     WHERE start_date >= '{$current_month_start}' 
     AND end_date <= '{$current_month_end}'
     AND is_kotime = 0
 ";
-$result_shopee_add = $conn->query($sql_additional_shopee);
-if ($result_shopee_add) {
-    $row = $result_shopee_add->fetch_assoc();
-    $additional_revenue += $row['total'] ?? 0;
+$result_shopee_add_asta = $conn->query($sql_additional_shopee_asta);
+if ($result_shopee_add_asta) {
+    $row = $result_shopee_add_asta->fetch_assoc();
+    $additional_revenue_asta += $row['total'] ?? 0;
 }
 
-// TikTok ASTA (non-kotime)
-$sql_additional_tiktok = "
+// TikTok ASTA
+$sql_additional_tiktok_asta = "
     SELECT SUM(additional_revenue) as total
     FROM acc_tiktok_additional 
     WHERE start_date >= '{$current_month_start}' 
     AND end_date <= '{$current_month_end}'
     AND is_kotime = 0
 ";
-$result_tiktok_add = $conn->query($sql_additional_tiktok);
-if ($result_tiktok_add) {
-    $row = $result_tiktok_add->fetch_assoc();
-    $additional_revenue += $row['total'] ?? 0;
+$result_tiktok_add_asta = $conn->query($sql_additional_tiktok_asta);
+if ($result_tiktok_add_asta) {
+    $row = $result_tiktok_add_asta->fetch_assoc();
+    $additional_revenue_asta += $row['total'] ?? 0;
 }
 
-// Lazada ASTA (non-kotime)
-$sql_additional_lazada = "
+// Lazada ASTA
+$sql_additional_lazada_asta = "
     SELECT SUM(additional_revenue) as total
     FROM acc_lazada_additional 
     WHERE start_date >= '{$current_month_start}' 
     AND end_date <= '{$current_month_end}'
     AND is_kotime = 0
 ";
-$result_lazada_add = $conn->query($sql_additional_lazada);
-if ($result_lazada_add) {
-    $row = $result_lazada_add->fetch_assoc();
-    $additional_revenue += $row['total'] ?? 0;
+$result_lazada_add_asta = $conn->query($sql_additional_lazada_asta);
+if ($result_lazada_add_asta) {
+    $row = $result_lazada_add_asta->fetch_assoc();
+    $additional_revenue_asta += $row['total'] ?? 0;
 }
+
+// Shopee Kotime
+$sql_additional_shopee_kotime = "
+    SELECT SUM(additional_revenue) as total
+    FROM acc_shopee_additional 
+    WHERE start_date >= '{$current_month_start}' 
+    AND end_date <= '{$current_month_end}'
+    AND is_kotime = 1
+";
+$result_shopee_add_kotime = $conn->query($sql_additional_shopee_kotime);
+if ($result_shopee_add_kotime) {
+    $row = $result_shopee_add_kotime->fetch_assoc();
+    $additional_revenue_kotime += $row['total'] ?? 0;
+}
+
+// TikTok Kotime
+$sql_additional_tiktok_kotime = "
+    SELECT SUM(additional_revenue) as total
+    FROM acc_tiktok_additional 
+    WHERE start_date >= '{$current_month_start}' 
+    AND end_date <= '{$current_month_end}'
+    AND is_kotime = 1
+";
+$result_tiktok_add_kotime = $conn->query($sql_additional_tiktok_kotime);
+if ($result_tiktok_add_kotime) {
+    $row = $result_tiktok_add_kotime->fetch_assoc();
+    $additional_revenue_kotime += $row['total'] ?? 0;
+}
+
+// Lazada Kotime
+$sql_additional_lazada_kotime = "
+    SELECT SUM(additional_revenue) as total
+    FROM acc_lazada_additional 
+    WHERE start_date >= '{$current_month_start}' 
+    AND end_date <= '{$current_month_end}'
+    AND is_kotime = 1
+";
+$result_lazada_add_kotime = $conn->query($sql_additional_lazada_kotime);
+if ($result_lazada_add_kotime) {
+    $row = $result_lazada_add_kotime->fetch_assoc();
+    $additional_revenue_kotime += $row['total'] ?? 0;
+}
+
+$additional_revenue_total = $additional_revenue_asta + $additional_revenue_kotime;
 
 // ===============================================
 // 4. FORMAT PESAN WHATSAPP
@@ -515,7 +604,7 @@ $message .= "• *" . $grand_total_wms . " transaksi* membutuhkan tindakan\n\n";
 $message .= "══════ Asta Acol ═════\n";
 $message .= "*Periode: " . date('d M Y', strtotime($current_month_start)) . " - " . date('d M Y', strtotime($current_month_end)) . "*\n";
 $message .= "*Bulan: " . date('F Y', strtotime($current_month_start)) . "*\n";
-$message .= "*Hanya faktur ASTA (non-Kotime)*\n";
+$message .= "*Termasuk ASTA dan Kotime*\n";
 $message .= "*Ratio Limit: " . $ratio_limit . "%*\n";
 $message .= "*Hanya faktur dengan ratio >{$ratio_limit}% yang dihitung (non-retur)*\n\n";
 
@@ -524,19 +613,35 @@ $message .= "1. Belum Note: Ratio >{$ratio_limit}% & note kosong\n";
 $message .= "2. Belum Check: Ratio >{$ratio_limit}% & note terisi & belum check\n";
 $message .= "3. Butuh Final DIR: Ratio >{$ratio_limit}% & note terisi & sudah check & status dir bukan 'Final DIR'\n\n";
 
-$total_faktur_all = 0;
-$total_ratio_exceed_all = 0;
-$total_belum_note_all = 0;
-$total_belum_check_all = 0;
-$total_butuh_final_dir_all = 0;
-$total_invoice_all = 0;
-$total_diterima_all = 0;
-$total_faktur_retur_all = 0;
-$total_invoice_retur_all = 0;
-$total_diterima_retur_all = 0;
+// Hitung total untuk ASTA
+$total_faktur_asta = 0;
+$total_ratio_exceed_asta = 0;
+$total_belum_note_asta = 0;
+$total_belum_check_asta = 0;
+$total_butuh_final_dir_asta = 0;
+$total_invoice_asta = 0;
+$total_diterima_asta = 0;
+$total_faktur_retur_asta = 0;
+$total_invoice_retur_asta = 0;
+$total_diterima_retur_asta = 0;
 
+// Hitung total untuk Kotime
+$total_faktur_kotime = 0;
+$total_ratio_exceed_kotime = 0;
+$total_belum_note_kotime = 0;
+$total_belum_check_kotime = 0;
+$total_butuh_final_dir_kotime = 0;
+$total_invoice_kotime = 0;
+$total_diterima_kotime = 0;
+$total_faktur_retur_kotime = 0;
+$total_invoice_retur_kotime = 0;
+$total_diterima_retur_kotime = 0;
+
+// Tampilkan data per marketplace untuk ASTA
+$message .= "🟦 *ASTA HOMEWARE*\n";
 foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
-    $data = $acol_data[$mp];
+    $data_key = 'asta_' . $mp;
+    $data = $acol_data[$data_key];
     if ($data['total_faktur'] > 0) {
         // Hitung non-retur
         $total_faktur_non_retur = $data['total_faktur'] - $data['total_faktur_retur'];
@@ -562,31 +667,128 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
         $message .= "• Selisih: Rp " . number_format($total_selisih_non_retur) . "\n";
         $message .= "• Ratio: " . number_format($ratio, 2) . "%\n\n";
 
-        $total_faktur_all += $data['total_faktur'];
-        $total_ratio_exceed_all += $data['ratio_exceed'];
-        $total_belum_note_all += $data['belum_note'];
-        $total_belum_check_all += $data['belum_check'];
-        $total_butuh_final_dir_all += $data['butuh_final_dir'];
-        $total_invoice_all += $total_invoice_non_retur;
-        $total_diterima_all += $total_diterima_non_retur;
-        $total_faktur_retur_all += $data['total_faktur_retur'];
-        $total_invoice_retur_all += $data['total_invoice_retur'];
-        $total_diterima_retur_all += $data['total_diterima_retur'];
+        // Akumulasi total ASTA
+        $total_faktur_asta += $data['total_faktur'];
+        $total_ratio_exceed_asta += $data['ratio_exceed'];
+        $total_belum_note_asta += $data['belum_note'];
+        $total_belum_check_asta += $data['belum_check'];
+        $total_butuh_final_dir_asta += $data['butuh_final_dir'];
+        $total_invoice_asta += $total_invoice_non_retur;
+        $total_diterima_asta += $total_diterima_non_retur;
+        $total_faktur_retur_asta += $data['total_faktur_retur'];
+        $total_invoice_retur_asta += $data['total_invoice_retur'];
+        $total_diterima_retur_asta += $data['total_diterima_retur'];
     }
 }
+
+// Tampilkan data per marketplace untuk Kotime
+$message .= "🟧 *KOTIME*\n";
+foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
+    $data_key = 'kotime_' . $mp;
+    $data = $acol_data[$data_key];
+    if ($data['total_faktur'] > 0) {
+        // Hitung non-retur
+        $total_faktur_non_retur = $data['total_faktur'] - $data['total_faktur_retur'];
+        $total_invoice_non_retur = $data['total_invoice'] - $data['total_invoice_retur'];
+        $total_diterima_non_retur = $data['total_diterima'] - $data['total_diterima_retur'];
+        $total_selisih_non_retur = $total_invoice_non_retur - $total_diterima_non_retur;
+
+        $ratio = $total_invoice_non_retur > 0 ? ($total_selisih_non_retur / $total_invoice_non_retur * 100) : 0;
+
+        $message .= "🛒 *" . strtoupper($mp) . "*\n";
+        $message .= "• Total Faktur: " . number_format($data['total_faktur']) . "\n";
+        $message .= "  - Non-Retur: " . number_format($total_faktur_non_retur) . "\n";
+        $message .= "  - Retur: " . number_format($data['total_faktur_retur']) . "\n";
+
+        $message .= "• Ratio >{$ratio_limit}%: " . number_format($data['ratio_exceed']) .
+            " (" . number_format(($data['ratio_exceed'] / $total_faktur_non_retur * 100), 1) . "% dari non-retur)\n";
+        $message .= "• Belum Note: " . number_format($data['belum_note']) . "\n";
+        $message .= "• Belum Check: " . number_format($data['belum_check']) . "\n";
+        $message .= "• Butuh Final DIR: " . number_format($data['butuh_final_dir']) . "\n";
+
+        $message .= "• Total Invoice: Rp " . number_format($total_invoice_non_retur) . "\n";
+        $message .= "• Total Diterima: Rp " . number_format($total_diterima_non_retur) . "\n";
+        $message .= "• Selisih: Rp " . number_format($total_selisih_non_retur) . "\n";
+        $message .= "• Ratio: " . number_format($ratio, 2) . "%\n\n";
+
+        // Akumulasi total Kotime
+        $total_faktur_kotime += $data['total_faktur'];
+        $total_ratio_exceed_kotime += $data['ratio_exceed'];
+        $total_belum_note_kotime += $data['belum_note'];
+        $total_belum_check_kotime += $data['belum_check'];
+        $total_butuh_final_dir_kotime += $data['butuh_final_dir'];
+        $total_invoice_kotime += $total_invoice_non_retur;
+        $total_diterima_kotime += $total_diterima_non_retur;
+        $total_faktur_retur_kotime += $data['total_faktur_retur'];
+        $total_invoice_retur_kotime += $data['total_invoice_retur'];
+        $total_diterima_retur_kotime += $data['total_diterima_retur'];
+    }
+}
+
+// Hitung grand total semua brand
+$total_faktur_all = $total_faktur_asta + $total_faktur_kotime;
+$total_ratio_exceed_all = $total_ratio_exceed_asta + $total_ratio_exceed_kotime;
+$total_belum_note_all = $total_belum_note_asta + $total_belum_note_kotime;
+$total_belum_check_all = $total_belum_check_asta + $total_belum_check_kotime;
+$total_butuh_final_dir_all = $total_butuh_final_dir_asta + $total_butuh_final_dir_kotime;
+$total_invoice_all = $total_invoice_asta + $total_invoice_kotime;
+$total_diterima_all = $total_diterima_asta + $total_diterima_kotime;
+$total_faktur_retur_all = $total_faktur_retur_asta + $total_faktur_retur_kotime;
+$total_invoice_retur_all = $total_invoice_retur_asta + $total_invoice_retur_kotime;
+$total_diterima_retur_all = $total_diterima_retur_asta + $total_diterima_retur_kotime;
 
 if ($total_faktur_all > 0) {
     $total_faktur_non_retur_all = $total_faktur_all - $total_faktur_retur_all;
     $selisih_all = $total_invoice_all - $total_diterima_all;
     $ratio_all = $total_invoice_all > 0 ? ($selisih_all / $total_invoice_all) * 100 : 0;
 
-    $message .= "📊 *TOTAL SEMUA MARKETPLACE:*\n";
+    $selisih_asta = $total_invoice_asta - $total_diterima_asta;
+    $ratio_asta = $total_invoice_asta > 0 ? ($selisih_asta / $total_invoice_asta) * 100 : 0;
+
+    $selisih_kotime = $total_invoice_kotime - $total_diterima_kotime;
+    $ratio_kotime = $total_invoice_kotime > 0 ? ($selisih_kotime / $total_invoice_kotime) * 100 : 0;
+
+    $message .= "📊 *SUMMARY PER BRAND*\n";
+
+    // ASTA Summary
+    $message .= "🟦 *ASTA HOMEWARE:*\n";
+    $message .= "• Total Faktur: " . number_format($total_faktur_asta) . "\n";
+    $message .= "  - Non-Retur: " . number_format($total_faktur_asta - $total_faktur_retur_asta) . "\n";
+    $message .= "  - Retur: " . number_format($total_faktur_retur_asta) . "\n";
+    $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_asta) .
+        " (" . number_format(($total_ratio_exceed_asta / ($total_faktur_asta - $total_faktur_retur_asta) * 100), 1) . "% dari non-retur)\n";
+    $message .= "• Belum Note: " . number_format($total_belum_note_asta) . "\n";
+    $message .= "• Belum Check: " . number_format($total_belum_check_asta) . "\n";
+    $message .= "• Butuh Final DIR: " . number_format($total_butuh_final_dir_asta) . "\n";
+    $message .= "• Total Invoice: Rp " . number_format($total_invoice_asta) . "\n";
+    $message .= "• Total Diterima: Rp " . number_format($total_diterima_asta) . "\n";
+    $message .= "• Selisih: Rp " . number_format($selisih_asta) . "\n";
+    $message .= "• Ratio: " . number_format($ratio_asta, 2) . "%\n";
+    $message .= "• Additional Revenue: Rp " . number_format($additional_revenue_asta) . "\n\n";
+
+    // Kotime Summary
+    $message .= "🟧 *KOTIME:*\n";
+    $message .= "• Total Faktur: " . number_format($total_faktur_kotime) . "\n";
+    $message .= "  - Non-Retur: " . number_format($total_faktur_kotime - $total_faktur_retur_kotime) . "\n";
+    $message .= "  - Retur: " . number_format($total_faktur_retur_kotime) . "\n";
+    $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_kotime) .
+        " (" . number_format(($total_ratio_exceed_kotime / ($total_faktur_kotime - $total_faktur_retur_kotime) * 100), 1) . "% dari non-retur)\n";
+    $message .= "• Belum Note: " . number_format($total_belum_note_kotime) . "\n";
+    $message .= "• Belum Check: " . number_format($total_belum_check_kotime) . "\n";
+    $message .= "• Butuh Final DIR: " . number_format($total_butuh_final_dir_kotime) . "\n";
+    $message .= "• Total Invoice: Rp " . number_format($total_invoice_kotime) . "\n";
+    $message .= "• Total Diterima: Rp " . number_format($total_diterima_kotime) . "\n";
+    $message .= "• Selisih: Rp " . number_format($selisih_kotime) . "\n";
+    $message .= "• Ratio: " . number_format($ratio_kotime, 2) . "%\n";
+    $message .= "• Additional Revenue: Rp " . number_format($additional_revenue_kotime) . "\n\n";
+
+    // Grand Total
+    $message .= "📈 *GRAND TOTAL (ASTA + KOTIME):*\n";
     $message .= "• Total Faktur: " . number_format($total_faktur_all) . "\n";
     $message .= "  - Non-Retur: " . number_format($total_faktur_non_retur_all) . "\n";
     $message .= "  - Retur: " . number_format($total_faktur_retur_all) . "\n";
-
     $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_all) .
-        " (" . number_format(($total_ratio_exceed_all / $total_faktur_non_retur_all * 100), 1) . "%)\n";
+        " (" . number_format(($total_ratio_exceed_all / $total_faktur_non_retur_all * 100), 1) . "% dari non-retur)\n";
 
     if ($total_ratio_exceed_all > 0) {
         $message .= "• Belum Note: " . number_format($total_belum_note_all) .
@@ -605,21 +807,27 @@ if ($total_faktur_all > 0) {
     $message .= "• Total Diterima: Rp " . number_format($total_diterima_all) . "\n";
     $message .= "• Selisih: Rp " . number_format($selisih_all) . "\n";
     $message .= "• Ratio: " . number_format($ratio_all, 2) . "%\n";
-    $message .= "• Additional Revenue: Rp " . number_format($additional_revenue) . "\n\n";
+    $message .= "• Additional Revenue Total: Rp " . number_format($additional_revenue_total) . "\n\n";
 } else {
     $message .= "ℹ️ *Tidak ada data faktur untuk periode ini*\n\n";
 }
 
 // 4.3 Critical Invoices Section
 if (!empty($critical_invoices)) {
-    // Kelompokkan berdasarkan kategori
-    $grouped_by_category = [];
+    // Kelompokkan berdasarkan brand dan kategori
+    $grouped_by_brand = [
+        'ASTA' => [],
+        'Kotime' => []
+    ];
+
     foreach ($critical_invoices as $inv) {
+        $brand = $inv['brand'];
         $category = $inv['category'];
-        if (!isset($grouped_by_category[$category])) {
-            $grouped_by_category[$category] = [];
+
+        if (!isset($grouped_by_brand[$brand][$category])) {
+            $grouped_by_brand[$brand][$category] = [];
         }
-        $grouped_by_category[$category][] = $inv;
+        $grouped_by_brand[$brand][$category][] = $inv;
     }
 
     // Urutkan kategori berdasarkan urutan prioritas
@@ -628,36 +836,46 @@ if (!empty($critical_invoices)) {
     $message .= "⚠️ *INVOICE YANG PERLU PERHATIAN:*\n";
     $message .= "Total: " . count($critical_invoices) . " invoice (ratio >{$ratio_limit}%)\n\n";
 
-    foreach ($category_order as $category) {
-        if (isset($grouped_by_category[$category]) && !empty($grouped_by_category[$category])) {
-            $invoices = $grouped_by_category[$category];
+    foreach (['ASTA', 'Kotime'] as $brand) {
+        if (!empty($grouped_by_brand[$brand])) {
+            $brand_total = array_sum(array_map('count', $grouped_by_brand[$brand]));
+            if ($brand_total > 0) {
+                $message .= ($brand == 'ASTA' ? "🟦" : "🟧") . " *" . $brand . " (" . $brand_total . "):*\n";
 
-            // Urutkan berdasarkan ratio tertinggi
-            usort($invoices, function ($a, $b) {
-                return $b['ratio_diference'] <=> $a['ratio_diference'];
-            });
+                foreach ($category_order as $category) {
+                    if (isset($grouped_by_brand[$brand][$category]) && !empty($grouped_by_brand[$brand][$category])) {
+                        $invoices = $grouped_by_brand[$brand][$category];
 
-            $message .= "*" . $category . " (" . count($invoices) . "):*\n";
+                        // Urutkan berdasarkan ratio tertinggi
+                        usort($invoices, function ($a, $b) {
+                            return $b['ratio_diference'] <=> $a['ratio_diference'];
+                        });
 
-            $display_count = min(2, count($invoices));
-            for ($i = 0; $i < $display_count; $i++) {
-                $inv = $invoices[$i];
-                $message .= ($i + 1) . ". " . $inv['no_faktur'] .
-                    " (Ratio: " . number_format($inv['ratio_diference'], 2) . "%)" .
-                    " [" . $inv['source'] . "]\n";
+                        $message .= "*" . $category . " (" . count($invoices) . "):*\n";
+
+                        $display_count = min(2, count($invoices));
+                        for ($i = 0; $i < $display_count; $i++) {
+                            $inv = $invoices[$i];
+                            $message .= ($i + 1) . ". " . $inv['no_faktur'] .
+                                " (Ratio: " . number_format($inv['ratio_diference'], 2) . "%)" .
+                                " [" . $inv['source'] . "]\n";
+                        }
+
+                        if (count($invoices) > $display_count) {
+                            $message .= "...dan " . (count($invoices) - $display_count) . " lainnya\n";
+                        }
+                        $message .= "\n";
+                    }
+                }
             }
-
-            if (count($invoices) > $display_count) {
-                $message .= "...dan " . (count($invoices) - $display_count) . " lainnya\n";
-            }
-            $message .= "\n";
         }
     }
 }
 
 // 4.4 Grand Total
 $message .= "📋 *GRAND TOTAL SEMUA SISTEM:*\n";
-$grand_total_all = $grand_total_wms + $total_belum_note_all + $total_belum_check_all + $total_butuh_final_dir_all;
+$grand_total_acol = $total_belum_note_all + $total_belum_check_all + $total_butuh_final_dir_all;
+$grand_total_all = $grand_total_wms + $grand_total_acol;
 $message .= "• WMS Pending: " . $grand_total_wms . "\n";
 $message .= "• Acol Belum Note: " . $total_belum_note_all . "\n";
 $message .= "• Acol Belum Check: " . $total_belum_check_all . "\n";
@@ -712,9 +930,11 @@ echo "----------------\n";
 echo "ASTA WMS: Semua data (tanpa filter periode)\n";
 echo "ASTA ACOL: " . date('d M Y', strtotime($current_month_start)) . " - " . date('d M Y', strtotime($current_month_end)) . "\n";
 echo "Bulan: " . date('F Y', strtotime($current_month_start)) . "\n";
-echo "Hanya ASTA (non-Kotime)\n";
+echo "Termasuk: ASTA Homeware dan Kotime\n";
 echo "Ratio Limit: " . $ratio_limit . "%\n";
-echo "Additional Revenue: Rp " . number_format($additional_revenue) . "\n\n";
+echo "Additional Revenue Total: Rp " . number_format($additional_revenue_total) . "\n";
+echo "  - ASTA: Rp " . number_format($additional_revenue_asta) . "\n";
+echo "  - Kotime: Rp " . number_format($additional_revenue_kotime) . "\n\n";
 
 if (isset($error_msg)) {
     echo "❌ ERROR cURL: " . $error_msg . "\n";
@@ -748,29 +968,66 @@ echo "  - Final DM: " . $total_final_dm . "\n";
 echo "  - Total WMS: " . $grand_total_wms . "\n\n";
 
 echo "ASTA ACOL (Periode: " . date('d M Y', strtotime($current_month_start)) . " - " . date('d M Y', strtotime($current_month_end)) . "):\n";
+echo "  🟦 ASTA HOMEWARE:\n";
 foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
-    $data = $acol_data[$mp];
+    $data = $acol_data['asta_' . $mp];
     if ($data['total_faktur'] > 0) {
-        echo "  " . strtoupper($mp) . ":\n";
-        echo "    - Total Faktur: " . number_format($data['total_faktur']) . "\n";
-        echo "      • Non-Retur: " . number_format($data['total_faktur'] - $data['total_faktur_retur']) . "\n";
-        echo "      • Retur: " . number_format($data['total_faktur_retur']) . "\n";
-        echo "    - Ratio >{$ratio_limit}%: " . number_format($data['ratio_exceed']) . "\n";
-        echo "    - Belum Note: " . number_format($data['belum_note']) . "\n";
-        echo "    - Belum Check: " . number_format($data['belum_check']) . "\n";
-        echo "    - Butuh Final DIR: " . number_format($data['butuh_final_dir']) . "\n";
+        echo "    " . strtoupper($mp) . ":\n";
+        echo "      - Total Faktur: " . number_format($data['total_faktur']) . "\n";
+        echo "        • Non-Retur: " . number_format($data['total_faktur'] - $data['total_faktur_retur']) . "\n";
+        echo "        • Retur: " . number_format($data['total_faktur_retur']) . "\n";
+        echo "      - Ratio >{$ratio_limit}%: " . number_format($data['ratio_exceed']) . "\n";
+        echo "      - Belum Note: " . number_format($data['belum_note']) . "\n";
+        echo "      - Belum Check: " . number_format($data['belum_check']) . "\n";
+        echo "      - Butuh Final DIR: " . number_format($data['butuh_final_dir']) . "\n";
+    }
+}
+
+echo "  🟧 KOTIME:\n";
+foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
+    $data = $acol_data['kotime_' . $mp];
+    if ($data['total_faktur'] > 0) {
+        echo "    " . strtoupper($mp) . ":\n";
+        echo "      - Total Faktur: " . number_format($data['total_faktur']) . "\n";
+        echo "        • Non-Retur: " . number_format($data['total_faktur'] - $data['total_faktur_retur']) . "\n";
+        echo "        • Retur: " . number_format($data['total_faktur_retur']) . "\n";
+        echo "      - Ratio >{$ratio_limit}%: " . number_format($data['ratio_exceed']) . "\n";
+        echo "      - Belum Note: " . number_format($data['belum_note']) . "\n";
+        echo "      - Belum Check: " . number_format($data['belum_check']) . "\n";
+        echo "      - Butuh Final DIR: " . number_format($data['butuh_final_dir']) . "\n";
     }
 }
 
 echo "\n📈 GRAND TOTAL:\n";
-echo "  - Total Faktur: " . number_format($total_faktur_all) . "\n";
-echo "    • Non-Retur: " . number_format($total_faktur_all - $total_faktur_retur_all) . "\n";
-echo "    • Retur: " . number_format($total_faktur_retur_all) . "\n";
-echo "  - Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_all) . "\n";
-echo "  - Total Invoice: Rp " . number_format($total_invoice_all) . "\n";
-echo "  - Total Diterima: Rp " . number_format($total_diterima_all) . "\n";
-echo "  - Selisih: Rp " . number_format($total_invoice_all - $total_diterima_all) . "\n";
-echo "  - Additional Revenue: Rp " . number_format($additional_revenue) . "\n";
+echo "  🟦 ASTA:\n";
+echo "    - Total Faktur: " . number_format($total_faktur_asta) . "\n";
+echo "      • Non-Retur: " . number_format($total_faktur_asta - $total_faktur_retur_asta) . "\n";
+echo "      • Retur: " . number_format($total_faktur_retur_asta) . "\n";
+echo "    - Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_asta) . "\n";
+echo "    - Total Invoice: Rp " . number_format($total_invoice_asta) . "\n";
+echo "    - Total Diterima: Rp " . number_format($total_diterima_asta) . "\n";
+echo "    - Selisih: Rp " . number_format($total_invoice_asta - $total_diterima_asta) . "\n";
+echo "    - Additional Revenue: Rp " . number_format($additional_revenue_asta) . "\n";
+
+echo "  🟧 KOTIME:\n";
+echo "    - Total Faktur: " . number_format($total_faktur_kotime) . "\n";
+echo "      • Non-Retur: " . number_format($total_faktur_kotime - $total_faktur_retur_kotime) . "\n";
+echo "      • Retur: " . number_format($total_faktur_retur_kotime) . "\n";
+echo "    - Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_kotime) . "\n";
+echo "    - Total Invoice: Rp " . number_format($total_invoice_kotime) . "\n";
+echo "    - Total Diterima: Rp " . number_format($total_diterima_kotime) . "\n";
+echo "    - Selisih: Rp " . number_format($total_invoice_kotime - $total_diterima_kotime) . "\n";
+echo "    - Additional Revenue: Rp " . number_format($additional_revenue_kotime) . "\n";
+
+echo "  📊 TOTAL (ASTA + KOTIME):\n";
+echo "    - Total Faktur: " . number_format($total_faktur_all) . "\n";
+echo "      • Non-Retur: " . number_format($total_faktur_all - $total_faktur_retur_all) . "\n";
+echo "      • Retur: " . number_format($total_faktur_retur_all) . "\n";
+echo "    - Total Invoice: Rp " . number_format($total_invoice_all) . "\n";
+echo "    - Total Diterima: Rp " . number_format($total_diterima_all) . "\n";
+echo "    - Selisih: Rp " . number_format($total_invoice_all - $total_diterima_all) . "\n";
+echo "    - Additional Revenue Total: Rp " . number_format($additional_revenue_total) . "\n";
+
 echo "\n📋 ITEM YANG PERLU PERHATIAN:\n";
 echo "  - WMS: " . $grand_total_wms . "\n";
 echo "  - Acol: " . ($total_belum_note_all + $total_belum_check_all + $total_butuh_final_dir_all) . "\n";
