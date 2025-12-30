@@ -66,7 +66,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="inputRole" class="form-label">Role</label>
-                            <select class="form-select" id="inputRole" name="inputRole">
+                            <select class="form-select" id="inputRole" name="inputRole" required>
                                 <option selected disabled>Pilih Role</option>
                                 <?php foreach ($role as $rkey => $rvalue) { ?>
                                 <option value="<?php echo $rvalue->idrole; ?>"><?php echo $rvalue->nama_role; ?></option>
@@ -74,9 +74,8 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="editRole" class="form-label">System Notification</label>
+                            <label class="form-label">System Notification</label>
                             <div class="form-check form-switch">
-                                <input type="hidden" name="inputWhatsapp" value="0">
                                 <input class="form-check-input" type="checkbox" role="switch" id="addWhatsapp" name="inputWhatsapp" value="1">
                                 <label class="form-check-label" for="addWhatsapp">Notification Whatsapp</label>
                             </div>
@@ -112,7 +111,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="editEmail">Email</label>
-                            <input type="text" class="form-control" id="editEmail" name="editEmail" required>
+                            <input type="email" class="form-control" id="editEmail" name="editEmail" required>
                         </div>
                         <div class="mb-3">
                             <label for="editBirthDate">Tanggal Lahir</label>
@@ -132,17 +131,17 @@
                         </div>
                         <div class="mb-3">
                             <label for="editRole" class="form-label">Role</label>
-                            <select class="form-select" id="editRole" name="editRole">
+                            <select class="form-select" id="editRole" name="editRole" required>
+                                <option selected disabled>Pilih Role</option>
                                 <?php foreach ($role as $rkey => $rvalue) { ?>
                                 <option value="<?php echo $rvalue->idrole; ?>"><?php echo $rvalue->nama_role; ?></option>
                                 <?php } ?>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="editRole" class="form-label">System Notification</label>
+                            <label class="form-label">System Notification</label>
                             <div class="form-check form-switch">
-                                <input type="hidden" name="inputWhatsapp" value="0">
-                                <input class="form-check-input" type="checkbox" role="switch" id="editWhatsapp" name="inputWhatsapp" value="1">
+                                <input class="form-check-input" type="checkbox" role="switch" id="editWhatsapp" name="editWhatsapp" value="1">
                                 <label class="form-check-label" for="editWhatsapp">Notification Whatsapp</label>
                             </div>
                         </div>
@@ -211,7 +210,7 @@
                         <td><span class="badge rounded-pill text-bg-danger">OFF</span></td>
                         <?php } ?>
                         <td>
-                            <button type="button" class="btn btn-warning btnEditUser" data-iduser="<?= $uvalue->iduser ?>" data-full_name="<?= $uvalue->full_name ?>" data-username="<?= $uvalue->username ?>" data-email="<?= $uvalue->email ?>" data-foto="<?= $uvalue->foto ?>" data-idrole="<?= $uvalue->idrole ?>" data-handphone="<?= $uvalue->handphone ?>" data-birth_date="<?= $uvalue->birth_date ?>" data-is_whatsapp="<?= $uvalue->is_whatsapp ?>" data-bs-toggle="modal" data-bs-target="#editUser">
+                            <button type="button" class="btn btn-warning btnEditUser" data-iduser="<?= $uvalue->iduser ?>" data-full_name="<?= $uvalue->full_name ?>" data-username="<?= $uvalue->username ?>" data-email="<?= $uvalue->email ?>" data-foto="<?= $uvalue->foto ?>" data-idrole="<?= $uvalue->idrole ?>" data-handphone="<?= $uvalue->handphone ?>" data-birth_date="<?= $uvalue->birth_date ? date('Y-m-d', strtotime($uvalue->birth_date)) : '' ?>" data-is_whatsapp="<?= $uvalue->is_whatsapp ?>" data-bs-toggle="modal" data-bs-target="#editUser">
                                 <i class="fa fa-edit"></i> Edit
                             </button>
                             <button type="button" class="btn btn-danger btnDeleteUser" data-iduser="<?= $uvalue->iduser ?>" data-full_name="<?= $uvalue->full_name ?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
@@ -288,7 +287,6 @@
                 const full_name = this.getAttribute('data-full_name');
                 const username = this.getAttribute('data-username');
                 const email = this.getAttribute('data-email');
-                const foto = this.getAttribute('data-foto');
                 const idrole = this.getAttribute('data-idrole');
                 const handphone = this.getAttribute('data-handphone');
                 const birth_date = this.getAttribute('data-birth_date');
@@ -312,8 +310,10 @@
                 const checkbox = document.getElementById('editWhatsapp');
                 if (is_whatsapp === '1') {
                     checkbox.checked = true;
+                    checkbox.value = '1';
                 } else {
                     checkbox.checked = false;
+                    checkbox.value = '0';
                 }
             });
         });

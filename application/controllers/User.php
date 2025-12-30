@@ -84,8 +84,8 @@ class User extends CI_Controller
             'foto' => $foto,
             'idrole' => $idrole,
             'handphone' => $handphone,
-            'birth_date' => $birth_date,
-            'is_whatsapp' => $is_whatsapp,
+            'birth_date' => $birth_date ? date('Y-m-d', strtotime($birth_date)) : null,
+            'is_whatsapp' => $is_whatsapp ? 1 : 0,
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),
             'updated_by' => $this->session->userdata('username'),
@@ -108,11 +108,16 @@ class User extends CI_Controller
         $password = $this->input->post('editPassword');
         $idrole = $this->input->post('editRole');
         $handphone = $this->input->post('editHandphone');
-        $is_whatsapp = $this->input->post('inputWhatsapp');
+        $is_whatsapp = $this->input->post('editWhatsapp');
         $birth_date = $this->input->post('editBirthDate');
 
         // Ambil data user lama
         $oldUser = $this->db->get_where('user', ['iduser' => $iduser])->row();
+        if (!$oldUser) {
+            $this->session->set_flashdata('error', 'User tidak ditemukan.');
+            redirect('user');
+            return;
+        }
 
         // Validasi jika username diubah, tidak boleh sama dengan user lain
         $cekUsername = $this->db
@@ -123,6 +128,19 @@ class User extends CI_Controller
             ->row();
         if ($cekUsername) {
             $this->session->set_flashdata('error', 'Username sudah dipakai oleh user aktif lain.');
+            redirect('user');
+            return;
+        }
+
+        // Validasi email jika diubah
+        $cekEmail = $this->db
+            ->where('email',  $email)
+            ->where('iduser !=', $iduser)
+            ->where('status', 1)
+            ->get('user')
+            ->row();
+        if ($cekEmail) {
+            $this->session->set_flashdata('error', 'Email sudah dipakai oleh user aktif lain.');
             redirect('user');
             return;
         }
@@ -155,14 +173,14 @@ class User extends CI_Controller
 
         $data = [
             'full_name' => $namaLengkap,
-            'username' => $username, // disimpan kembali, bisa jadi diubah
+            'username' => $username,
             'email' => $email,
             'password' => $hashedPassword,
             'foto' => $foto,
             'idrole' => $idrole,
             'handphone' => $handphone,
-            'birth_date' => $birth_date,
-            'is_whatsapp' => $is_whatsapp,
+            'birth_date' => $birth_date ? date('Y-m-d', strtotime($birth_date)) : null,
+            'is_whatsapp' => $is_whatsapp ? 1 : 0,
             'updated_by' => $this->session->userdata('username'),
             'updated_date' => date("Y-m-d H:i:s")
         ];
