@@ -1,5 +1,20 @@
 <?php
 
+// Helper function di luar class
+function getStatusText($status)
+{
+    switch ($status) {
+        case 'safe':
+            return '✅ Safe (updated today/yesterday)';
+        case 'empty':
+            return '📭 Empty (no data)';
+        case 'not_updated_today':
+            return '⚠️ Not Updated Today';
+        default:
+            return '❓ Unknown';
+    }
+}
+
 $servername = "103.163.138.82";
 $username = "astahome_it";
 $password = "astawms=d17d09";
@@ -11,8 +26,8 @@ if ($conn->connect_error) {
 }
 
 $token = 'ZsZ2Dp71dyKrgz3YAQKg';
-// $targets = '6281331090331-1528429522@g.us';
-$targets = '6285156340619';
+$targets = '6281331090331-1528429522@g.us';
+// $targets = '6285156340619';
 
 // ===============================================
 // 1. DATA ASTA WMS - TANPA FILTER PERIODE
@@ -201,8 +216,164 @@ $total_final_dm = $result_final_dm->fetch_assoc()['total'];
 // **PERIODE ACOL: tanggal 1 bulan sekarang sampai kemarin**
 $current_month_start = date('Y-m-01');
 $current_month_end = date('Y-m-d', strtotime('-1 day')); // Sampai kemarin
+$today = date('Y-m-d');
+$yesterday = date('Y-m-d', strtotime('-1 day'));
 
 $ratio_limit = 30;
+
+// ===============================================
+// CHECK MARKETPLACE STATUS
+// ===============================================
+
+$marketplace_status = [
+    'shopee' => ['asta' => '', 'kotime' => ''],
+    'tiktok' => ['asta' => '', 'kotime' => ''],
+    'lazada' => ['asta' => '', 'kotime' => '']
+];
+
+// Check Lazada ASTA data
+$sql_lazada_asta_status = "
+    SELECT 
+        CASE 
+            WHEN COUNT(*) = 0 THEN 'empty'
+            WHEN MAX(ald.updated_date) >= '{$today}' THEN 'safe'
+            WHEN MAX(ald.updated_date) >= '{$yesterday}' THEN 'safe'
+            ELSE 'not_updated_today'
+        END as status,
+        COUNT(*) as total_records,
+        MAX(ald.updated_date) as last_update
+    FROM acc_lazada_detail ald
+    INNER JOIN acc_lazada al ON al.idacc_lazada = ald.idacc_lazada
+    WHERE ald.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
+    AND ald.status = 1
+    AND (al.is_kotime = 0 OR al.is_kotime IS NULL)
+";
+
+$result_lazada_asta = $conn->query($sql_lazada_asta_status);
+if ($result_lazada_asta) {
+    $row = $result_lazada_asta->fetch_assoc();
+    $marketplace_status['lazada']['asta'] = $row['status'];
+}
+
+// Check Lazada Kotime data
+$sql_lazada_kotime_status = "
+    SELECT 
+        CASE 
+            WHEN COUNT(*) = 0 THEN 'empty'
+            WHEN MAX(ald.updated_date) >= '{$today}' THEN 'safe'
+            WHEN MAX(ald.updated_date) >= '{$yesterday}' THEN 'safe'
+            ELSE 'not_updated_today'
+        END as status,
+        COUNT(*) as total_records,
+        MAX(ald.updated_date) as last_update
+    FROM acc_lazada_detail ald
+    INNER JOIN acc_lazada al ON al.idacc_lazada = ald.idacc_lazada
+    WHERE ald.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
+    AND ald.status = 1
+    AND al.is_kotime = 1
+";
+
+$result_lazada_kotime = $conn->query($sql_lazada_kotime_status);
+if ($result_lazada_kotime) {
+    $row = $result_lazada_kotime->fetch_assoc();
+    $marketplace_status['lazada']['kotime'] = $row['status'];
+}
+
+// Check Shopee ASTA data
+$sql_shopee_asta_status = "
+    SELECT 
+        CASE 
+            WHEN COUNT(*) = 0 THEN 'empty'
+            WHEN MAX(asd.updated_date) >= '{$today}' THEN 'safe'
+            WHEN MAX(asd.updated_date) >= '{$yesterday}' THEN 'safe'
+            ELSE 'not_updated_today'
+        END as status,
+        COUNT(*) as total_records,
+        MAX(asd.updated_date) as last_update
+    FROM acc_shopee_detail asd
+    INNER JOIN acc_shopee s ON s.idacc_shopee = asd.idacc_shopee
+    WHERE asd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
+    AND asd.status = 1
+    AND (s.is_kotime = 0 OR s.is_kotime IS NULL)
+";
+
+$result_shopee_asta = $conn->query($sql_shopee_asta_status);
+if ($result_shopee_asta) {
+    $row = $result_shopee_asta->fetch_assoc();
+    $marketplace_status['shopee']['asta'] = $row['status'];
+}
+
+// Check Shopee Kotime data
+$sql_shopee_kotime_status = "
+    SELECT 
+        CASE 
+            WHEN COUNT(*) = 0 THEN 'empty'
+            WHEN MAX(asd.updated_date) >= '{$today}' THEN 'safe'
+            WHEN MAX(asd.updated_date) >= '{$yesterday}' THEN 'safe'
+            ELSE 'not_updated_today'
+        END as status,
+        COUNT(*) as total_records,
+        MAX(asd.updated_date) as last_update
+    FROM acc_shopee_detail asd
+    INNER JOIN acc_shopee s ON s.idacc_shopee = asd.idacc_shopee
+    WHERE asd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
+    AND asd.status = 1
+    AND s.is_kotime = 1
+";
+
+$result_shopee_kotime = $conn->query($sql_shopee_kotime_status);
+if ($result_shopee_kotime) {
+    $row = $result_shopee_kotime->fetch_assoc();
+    $marketplace_status['shopee']['kotime'] = $row['status'];
+}
+
+// Check TikTok ASTA data
+$sql_tiktok_asta_status = "
+    SELECT 
+        CASE 
+            WHEN COUNT(*) = 0 THEN 'empty'
+            WHEN MAX(atd.updated_date) >= '{$today}' THEN 'safe'
+            WHEN MAX(atd.updated_date) >= '{$yesterday}' THEN 'safe'
+            ELSE 'not_updated_today'
+        END as status,
+        COUNT(*) as total_records,
+        MAX(atd.updated_date) as last_update
+    FROM acc_tiktok_detail atd
+    INNER JOIN acc_tiktok t ON t.idacc_tiktok = atd.idacc_tiktok
+    WHERE atd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
+    AND atd.status = 1
+    AND (t.is_kotime = 0 OR t.is_kotime IS NULL)
+";
+
+$result_tiktok_asta = $conn->query($sql_tiktok_asta_status);
+if ($result_tiktok_asta) {
+    $row = $result_tiktok_asta->fetch_assoc();
+    $marketplace_status['tiktok']['asta'] = $row['status'];
+}
+
+// Check TikTok Kotime data
+$sql_tiktok_kotime_status = "
+    SELECT 
+        CASE 
+            WHEN COUNT(*) = 0 THEN 'empty'
+            WHEN MAX(atd.updated_date) >= '{$today}' THEN 'safe'
+            WHEN MAX(atd.updated_date) >= '{$yesterday}' THEN 'safe'
+            ELSE 'not_updated_today'
+        END as status,
+        COUNT(*) as total_records,
+        MAX(atd.updated_date) as last_update
+    FROM acc_tiktok_detail atd
+    INNER JOIN acc_tiktok t ON t.idacc_tiktok = atd.idacc_tiktok
+    WHERE atd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
+    AND atd.status = 1
+    AND t.is_kotime = 1
+";
+
+$result_tiktok_kotime = $conn->query($sql_tiktok_kotime_status);
+if ($result_tiktok_kotime) {
+    $row = $result_tiktok_kotime->fetch_assoc();
+    $marketplace_status['tiktok']['kotime'] = $row['status'];
+}
 
 // 2.2 Query untuk data Acol dengan periode tertentu - INCLUDE KOTIME
 $sql_acol_detail = "
@@ -238,7 +409,6 @@ $sql_acol_detail = "
     AND aad.payment IS NOT NULL
     AND asd.total_faktur > 0
     AND asd.status = 1
-    -- REMOVE Kotime filter: include both ASTA and Kotime
     GROUP BY asd.no_faktur
 
     UNION
@@ -275,7 +445,6 @@ $sql_acol_detail = "
     AND aad.payment IS NOT NULL
     AND atd.total_faktur > 0
     AND atd.status = 1
-    -- REMOVE Kotime filter: include both ASTA and Kotime
     GROUP BY atd.no_faktur
 
     UNION
@@ -296,9 +465,9 @@ $sql_acol_detail = "
         MAX(aad.discount) AS accurate_discount,
         MAX(aad.payment) AS accurate_payment,
         'lazada' as source,
-        MAX(l.is_kotime) as is_kotime
+        MAX(al.is_kotime) as is_kotime
     FROM acc_lazada_detail ald
-    INNER JOIN acc_lazada l ON l.idacc_lazada = ald.idacc_lazada
+    INNER JOIN acc_lazada al ON al.idacc_lazada = ald.idacc_lazada
     LEFT JOIN (
         SELECT a1.*
         FROM acc_accurate_detail a1
@@ -312,7 +481,6 @@ $sql_acol_detail = "
     AND aad.payment IS NOT NULL
     AND ald.total_faktur > 0
     AND ald.status = 1
-    -- REMOVE Kotime filter: include both ASTA and Kotime
     GROUP BY ald.no_faktur
 
     ORDER BY no_faktur ASC
@@ -408,7 +576,8 @@ $all_invoices = [];
 if ($result_acol) {
     while ($row = $result_acol->fetch_assoc()) {
         $source = $row['source'];
-        $is_kotime = $row['is_kotime'] == 1;
+        // Handle NULL is_kotime values (treat as ASTA)
+        $is_kotime = ($row['is_kotime'] == 1) ? 1 : 0;
         $brand_prefix = $is_kotime ? 'kotime_' : 'asta_';
         $data_key = $brand_prefix . $source;
 
@@ -483,11 +652,13 @@ $additional_revenue_kotime = 0;
 
 // Shopee ASTA
 $sql_additional_shopee_asta = "
-    SELECT SUM(additional_revenue) as total
-    FROM acc_shopee_additional 
-    WHERE start_date >= '{$current_month_start}' 
-    AND end_date <= '{$current_month_end}'
-    AND is_kotime = 0
+    SELECT SUM(asa.additional_revenue) as total
+    FROM acc_shopee_additional asa
+    INNER JOIN acc_shopee s ON s.idacc_shopee = asa.idacc_shopee
+    WHERE asa.start_date >= '{$current_month_start}' 
+    AND asa.end_date <= '{$current_month_end}'
+    AND (s.is_kotime = 0 OR s.is_kotime IS NULL)
+    AND asa.status = 1
 ";
 $result_shopee_add_asta = $conn->query($sql_additional_shopee_asta);
 if ($result_shopee_add_asta) {
@@ -497,11 +668,13 @@ if ($result_shopee_add_asta) {
 
 // TikTok ASTA
 $sql_additional_tiktok_asta = "
-    SELECT SUM(additional_revenue) as total
-    FROM acc_tiktok_additional 
-    WHERE start_date >= '{$current_month_start}' 
-    AND end_date <= '{$current_month_end}'
-    AND is_kotime = 0
+    SELECT SUM(ata.additional_revenue) as total
+    FROM acc_tiktok_additional ata
+    INNER JOIN acc_tiktok t ON t.idacc_tiktok = ata.idacc_tiktok
+    WHERE ata.start_date >= '{$current_month_start}' 
+    AND ata.end_date <= '{$current_month_end}'
+    AND (t.is_kotime = 0 OR t.is_kotime IS NULL)
+    AND ata.status = 1
 ";
 $result_tiktok_add_asta = $conn->query($sql_additional_tiktok_asta);
 if ($result_tiktok_add_asta) {
@@ -509,13 +682,15 @@ if ($result_tiktok_add_asta) {
     $additional_revenue_asta += $row['total'] ?? 0;
 }
 
-// Lazada ASTA
+// Lazada ASTA Additional Revenue (is_kotime = 0 or NULL)
 $sql_additional_lazada_asta = "
-    SELECT SUM(additional_revenue) as total
-    FROM acc_lazada_additional 
-    WHERE start_date >= '{$current_month_start}' 
-    AND end_date <= '{$current_month_end}'
-    AND is_kotime = 0
+    SELECT SUM(ala.additional_revenue) as total
+    FROM acc_lazada_additional ala
+    INNER JOIN acc_lazada al ON al.idacc_lazada = ala.idacc_lazada
+    WHERE ala.start_date >= '{$current_month_start}' 
+    AND ala.end_date <= '{$current_month_end}'
+    AND (al.is_kotime = 0 OR al.is_kotime IS NULL)
+    AND ala.status = 1
 ";
 $result_lazada_add_asta = $conn->query($sql_additional_lazada_asta);
 if ($result_lazada_add_asta) {
@@ -525,11 +700,13 @@ if ($result_lazada_add_asta) {
 
 // Shopee Kotime
 $sql_additional_shopee_kotime = "
-    SELECT SUM(additional_revenue) as total
-    FROM acc_shopee_additional 
-    WHERE start_date >= '{$current_month_start}' 
-    AND end_date <= '{$current_month_end}'
-    AND is_kotime = 1
+    SELECT SUM(asa.additional_revenue) as total
+    FROM acc_shopee_additional asa
+    INNER JOIN acc_shopee s ON s.idacc_shopee = asa.idacc_shopee
+    WHERE asa.start_date >= '{$current_month_start}' 
+    AND asa.end_date <= '{$current_month_end}'
+    AND s.is_kotime = 1
+    AND asa.status = 1
 ";
 $result_shopee_add_kotime = $conn->query($sql_additional_shopee_kotime);
 if ($result_shopee_add_kotime) {
@@ -539,11 +716,13 @@ if ($result_shopee_add_kotime) {
 
 // TikTok Kotime
 $sql_additional_tiktok_kotime = "
-    SELECT SUM(additional_revenue) as total
-    FROM acc_tiktok_additional 
-    WHERE start_date >= '{$current_month_start}' 
-    AND end_date <= '{$current_month_end}'
-    AND is_kotime = 1
+    SELECT SUM(ata.additional_revenue) as total
+    FROM acc_tiktok_additional ata
+    INNER JOIN acc_tiktok t ON t.idacc_tiktok = ata.idacc_tiktok
+    WHERE ata.start_date >= '{$current_month_start}' 
+    AND ata.end_date <= '{$current_month_end}'
+    AND t.is_kotime = 1
+    AND ata.status = 1
 ";
 $result_tiktok_add_kotime = $conn->query($sql_additional_tiktok_kotime);
 if ($result_tiktok_add_kotime) {
@@ -551,13 +730,15 @@ if ($result_tiktok_add_kotime) {
     $additional_revenue_kotime += $row['total'] ?? 0;
 }
 
-// Lazada Kotime
+// Lazada Kotime Additional Revenue (is_kotime = 1)
 $sql_additional_lazada_kotime = "
-    SELECT SUM(additional_revenue) as total
-    FROM acc_lazada_additional 
-    WHERE start_date >= '{$current_month_start}' 
-    AND end_date <= '{$current_month_end}'
-    AND is_kotime = 1
+    SELECT SUM(ala.additional_revenue) as total
+    FROM acc_lazada_additional ala
+    INNER JOIN acc_lazada al ON al.idacc_lazada = ala.idacc_lazada
+    WHERE ala.start_date >= '{$current_month_start}' 
+    AND ala.end_date <= '{$current_month_end}'
+    AND al.is_kotime = 1
+    AND ala.status = 1
 ";
 $result_lazada_add_kotime = $conn->query($sql_additional_lazada_kotime);
 if ($result_lazada_add_kotime) {
@@ -575,7 +756,24 @@ $current_date = date('d F Y');
 $message = "📊 *ASTA HOMEWARE - DAILY REPORT*\n";
 $message .= "*Tanggal: " . $current_date . "*\n\n";
 
-// 4.1 Asta WMS Section - TANPA PERIODE (semua data)
+// 4.0 Marketplace Status Section
+$message .= "══════ STATUS MARKETPLACE ═════\n";
+$message .= "*Periode: " . date('d M Y', strtotime($current_month_start)) . " - " . date('d M Y', strtotime($current_month_end)) . "*\n\n";
+
+foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
+    $message .= "🛒 *" . strtoupper($mp) . "*\n";
+
+    // ASTA Status
+    $asta_status = $marketplace_status[$mp]['asta'];
+    $asta_status_text = getStatusText($asta_status);
+    $message .= "  🟦 ASTA: " . $asta_status_text . "\n";
+
+    // Kotime Status
+    $kotime_status = $marketplace_status[$mp]['kotime'];
+    $kotime_status_text = getStatusText($kotime_status);
+    $message .= "  🟧 Kotime: " . $kotime_status_text . "\n\n";
+}
+
 $message .= "══════ Asta WMS ═════\n";
 $message .= "*(Semua data tanpa filter periode)*\n\n";
 
@@ -678,6 +876,9 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
         $total_faktur_retur_asta += $data['total_faktur_retur'];
         $total_invoice_retur_asta += $data['total_invoice_retur'];
         $total_diterima_retur_asta += $data['total_diterima_retur'];
+    } else {
+        $message .= "🛒 *" . strtoupper($mp) . "*\n";
+        $message .= "• Tidak ada data faktur\n\n";
     }
 }
 
@@ -693,7 +894,7 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
         $total_diterima_non_retur = $data['total_diterima'] - $data['total_diterima_retur'];
         $total_selisih_non_retur = $total_invoice_non_retur - $total_diterima_non_retur;
 
-        $ratio = $total_invoice_non_retur > 0 ? ($total_selisih_non_retur / $total_invoice_non_retur * 100) : 0;
+        $ratio = $total_invoice_non_retur > 0 ? ($total_selisih_non_retur / $total_invoice_non_retur) * 100 : 0;
 
         $message .= "🛒 *" . strtoupper($mp) . "*\n";
         $message .= "• Total Faktur: " . number_format($data['total_faktur']) . "\n";
@@ -722,6 +923,9 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
         $total_faktur_retur_kotime += $data['total_faktur_retur'];
         $total_invoice_retur_kotime += $data['total_invoice_retur'];
         $total_diterima_retur_kotime += $data['total_diterima_retur'];
+    } else {
+        $message .= "🛒 *" . strtoupper($mp) . "*\n";
+        $message .= "• Tidak ada data faktur\n\n";
     }
 }
 
@@ -755,8 +959,12 @@ if ($total_faktur_all > 0) {
     $message .= "• Total Faktur: " . number_format($total_faktur_asta) . "\n";
     $message .= "  - Non-Retur: " . number_format($total_faktur_asta - $total_faktur_retur_asta) . "\n";
     $message .= "  - Retur: " . number_format($total_faktur_retur_asta) . "\n";
-    $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_asta) .
-        " (" . number_format(($total_ratio_exceed_asta / ($total_faktur_asta - $total_faktur_retur_asta) * 100), 1) . "% dari non-retur)\n";
+    if ($total_faktur_asta - $total_faktur_retur_asta > 0) {
+        $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_asta) .
+            " (" . number_format(($total_ratio_exceed_asta / ($total_faktur_asta - $total_faktur_retur_asta) * 100), 1) . "% dari non-retur)\n";
+    } else {
+        $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_asta) . "\n";
+    }
     $message .= "• Belum Note: " . number_format($total_belum_note_asta) . "\n";
     $message .= "• Belum Check: " . number_format($total_belum_check_asta) . "\n";
     $message .= "• Butuh Final DIR: " . number_format($total_butuh_final_dir_asta) . "\n";
@@ -771,8 +979,12 @@ if ($total_faktur_all > 0) {
     $message .= "• Total Faktur: " . number_format($total_faktur_kotime) . "\n";
     $message .= "  - Non-Retur: " . number_format($total_faktur_kotime - $total_faktur_retur_kotime) . "\n";
     $message .= "  - Retur: " . number_format($total_faktur_retur_kotime) . "\n";
-    $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_kotime) .
-        " (" . number_format(($total_ratio_exceed_kotime / ($total_faktur_kotime - $total_faktur_retur_kotime) * 100), 1) . "% dari non-retur)\n";
+    if ($total_faktur_kotime - $total_faktur_retur_kotime > 0) {
+        $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_kotime) .
+            " (" . number_format(($total_ratio_exceed_kotime / ($total_faktur_kotime - $total_faktur_retur_kotime) * 100), 1) . "% dari non-retur)\n";
+    } else {
+        $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_kotime) . "\n";
+    }
     $message .= "• Belum Note: " . number_format($total_belum_note_kotime) . "\n";
     $message .= "• Belum Check: " . number_format($total_belum_check_kotime) . "\n";
     $message .= "• Butuh Final DIR: " . number_format($total_butuh_final_dir_kotime) . "\n";
@@ -787,8 +999,12 @@ if ($total_faktur_all > 0) {
     $message .= "• Total Faktur: " . number_format($total_faktur_all) . "\n";
     $message .= "  - Non-Retur: " . number_format($total_faktur_non_retur_all) . "\n";
     $message .= "  - Retur: " . number_format($total_faktur_retur_all) . "\n";
-    $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_all) .
-        " (" . number_format(($total_ratio_exceed_all / $total_faktur_non_retur_all * 100), 1) . "% dari non-retur)\n";
+    if ($total_faktur_non_retur_all > 0) {
+        $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_all) .
+            " (" . number_format(($total_ratio_exceed_all / $total_faktur_non_retur_all * 100), 1) . "% dari non-retur)\n";
+    } else {
+        $message .= "• Ratio >{$ratio_limit}%: " . number_format($total_ratio_exceed_all) . "\n";
+    }
 
     if ($total_ratio_exceed_all > 0) {
         $message .= "• Belum Note: " . number_format($total_belum_note_all) .
@@ -936,6 +1152,15 @@ echo "Additional Revenue Total: Rp " . number_format($additional_revenue_total) 
 echo "  - ASTA: Rp " . number_format($additional_revenue_asta) . "\n";
 echo "  - Kotime: Rp " . number_format($additional_revenue_kotime) . "\n\n";
 
+echo "📊 MARKETPLACE STATUS:\n";
+echo "---------------------\n";
+foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
+    echo strtoupper($mp) . ":\n";
+    echo "  ASTA: " . getStatusText($marketplace_status[$mp]['asta']) . "\n";
+    echo "  Kotime: " . getStatusText($marketplace_status[$mp]['kotime']) . "\n";
+}
+echo "\n";
+
 if (isset($error_msg)) {
     echo "❌ ERROR cURL: " . $error_msg . "\n";
 } else {
@@ -980,6 +1205,8 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
         echo "      - Belum Note: " . number_format($data['belum_note']) . "\n";
         echo "      - Belum Check: " . number_format($data['belum_check']) . "\n";
         echo "      - Butuh Final DIR: " . number_format($data['butuh_final_dir']) . "\n";
+    } else {
+        echo "    " . strtoupper($mp) . ": Tidak ada data\n";
     }
 }
 
@@ -995,6 +1222,8 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
         echo "      - Belum Note: " . number_format($data['belum_note']) . "\n";
         echo "      - Belum Check: " . number_format($data['belum_check']) . "\n";
         echo "      - Butuh Final DIR: " . number_format($data['butuh_final_dir']) . "\n";
+    } else {
+        echo "    " . strtoupper($mp) . ": Tidak ada data\n";
     }
 }
 

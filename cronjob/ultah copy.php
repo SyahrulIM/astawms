@@ -1,58 +1,111 @@
 <?php
 
-$servername = "103.163.138.82";
-$username = "astahome_it";
-$password = "astawms=d17d09";
-$dbname = "astahome_wms";
-$conn = new mysqli($servername, $username, $password, $dbname);
+date_default_timezone_set('Asia/Jakarta');
+
+/* =====================
+   CONFIG
+===================== */
 $token = 'ZsZ2Dp71dyKrgz3YAQKg';
 
-$targets = '6285156340619, 6281331090331, 62816536516, 6285755313101, 62895371819977, 6285816236056,  6285731122858, 6285743103073, 6289612686399, 6289616460526, 6285735096566, 6285733207227, 6285856777414, 6281215908797, 6285806241787, 628563557912, 6281340238155, 6285926871752, 6285755692019, 6282141428660';
+/* =====================
+   DATA KARYAWAN (DISISAKAN)
+===================== */
+$employees = [
+    ['name' => 'Suriadi Chiannger', 'date' => '28-09', 'phone' => '0816536516'],
+    ['name' => 'Priaji Utomo', 'date' => '13-11', 'phone' => '08563557912'],
+    ['name' => 'Virijani Rossanna', 'date' => '24-03', 'phone' => '081331090331'],
+];
 
-$message = "🎉 *ULTAH ALERT!* 🎉\n\n"
-    . "Selamat siang rekan-rekan Asta Homeware 🙏\n\n"
-    . "Dalam rangka menyambut H-0 ulang tahun karyawan, sesuai agenda kita mengadakan pengumpulan dana dengan nominal seikhlasnya.\n\n"
-    . "Bersama ini kami informasikan bahwa dalam waktu dekat:\n\n"
-    . "🎯 *DETAIL ULTAH* 🎯\n"
-    . "━━━━━━━━━━━━━━━━━━\n"
-    . "👤 *Nama*       : Purwono\n"
-    . "📅 *Tanggal*    : 18 Desember 2025\n"
-    . "━━━━━━━━━━━━━━━━━━\n\n"
-    . "Kami mengajak seluruh rekan-rekan yang berkenan untuk ikut berpartisipasi dalam pengumpulan dana ini sebagai bentuk perhatian kita bersama.\n\n"
-    . "🔒 *Mohon dijaga kerahasiaannya* ya teman-teman, agar ini bisa menjadi kejutan yang spesial untuk beliau hehe 🤓\n\n"
-    . "Untuk transfer partisipasi dapat dilakukan ke rekening:\n\n"
-    . "💳 *INFO TRANSFER* 💳\n"
-    . "━━━━━━━━━━━━━━━━━━\n"
-    . "🏦 *Bank*      : BCA\n"
-    . "🔢 *No. Rek*   : 6720711981\n"
-    . "👩 *Atas Nama* : Imroatin Fauziah\n"
-    . "━━━━━━━━━━━━━━━━━━\n\n"
-    . "🙏 *TERIMA KASIH* 🙏\n"
-    . "Atas partisipasi dan kerja sama rekan-rekan semua kami ucapkan terima kasih😉\n\n"
-    . "━━━━━━━━━━━━━━━━━━\n"
-    . "_Asta Homeware ERP_";
-
-echo nl2br($message);
-
-$curl = curl_init();
-curl_setopt_array($curl, array(
-    CURLOPT_URL => 'https://api.fonnte.com/send',
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST => true,
-    CURLOPT_POSTFIELDS => array(
-        'target' => $targets,
-        'message' => $message,
-        'countryCode' => '62',
-    ),
-    CURLOPT_HTTPHEADER => array(
-        'Authorization: ' . $token
-    ),
-));
-
-$response = curl_exec($curl);
-if ($response === false) {
-    echo 'Curl error: ' . curl_error($curl);
-} else {
-    echo 'Message sent successfully!';
+/* =====================
+   NORMALISASI NO HP
+===================== */
+function normalizePhone($phone)
+{
+    $phone = preg_replace('/[^0-9]/', '', $phone);
+    if (substr($phone, 0, 1) === '0') {
+        $phone = '62' . substr($phone, 1);
+    }
+    return $phone;
 }
-curl_close($curl);
+
+/* =====================
+   TANGGAL HARI INI
+===================== */
+$today = new DateTime(date('Y-m-d'));
+
+/* =====================
+   LOOP CEK ULTAH
+===================== */
+foreach ($employees as $emp) {
+
+    [$day, $month] = explode('-', $emp['date']);
+
+    $birthday = DateTime::createFromFormat(
+        'Y-m-d',
+        date('Y') . "-{$month}-{$day}"
+    );
+
+    $diffDays = (int) $today->diff($birthday)->format('%r%a');
+
+    // HANYA H-2, H-1, H-0
+    if (!in_array($diffDays, [-2, -1, 0])) {
+        continue;
+    }
+
+    /* =====================
+       TARGET WA (KECUALI YG ULTAH)
+    ====================== */
+    $excludePhone = normalizePhone($emp['phone']);
+    $targets = [];
+
+    foreach ($employees as $t) {
+        if (normalizePhone($t['phone']) === $excludePhone) {
+            continue;
+        }
+        $targets[] = normalizePhone($t['phone']);
+    }
+
+    if (empty($targets)) {
+        continue;
+    }
+
+    $targets = implode(',', $targets);
+
+    /* =====================
+       MESSAGE
+    ====================== */
+    $message = "🎉 *ULTAH ALERT!* 🎉\n\n"
+        . "Selamat siang rekan-rekan 🙏\n\n"
+        . "Dalam rangka menyambut H-" . abs($diffDays) . " ulang tahun karyawan, "
+        . "diadakan pengumpulan dana seikhlasnya.\n\n"
+        . "🎯 *DETAIL ULTAH*\n"
+        . "━━━━━━━━━━━━━━━━━━\n"
+        . "👤 *Nama*    : {$emp['name']}\n"
+        . "📅 *Tanggal* : {$day}-{$month}\n"
+        . "━━━━━━━━━━━━━━━━━━\n\n"
+        . "🔒 *Mohon dijaga kerahasiaannya* ya 🤓\n\n"
+        . "_Asta Homeware ERP_";
+
+    /* =====================
+       SEND WA
+    ====================== */
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://api.fonnte.com/send',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => [
+            'target' => $targets,
+            'message' => $message,
+            'countryCode' => '62',
+        ],
+        CURLOPT_HTTPHEADER => [
+            'Authorization: ' . $token
+        ],
+    ]);
+
+    curl_exec($curl);
+    curl_close($curl);
+}
+
+echo "Cron birthday executed";
