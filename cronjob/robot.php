@@ -7,7 +7,7 @@ function getStatusText($status)
         case 'safe':
             return '✅ Safe (updated today/yesterday)';
         case 'empty':
-            return '📭 Empty (no data)';
+            return '📭 No Transaction (no data)';
         case 'not_updated_today':
             return '⚠️ Not Updated Today';
         default:

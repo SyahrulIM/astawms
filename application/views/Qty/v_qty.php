@@ -41,6 +41,18 @@
                                     <div class="row">
                                         <div class="col">
                                             <div class="mb-3">
+                                                <label for="sale_mouth" class="form-label">Type Pre Order:</label>
+                                                <select name="type_po" id="type_po" class="form-select">
+                                                    <option value="">--- Select Type Pre Order ---</option>
+                                                    <option value="online">Online</option>
+                                                    <option value="offline">Offline</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
                                                 <label for="sale_mouth" class="form-label">Excel Rincian Penjualan per Barang per Bulan Accurate ( Penjualan bulan lalu, Penjualan bulan ini ):</label>
                                                 <input type="file" class="form-control" name="sale_mouth" id="sale_mouth" accept=".xlsx">
                                             </div>
