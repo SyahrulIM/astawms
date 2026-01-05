@@ -116,6 +116,10 @@ PC Remote List:
   ID: 118912117
   PASS: asta3101
 
+- Laptop Acer Northwest
+  ID: 126969812
+  PASS: asta3101
+
 SMTP Gmail:
 Username: chalung.izha@gmail.com
 Password: apls xytd rkek nxqr
