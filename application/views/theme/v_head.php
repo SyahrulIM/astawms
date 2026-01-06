@@ -137,19 +137,14 @@
                             Mutasi
                             <?php
                             $this->load->helper('transaction');
-                            $manual_pending_verification = number_pending_verification_delivery_manual();
+                            $manual_pending_verification = number_pending_verification_delivery_mutasi();
                             if ($manual_pending_verification > 0) : ?>
                             <span class="badge rounded-pill text-bg-primary"><?= $manual_pending_verification; ?></span>
                             <?php endif; ?>
                             <?php
-                            $manual_pending_validasi = number_pending_validasi_delivery_manual();
+                            $manual_pending_validasi = number_pending_validasi_delivery_mutasi();
                             if ($manual_pending_validasi > 0) : ?>
                             <span class="badge rounded-pill text-bg-info"><?= $manual_pending_validasi; ?></span>
-                            <?php endif; ?>
-                            <?php
-                            $manual_pending_final = number_pending_final_delivery_manual();
-                            if ($manual_pending_final > 0) : ?>
-                            <span class="badge rounded-pill text-bg-success"><?= $manual_pending_final; ?></span>
                             <?php endif; ?>
                         </a>
                     </div>

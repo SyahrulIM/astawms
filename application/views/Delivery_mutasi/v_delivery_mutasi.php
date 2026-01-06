@@ -372,17 +372,11 @@
                                         <a href="#" class="btn btn-sm btn-info mb-1" onclick="showValidasiModal(<?= $dvalue->iddelivery_note ?>)">
                                             <i class="fas fa-check-double"></i> Validasi
                                         </a><br>
-                                        <?php } else if ($dvalue->progress == 3 && $this->session->userdata('idrole') == 1) { ?>
-                                        <a href="#" class="btn btn-sm btn-success mb-1" onclick="showFinalModal(<?= $dvalue->iddelivery_note ?>)">
-                                            <i class="fas fa-check-double"></i> Final DIR
-                                        </a><br>
                                         <?php } ?>
                                         <?php if ($dvalue->progress == 2 && $this->session->userdata('idrole') == 6 || $dvalue->progress == 2 && $this->session->userdata('idrole') == 1) { ?>
                                         <span class="badge text-bg-info">Menunggu Validasi</span>
                                         <?php } else if ($dvalue->progress == 1 && $this->session->userdata('idrole') == 5 || $dvalue->progress == 2 && $this->session->userdata('idrole') == 1) { ?>
                                         <span class="badge text-bg-primary">Menunggu Verifikasi</span>
-                                        <?php } else if ($dvalue->progress == 3 && $this->session->userdata('idrole') == 6 || $dvalue->progress == 3 && $this->session->userdata('idrole') == 5) { ?>
-                                        <span class="badge text-bg-success">Menunggu Final Dir dari Direktur</span>
                                         <?php } ?>
                                         <?php if ($this->session->userdata('idrole') == 1) { ?>
                                         <a href="<?= base_url('assets/image/surat_jalan/' . $dvalue->foto) ?>" download class="btn btn-sm btn-outline-secondary">
