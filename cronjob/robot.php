@@ -209,6 +209,69 @@ $sql_final_delivery_manual = "
 $result_final_dm = $conn->query($sql_final_delivery_manual);
 $total_final_dm = $result_final_dm->fetch_assoc()['total'];
 
+// 8. Hitung pending verification Surat Jalan Mutasi (kategori 3) - semua data
+$sql_verification_mutasi = "
+    SELECT COUNT(DISTINCT dn.iddelivery_note) as total
+    FROM delivery_note dn
+    LEFT JOIN (
+        SELECT t1.* 
+        FROM delivery_note_log t1
+        JOIN (
+            SELECT iddelivery_note, MAX(created_date) as max_date
+            FROM delivery_note_log
+            GROUP BY iddelivery_note
+        ) t2 ON t1.iddelivery_note = t2.iddelivery_note AND t1.created_date = t2.max_date
+    ) dnl ON dnl.iddelivery_note = dn.iddelivery_note
+    WHERE dn.status = 1
+    AND dn.kategori = 3
+    AND dnl.progress = 1
+";
+
+$result_verif_mutasi = $conn->query($sql_verification_mutasi);
+$total_verif_mutasi = $result_verif_mutasi->fetch_assoc()['total'];
+
+// 9. Hitung pending validation Surat Jalan Mutasi (kategori 3) - semua data
+$sql_validation_mutasi = "
+    SELECT COUNT(DISTINCT dn.iddelivery_note) as total
+    FROM delivery_note dn
+    LEFT JOIN (
+        SELECT t1.* 
+        FROM delivery_note_log t1
+        JOIN (
+            SELECT iddelivery_note, MAX(created_date) as max_date
+            FROM delivery_note_log
+            GROUP BY iddelivery_note
+        ) t2 ON t1.iddelivery_note = t2.iddelivery_note AND t1.created_date = t2.max_date
+    ) dnl ON dnl.iddelivery_note = dn.iddelivery_note
+    WHERE dn.status = 1
+    AND dn.kategori = 3
+    AND dnl.progress = 2
+";
+
+$result_valid_mutasi = $conn->query($sql_validation_mutasi);
+$total_valid_mutasi = $result_valid_mutasi->fetch_assoc()['total'];
+
+// 10. Hitung pending Final DIR Surat Jalan Mutasi (kategori 3) - semua data
+$sql_final_mutasi = "
+    SELECT COUNT(DISTINCT dn.iddelivery_note) as total
+    FROM delivery_note dn
+    LEFT JOIN (
+        SELECT t1.* 
+        FROM delivery_note_log t1
+        JOIN (
+            SELECT iddelivery_note, MAX(created_date) as max_date
+            FROM delivery_note_log
+            GROUP BY iddelivery_note
+        ) t2 ON t1.iddelivery_note = t2.iddelivery_note AND t1.created_date = t2.max_date
+    ) dnl ON dnl.iddelivery_note = dn.iddelivery_note
+    WHERE dn.status = 1
+    AND dn.kategori = 3
+    AND dnl.progress = 3
+";
+
+$result_final_mutasi = $conn->query($sql_final_mutasi);
+$total_final_mutasi = $result_final_mutasi->fetch_assoc()['total'];
+
 // ===============================================
 // 2. DATA ASTA ACOL DENGAN PERIODE KHUSUS - DENGAN KOTIME
 // ===============================================
@@ -782,20 +845,26 @@ $message .= "• Instock Pending: " . $total_instock . "\n";
 $message .= "• Outstock Pending: " . $total_outstock . "\n";
 $message .= "• Total: " . ($total_instock + $total_outstock) . "\n\n";
 
-$message .= "🚚 *DELIVERY NOTE:*\n";
+$message .= "🚚 *Surat Jalan:*\n";
 $message .= "• Verifikasi Pending: " . $total_verif_dn . "\n";
 $message .= "• Validasi Pending: " . $total_valid_dn . "\n";
 $message .= "• Final DIR Pending: " . $total_final_dn . "\n";
 $message .= "• Total: " . ($total_verif_dn + $total_valid_dn + $total_final_dn) . "\n\n";
 
-$message .= "📝 *DELIVERY MANUAL:*\n";
+$message .= "📝 *Surat Jalan Manual:*\n";
 $message .= "• Verifikasi Pending: " . $total_verif_dm . "\n";
 $message .= "• Validasi Pending: " . $total_valid_dm . "\n";
 $message .= "• Final DIR Pending: " . $total_final_dm . "\n";
 $message .= "• Total: " . ($total_verif_dm + $total_valid_dm + $total_final_dm) . "\n\n";
 
+$message .= "🔄 *Surat Jalan Mutasi:*\n";
+$message .= "• Verifikasi Pending: " . $total_verif_mutasi . "\n";
+$message .= "• Validasi Pending: " . $total_valid_mutasi . "\n";
+$message .= "• Final DIR Pending: " . $total_final_mutasi . "\n";
+$message .= "• Total: " . ($total_verif_mutasi + $total_valid_mutasi + $total_final_mutasi) . "\n\n";
+
 $message .= "📈 *GRAND TOTAL PENDING WMS:*\n";
-$grand_total_wms = ($total_instock + $total_outstock) + ($total_verif_dn + $total_valid_dn + $total_final_dn) + ($total_verif_dm + $total_valid_dm + $total_final_dm);
+$grand_total_wms = ($total_instock + $total_outstock) + ($total_verif_dn + $total_valid_dn + $total_final_dn) + ($total_verif_dm + $total_valid_dm + $total_final_dm) + ($total_verif_mutasi + $total_valid_mutasi + $total_final_mutasi);
 $message .= "• *" . $grand_total_wms . " transaksi* membutuhkan tindakan\n\n";
 
 // 4.2 Asta Acol Section - DENGAN PERIODE KHUSUS
@@ -1184,12 +1253,15 @@ echo "----------------\n";
 echo "ASTA WMS (Semua data):\n";
 echo "  - Instock Pending: " . $total_instock . "\n";
 echo "  - Outstock Pending: " . $total_outstock . "\n";
-echo "  - Verif DN: " . $total_verif_dn . "\n";
-echo "  - Valid DN: " . $total_valid_dn . "\n";
-echo "  - Final DN: " . $total_final_dn . "\n";
-echo "  - Verif DM: " . $total_verif_dm . "\n";
-echo "  - Valid DM: " . $total_valid_dm . "\n";
-echo "  - Final DM: " . $total_final_dm . "\n";
+echo "  - Verif DN (K1): " . $total_verif_dn . "\n";
+echo "  - Valid DN (K1): " . $total_valid_dn . "\n";
+echo "  - Final DN (K1): " . $total_final_dn . "\n";
+echo "  - Verif DM (K2): " . $total_verif_dm . "\n";
+echo "  - Valid DM (K2): " . $total_valid_dm . "\n";
+echo "  - Final DM (K2): " . $total_final_dm . "\n";
+echo "  - Verif Mutasi (K3): " . $total_verif_mutasi . "\n";
+echo "  - Valid Mutasi (K3): " . $total_valid_mutasi . "\n";
+echo "  - Final Mutasi (K3): " . $total_final_mutasi . "\n";
 echo "  - Total WMS: " . $grand_total_wms . "\n\n";
 
 echo "ASTA ACOL (Periode: " . date('d M Y', strtotime($current_month_start)) . " - " . date('d M Y', strtotime($current_month_end)) . "):\n";
