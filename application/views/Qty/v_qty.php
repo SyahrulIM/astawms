@@ -44,8 +44,8 @@
                                                 <label for="sale_mouth" class="form-label">Type Pre Order:</label>
                                                 <select name="type_po" id="type_po" class="form-select">
                                                     <option value="">--- Select Type Pre Order ---</option>
-                                                    <option value="online">Online</option>
-                                                    <option value="offline">Offline</option>
+                                                    <option value="local">Local</option>
+                                                    <option value="Import">Import</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -227,7 +227,6 @@
                                             } else {
                                                 echo 'In Progress';
                                             } ?>
-                                        <?php echo $trx->order_date ?></td>
                                     <td><?php echo $trx->created_by ?></td>
                                     <td><?php echo $trx->created_date ?></td>
                                     <td>

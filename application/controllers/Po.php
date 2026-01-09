@@ -39,6 +39,8 @@ class Po extends CI_Controller
         $this->load->helper('file');
         require_once FCPATH . 'vendor/autoload.php';
 
+        $type_po = $this->input->post('type_po');
+
         $upload_path = './assets/excel/';
         if (!is_dir($upload_path)) mkdir($upload_path, 0777, true);
 
@@ -75,6 +77,7 @@ class Po extends CI_Controller
 
         // === Simpan data utama analisys_po ===
         $data = [
+            'type_po' => $type_po,
             'status_progress' => 'Listing',
             'created_by' => $this->session->userdata('username'),
             'created_date' => date("Y-m-d H:i:s"),

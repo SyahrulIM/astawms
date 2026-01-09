@@ -101,15 +101,14 @@ class Verification extends CI_Controller
             // Ambil data qty_instock dari POST
             $qty_instock_data = $this->input->post('qty_instock');
 
-            // Cek apakah ini instock dari packing list
+            // Cek apakah ini instock dari packing list (mengecek kategori saja, tanpa prefix PL-)
             $is_from_packing_list = false;
             $analisys_po_code = null;
 
-            if (strpos($trx->kategori, 'PACKING LIST') !== false || strpos($trx->instock_code, 'PL-') === 0) {
-                if (strpos($trx->instock_code, 'PL-') === 0) {
-                    $analisys_po_code = substr($trx->instock_code, 3);
-                    $is_from_packing_list = true;
-                }
+            if (strpos($trx->kategori, 'PACKING LIST') !== false) {
+                // Jika instock dari packing list, nomor packing list ada di no_manual
+                $is_from_packing_list = true;
+                $analisys_po_code = $trx->no_manual;
             }
 
             // Cek transaksi sebelumnya yang belum diverifikasi
@@ -162,9 +161,9 @@ class Verification extends CI_Controller
                 $detail_table = 'detail_instock';
 
                 // Update detail_instock dengan nilai dari input
-                foreach ($qty_instock_data as $idproduct => $qty_instock_input) {
+                foreach ($qty_instock_data as $idproduct => $qty_instock) {
                     $idproduct = (int) $idproduct;
-                    $qty_instock = (int) $qty_instock_input;
+                    $qty_instock = (int) $qty_instock;
 
                     if ($qty_instock < 0) {
                         throw new Exception('Qty Instock tidak boleh negatif untuk ID Produk: ' . $idproduct);
@@ -230,7 +229,7 @@ class Verification extends CI_Controller
             }
         } elseif ($type == 'outstock') {
             // ===================================================
-            // KODE UNTUK OUTSTOCK
+            // KODE UNTUK OUTSTOCK - TETAP SAMA
             // ===================================================
             $main_table = 'outstock';
             $kode_field = 'outstock_code';
@@ -332,7 +331,7 @@ class Verification extends CI_Controller
             }
         } elseif ($type == 'packing_list') {
             // ===================================================
-            // KODE UNTUK PACKING LIST
+            // KODE UNTUK PACKING LIST - DIHAPUS PREFIX PL-
             // ===================================================
             $main_table = 'analisys_po';
             $kode_field = 'number_po';
@@ -345,18 +344,8 @@ class Verification extends CI_Controller
             }
 
             // Ambil data dari POST - gunakan qty_packing_list
-            $nomor_accurate = $this->input->post('nomor_accurate');
-            $idgudang = $this->input->post('idgudang');
-            $tanggal_diterima = $this->input->post('tanggal_diterima');
             $qty_packing_list_data = $this->input->post('qty_packing_list');
             $additional_products_data = $this->input->post('additional_products');
-
-            // Validasi input dari modal
-            if (!$nomor_accurate || !$idgudang || !$tanggal_diterima) {
-                $this->session->set_flashdata('error', 'Harap isi semua field: Nomor Accurate, Gudang, dan Tanggal Diterima.');
-                redirect('verification');
-                return;
-            }
 
             // Validasi minimal ada data produk
             if (empty($qty_packing_list_data) && empty($additional_products_data)) {
@@ -399,20 +388,17 @@ class Verification extends CI_Controller
             $this->db->trans_start();
 
             try {
-                // Update analisys_po dengan data baru
+                // Update analisys_po dengan status verifikasi saja
                 $update_data = [
                     'status_verification' => 1,
-                    'no_manual' => $nomor_accurate,
-                    'idgudang' => $idgudang,
-                    'distribution_date' => $tanggal_diterima,
                     'updated_by' => $this->session->userdata('username'),
                     'updated_date' => date('Y-m-d H:i:s')
                 ];
 
                 $this->db->where($kode_field, $code)->update($main_table, $update_data);
 
-                // Buat data instock baru
-                $instock_code = 'PL-' . $trx->number_po;
+                // Buat data instock baru - TANPA PREFIX PL-
+                $instock_code = $trx->number_po; // Gunakan langsung number_po tanpa prefix PL-
 
                 // Cek apakah instock dengan kode ini sudah ada
                 $existing_instock = $this->db->where('instock_code', $instock_code)->get('instock')->row();
@@ -422,15 +408,15 @@ class Verification extends CI_Controller
 
                 // INSERT KE TABEL INSTOCK (HEADER)
                 $instock_data = [
-                    'idgudang' => $idgudang,
+                    'idgudang' => $trx->idgudang, // Gunakan idgudang dari packing list asli
                     'instock_code' => $instock_code,
                     'tgl_terima' => date('Y-m-d'),
                     'jam_terima' => date('H:i:s'),
                     'datetime' => date('Y-m-d H:i:s'),
                     'user' => $this->session->userdata('username'),
                     'kategori' => 'PACKING LIST',
-                    'no_manual' => $nomor_accurate,
-                    'distribution_date' => $tanggal_diterima,
+                    'no_manual' => $trx->no_manual, // Gunakan nomor manual dari packing list
+                    'distribution_date' => $trx->distribution_date, // Gunakan distribution_date dari packing list
                     'created_by' => $this->session->userdata('username'),
                     'created_date' => date('Y-m-d H:i:s'),
                     'status_verification' => 0
