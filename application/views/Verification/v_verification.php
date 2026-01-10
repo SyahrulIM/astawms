@@ -145,7 +145,7 @@
                                         <div class="mb-3">
                                             <label for="inputNomorAccurate" class="form-label">Nomor Accurate <span class="text-danger">*</span></label>
                                             <input type="text" id="inputNomorAccurate" name="nomor_accurate" class="form-control" placeholder="Masukkan Nomor Accurate">
-                                            <div class="form-text">Contoh: ACC-2025-001</div>
+                                            <div class="form-text">Contoh: RI.2025.01.001</div>
                                         </div>
                                     </div>
                                     <div class="col-md-3">

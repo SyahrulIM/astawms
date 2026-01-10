@@ -161,7 +161,7 @@ class Qty extends CI_Controller
                         'distribution_date' => $order_date,
                         'created_by' => $this->session->userdata('username'),
                         'created_date' => date('Y-m-d H:i:s'),
-                        'status_verification' => 1 // Langsung diverifikasi untuk local PO
+                        'status_verification' => 0 // Langsung diverifikasi untuk local PO
                     ];
 
                     $this->db->insert('instock', $instock_data);
