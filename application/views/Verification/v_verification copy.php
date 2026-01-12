@@ -145,7 +145,7 @@
                                         <div class="mb-3">
                                             <label for="inputNomorAccurate" class="form-label">Nomor Accurate <span class="text-danger">*</span></label>
                                             <input type="text" id="inputNomorAccurate" name="nomor_accurate" class="form-control" placeholder="Masukkan Nomor Accurate">
-                                            <div class="form-text">Contoh: ACC-2025-001</div>
+                                            <div class="form-text">Contoh: RI.2025.01.001</div>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -195,10 +195,9 @@
                                             </tr>
                                             <tr id="detailHeaderPackingList" style="display:none;">
                                                 <th width="15%">SKU</th>
-                                                <th width="40%">Nama Produk</th>
+                                                <th width="45%">Nama Produk</th>
                                                 <th width="15%" class="text-end">Qty Order</th>
-                                                <th width="20%" class="text-end">Qty Packing List</th>
-                                                <th width="10%" class="text-center">Aksi</th>
+                                                <th width="25%" class="text-end">Qty Packing List</th>
                                             </tr>
                                         </thead>
                                         <tbody id="detailStockTable">
@@ -269,10 +268,9 @@
                                             <thead class="table-warning">
                                                 <tr>
                                                     <th width="5%">No</th>
-                                                    <th width="25%">SKU</th>
-                                                    <th width="40%">Nama Produk</th>
+                                                    <th width="30%">SKU</th>
+                                                    <th width="50%">Nama Produk</th>
                                                     <th width="15%">Qty</th>
-                                                    <th width="15%" class="text-center">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="additionalProductsTable">
@@ -282,7 +280,6 @@
                                                 <tr class="table-success">
                                                     <td colspan="3" class="text-end"><strong>Total Produk Tambahan:</strong></td>
                                                     <td class="text-end"><strong id="totalAdditionalQty">0</strong></td>
-                                                    <td></td>
                                                 </tr>
                                             </tfoot>
                                         </table>
@@ -444,7 +441,6 @@
                         let normalizedType = selectedTransactionType.toLowerCase();
 
                         if (normalizedType === 'packing list') {
-                            // ... kode packing list tetap sama ...
                             // Isi data packing list
                             let totalQtyOrder = 0;
                             let totalQtyPackingList = 0;
@@ -489,11 +485,6 @@
                                         'data-is-existing="true" ' +
                                         'data-is-additional="' + (isAdditional ? 'true' : 'false') + '" ' +
                                         'required>' +
-                                        '</td>' +
-                                        '<td class="text-center">' +
-                                        '<button type="button" class="btn btn-sm btn-danger btn-hapus-produk" data-index="' + index + '" data-is-existing="true" title="Hapus">' +
-                                        '<i class="fas fa-trash"></i>' +
-                                        '</button>' +
                                         '</td>' +
                                         '</tr>';
                                     $('#detailStockTable').append(row);
@@ -865,11 +856,6 @@
                 'required>' +
                 '<input type="hidden" name="additional_products[' + newIndex + '][idproduct]" value="' + productId + '">' +
                 '</td>' +
-                '<td class="text-center">' +
-                '<button type="button" class="btn btn-sm btn-danger btn-hapus-produk-tambahan" data-index="' + newIndex + '" data-additional-id="' + additionalProductCounter + '" title="Hapus">' +
-                '<i class="fas fa-trash"></i>' +
-                '</button>' +
-                '</td>' +
                 '</tr>';
 
             $('#additionalProductsTable').append(newRow);
@@ -880,40 +866,6 @@
 
             updateTotalAdditionalQty();
             row.remove();
-            populateProductList();
-        });
-
-        $(document).on('click', '.btn-hapus-produk-tambahan', function() {
-            let index = $(this).data('index');
-            let additionalId = $(this).data('additional-id');
-
-            if (!confirm('Apakah Anda yakin ingin menghapus produk tambahan ini?')) {
-                return;
-            }
-
-            additionalProducts = additionalProducts.filter(function(product) {
-                return product.id !== additionalId;
-            });
-
-            $(this).closest('tr').remove();
-
-            $('#additionalProductsTable tr').each(function(i) {
-                let row = $(this);
-                if (row.find('.additional-qty-packing-list-input').length > 0) {
-                    let newIndex = i - 1;
-                    row.find('.additional-qty-packing-list-input').attr('name', 'additional_products[' + newIndex + '][qty_packing_list]')
-                        .data('index', newIndex);
-                    row.find('input[type="hidden"]').attr('name', 'additional_products[' + newIndex + '][idproduct]');
-                    row.find('.btn-hapus-produk-tambahan').data('index', newIndex);
-                    row.find('td:first').text(newIndex + 1);
-                }
-            });
-
-            if (additionalProducts.length === 0) {
-                $('#additionalProductsFooter').hide();
-            }
-
-            updateTotalAdditionalQty();
             populateProductList();
         });
 

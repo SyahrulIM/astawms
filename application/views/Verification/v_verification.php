@@ -198,7 +198,6 @@
                                                 <th width="40%">Nama Produk</th>
                                                 <th width="15%" class="text-end">Qty Order</th>
                                                 <th width="20%" class="text-end">Qty Packing List</th>
-                                                <th width="10%" class="text-center">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody id="detailStockTable">
@@ -208,7 +207,6 @@
                                             <tr class="table-info">
                                                 <td colspan="3" class="text-end"><strong>Total Qty Receive:</strong></td>
                                                 <td class="text-end"><strong id="totalQtyReceive">0</strong></td>
-                                                <td></td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -490,11 +488,6 @@
                                         'data-is-additional="' + (isAdditional ? 'true' : 'false') + '" ' +
                                         'required>' +
                                         '</td>' +
-                                        '<td class="text-center">' +
-                                        '<button type="button" class="btn btn-sm btn-danger btn-hapus-produk" data-index="' + index + '" data-is-existing="true" title="Hapus">' +
-                                        '<i class="fas fa-trash"></i>' +
-                                        '</button>' +
-                                        '</td>' +
                                         '</tr>';
                                     $('#detailStockTable').append(row);
 
@@ -514,7 +507,6 @@
                                     '<td colspan="2" class="text-end"><strong>Total Qty Order:</strong></td>' +
                                     '<td class="text-end"><strong>' + totalQtyOrder.toLocaleString() + '</strong></td>' +
                                     '<td class="text-end"><strong id="totalQtyPackingList">' + totalQtyPackingList.toLocaleString() + '</strong></td>' +
-                                    '<td></td>' +
                                     '</tr>'
                                 );
                             }
@@ -535,7 +527,6 @@
             '<th width="15%">SKU</th>' +
             '<th width="50%">Nama Produk</th>' +
             '<th width="20%" class="text-end">Qty Instock</th>' +
-            '<th width="15%" class="text-center">Aksi</th>' +
             '</tr>';
 
         $('thead tr').not('.table-light').remove();
@@ -573,11 +564,6 @@
                     'data-is-existing="true" ' +
                     'required>' +
                     '</td>' +
-                    '<td class="text-center">' +
-                    '<button type="button" class="btn btn-sm btn-danger btn-hapus-produk" data-index="' + index + '" data-is-existing="true" title="Hapus">' +
-                    '<i class="fas fa-trash"></i>' +
-                    '</button>' +
-                    '</td>' +
                     '</tr>';
                 $('#detailStockTable').append(row);
 
@@ -591,10 +577,8 @@
         } else {
             $('#detailStockTable').append(
                 '<tr class="table-info">' +
-                '<td colspan="2" class="text-end"><strong>Total Qty Packing List:</strong></td>' +
-                '<td class="text-end"><strong>' + totalQtyPackingList.toLocaleString() + '</strong></td>' +
+                '<td colspan="2" class="text-end"><strong>Total Qty Instock:</strong></td>' +
                 '<td class="text-end"><strong id="totalQtyInstock">' + totalQtyInstock.toLocaleString() + '</strong></td>' +
-                '<td></td>' +
                 '</tr>'
             );
         }
