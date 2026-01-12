@@ -10,6 +10,9 @@ class Finish extends CI_Controller
             $this->session->set_flashdata('error', 'Eeettss gak boleh nakal, Login dulu ya kak hehe.');
             redirect('auth');
         }
+
+        // Load translation helper
+        $this->load->helper('translation');
     }
 
     public function index()
@@ -202,12 +205,12 @@ class Finish extends CI_Controller
 
     public function exportPdf()
     {
-        $this->load->helper('translate');
         $id = $this->input->get('id');
 
         // Ambil data header PO
         $this->db->where('idanalisys_po', $id);
         $data_po = $this->db->get('analisys_po');
+        $po = $data_po->row();
 
         // Ambil data detail PO + gambar produk
         $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, p.gambar, d.type_sgs, d.type_unit, 
@@ -219,10 +222,11 @@ class Finish extends CI_Controller
         $this->db->where('d.qty_order > 0');
         $query = $this->db->get();
 
-        // Filter data (Avg Sales vs Stock < 1)
+        // Filter data (Avg Sales vs Stock < 1) dan translate
         $filtered_detail_po = [];
         $total_qty = 0;
         $total_value = 0;
+        $no = 1;
 
         foreach ($query->result() as $row) {
             $total_sales = floatval($row->current_month_sales);
@@ -233,14 +237,27 @@ class Finish extends CI_Controller
                 if ($avg_vs_stock < 1) {
                     $item_value = floatval($row->qty_order) * floatval($row->price);
 
+                    // Try to translate using API, fallback to simple translation
+                    try {
+                        $translated_product_name = translate_id_to_en($row->nama_produk);
+                        $translated_description = !empty($row->description) ? translate_id_to_en($row->description) : '';
+                    } catch (Exception $e) {
+                        // Fallback to simple translation
+                        $translated_product_name = simple_translate_id_to_en($row->nama_produk);
+                        $translated_description = !empty($row->description) ? simple_translate_id_to_en($row->description) : '';
+                    }
+
+                    // FIXED: Get correct image path with better checking
+                    $image_url = $this->getProductImageUrl($row->gambar);
+
                     $filtered_detail_po[] = [
                         'row' => $row,
+                        'translated_product_name' => $translated_product_name,
+                        'translated_description' => $translated_description,
                         'avg_vs_stock' => number_format($avg_vs_stock, 2),
                         'item_value' => $item_value,
-                        // Tambahkan base_url gambar biar view gampang pakai
-                        'image_url' => !empty($row->gambar)
-                            ? base_url('uploads/product/' . $row->gambar)
-                            : base_url('uploads/no-image.png')
+                        'no' => $no++,
+                        'image_url' => $image_url
                     ];
 
                     $total_qty += floatval($row->qty_order);
@@ -250,13 +267,80 @@ class Finish extends CI_Controller
         }
 
         $data = [
-            'title' => 'Export Pre-Order',
-            'po' => $data_po->row(),
+            'title' => 'Export Purchase Order',
+            'po' => $po,
             'detail_po' => $filtered_detail_po,
             'total_qty' => $total_qty,
             'total_value' => $total_value
         ];
 
-        $this->load->view('finish/v_pdf', $data);
+        $this->load->view('finish/v_pdf', $data); // Use fixed view
+    }
+
+    // Helper function to get product image URL
+    private function getProductImageUrl($image_filename)
+    {
+        if (empty($image_filename)) {
+            return base_url('assets/image/no-image.png');
+        }
+
+        // Check multiple possible locations
+        $possible_paths = [
+            'uploads/product/' . $image_filename,
+            'assets/image/' . $image_filename,
+            'assets/images/' . $image_filename,
+            'images/' . $image_filename,
+            'uploads/' . $image_filename
+        ];
+
+        foreach ($possible_paths as $path) {
+            if (file_exists(FCPATH . $path)) {
+                return base_url($path);
+            }
+        }
+
+        // If image not found in any location
+        return base_url('assets/image/no-image.png');
+    }
+
+    // Optional: Pre-translate function for better performance
+    public function preTranslate($idanalisys_po = null)
+    {
+        if ($idanalisys_po) {
+            // Translate single PO
+            $this->db->select('d.idanalisys_po, p.nama_produk, d.description');
+            $this->db->from('detail_analisys_po d');
+            $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
+            $this->db->where('d.idanalisys_po', $idanalisys_po);
+            $this->db->where('d.qty_order > 0');
+            $query = $this->db->get();
+
+            $translation_count = 0;
+            foreach ($query->result() as $row) {
+                // Pre-translate to cache
+                $translated_name = translate_id_to_en($row->nama_produk);
+                if (!empty($row->description)) {
+                    translate_id_to_en($row->description);
+                }
+                $translation_count++;
+            }
+
+            $this->session->set_flashdata('success', "Pre-translated $translation_count product names for PO #$idanalisys_po");
+            redirect('finish');
+        } else {
+            // Translate all products in database
+            $this->db->select('nama_produk');
+            $this->db->distinct();
+            $products = $this->db->get('product');
+
+            $translation_count = 0;
+            foreach ($products->result() as $product) {
+                translate_id_to_en($product->nama_produk);
+                $translation_count++;
+            }
+
+            $this->session->set_flashdata('success', "Pre-translated $translation_count unique product names");
+            redirect('finish');
+        }
     }
 }

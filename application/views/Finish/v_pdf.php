@@ -23,7 +23,6 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 25px;
-
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
@@ -59,6 +58,22 @@
             object-fit: cover;
             border: 1px solid #ccc;
             border-radius: 6px;
+            background-color: #f5f5f5;
+        }
+
+        .product-image-placeholder {
+            width: 90px;
+            height: 90px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #999;
+            text-align: center;
+            padding: 5px;
         }
 
         .total-row {
@@ -91,6 +106,11 @@
                 height: 70px;
             }
 
+            .product-image-placeholder {
+                width: 70px;
+                height: 70px;
+            }
+
             #tableproduct th,
             .total-row {
                 background-color: #003d73 !important;
@@ -106,7 +126,7 @@
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
 
             <div style="width:40%;">
-                <img src="<?php echo base_url('assets/image/Logo Warna.png') ?>" style="width:150px; margin-bottom:10px;">
+                <img src="<?php echo base_url('assets/image/Logo Warna.png') ?>" style="width:150px; margin-bottom:10px;" onerror="this.style.display='none'">
             </div>
 
             <div style="width:60%; text-align:right; font-size:12px; line-height:1.4;">
@@ -171,25 +191,43 @@
 
             <tbody>
                 <?php if (!empty($detail_po)) : ?>
-                <?php $no = 1;
-                    foreach ($detail_po as $item) : ?>
+                <?php foreach ($detail_po as $item) : ?>
                 <tr>
-                    <td><?= $no++ ?></td>
+                    <td><?= $item['no'] ?></td>
                     <td>
-                        <img src="<?= base_url('assets/image/' . $item['row']->gambar) ?>" class="product-image">
+                        <?php if (!empty($item['image_url']) && $item['image_url'] != base_url('assets/image/no-image.png')) : ?>
+                        <img src="<?= $item['image_url'] ?>" class="product-image" onerror="this.onerror=null; this.style.display='none'; document.getElementById('placeholder_<?= $item['no'] ?>').style.display='flex';">
+                        <div id="placeholder_<?= $item['no'] ?>" class="product-image-placeholder" style="display:none;">
+                            No Image
+                        </div>
+                        <?php else : ?>
+                        <div class="product-image-placeholder">
+                            No Image
+                        </div>
+                        <?php endif; ?>
                     </td>
                     <td class="text-center">
-                        <?= htmlspecialchars(translate_to_english($item['row']->nama_produk)) ?><br>
+                        <?= htmlspecialchars($item['translated_product_name']) ?>
                     </td>
                     <td><?= htmlspecialchars($item['row']->sku) ?></td>
                     <td><?= htmlspecialchars(strtoupper($item['row']->type_sgs)) ?></td>
                     <td><?= htmlspecialchars(strtoupper($item['row']->type_unit)) ?></td>
-                    <td class="text-right"><?php $currency = ($po->money_currency == 'rmb') ? '¥' : 'Rp';
-                                                    echo $currency; ?> <?= number_format($item['row']->price, 2, '.', ',') ?></td>
+                    <td class="text-right">
+                        <?php
+                                $currency = ($po->money_currency == 'rmb') ? '¥' : 'Rp';
+                                echo $currency;
+                                ?>
+                        <?= number_format($item['row']->price, 2, '.', ',') ?>
+                    </td>
                     <td><?= htmlspecialchars($item['row']->qty_order) ?></td>
-                    <td class="text-right"><?php $currency = ($po->money_currency == 'rmb') ? '¥' : 'Rp';
-                                                    echo $currency; ?> <?= number_format($item['item_value'], 2, '.', ',') ?></td>
-                    <td><?= htmlspecialchars($item['row']->description) ?></td>
+                    <td class="text-right">
+                        <?php
+                                $currency = ($po->money_currency == 'rmb') ? '¥' : 'Rp';
+                                echo $currency;
+                                ?>
+                        <?= number_format($item['item_value'], 2, '.', ',') ?>
+                    </td>
+                    <td><?= htmlspecialchars($item['translated_description']) ?></td>
                 </tr>
                 <?php endforeach; ?>
 
@@ -230,8 +268,16 @@
             <div style="width:45%; text-align:center; height:200px; position:relative;">
                 <div style="font-size:12px; margin-bottom:10px;">Approved By,</div>
                 <div style="width:100%; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">
-                    <img src="<?php echo base_url('assets/image/Suriadi Chianger_TTD.png'); ?>" style="width:55%; max-width:260px;">
-                    <img src="<?php echo base_url('assets/image/Stempel Asta Blue.png'); ?>" style="width:30%; max-width:260px; opacity:0.85; margin-left:-20%;">
+                    <?php
+                    $ttd_path = 'assets/image/Suriadi Chianger_TTD.png';
+                    $stempel_path = 'assets/image/Stempel Asta Blue.png';
+                    ?>
+                    <?php if (file_exists(FCPATH . $ttd_path)) : ?>
+                    <img src="<?php echo base_url($ttd_path); ?>" style="width:55%; max-width:260px;" onerror="this.style.display='none'">
+                    <?php endif; ?>
+                    <?php if (file_exists(FCPATH . $stempel_path)) : ?>
+                    <img src="<?php echo base_url($stempel_path); ?>" style="width:30%; max-width:260px; opacity:0.85; margin-left:-20%;" onerror="this.style.display='none'">
+                    <?php endif; ?>
                 </div>
                 <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:80%; border-top:1px solid #333; padding-top:3px; font-size:12px;">
                     ( Manager )
@@ -249,9 +295,44 @@
     </div>
 
     <script>
+        // Function to preload images and handle errors
+        function preloadImages() {
+            const images = document.querySelectorAll('.product-image');
+            let loadedCount = 0;
+            const totalImages = images.length;
+
+            if (totalImages === 0) {
+                window.print();
+                return;
+            }
+
+            images.forEach(img => {
+                const tempImage = new Image();
+                tempImage.src = img.src;
+
+                tempImage.onload = () => {
+                    loadedCount++;
+                    if (loadedCount === totalImages) {
+                        // All images loaded, wait a bit more then print
+                        setTimeout(() => window.print(), 500);
+                    }
+                };
+
+                tempImage.onerror = () => {
+                    loadedCount++;
+                    if (loadedCount === totalImages) {
+                        // All images processed (even if some failed)
+                        setTimeout(() => window.print(), 500);
+                    }
+                };
+            });
+        }
+
         window.onload = function() {
             document.title = "<?php echo 'Purchase_Order_' . ($po->number_po ?? 'PO') . '_' . date('Y-m-d_H-i-s'); ?>";
-            setTimeout(() => window.print(), 80);
+
+            // Preload images before printing
+            setTimeout(preloadImages, 100);
         }
     </script>
 
