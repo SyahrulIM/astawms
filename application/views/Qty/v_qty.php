@@ -319,6 +319,7 @@
                     }
                 });
 
+                // Global function to show detail modal
                 function showDetail(idanalisys_po) {
                     document.getElementById('detailContent').innerHTML = `
             <div class="text-center py-4">
@@ -343,6 +344,8 @@
                             document.getElementById('detailContent').innerHTML = html;
                             initializeSearch();
                             initializeTooltips();
+                            initializePONumberValidation();
+                            setupFormValidation();
                         })
                         .catch((error) => {
                             console.error('Error:', error);
@@ -353,6 +356,190 @@
                     </div>
                 `;
                         });
+                }
+
+                // Function to initialize PO number validation
+                function initializePONumberValidation() {
+                    const poInput = document.getElementById('number_po');
+                    if (!poInput) {
+                        console.log('PO number input not found');
+                        return;
+                    }
+
+                    // Get existing PO numbers from data attribute
+                    const existingPOsData = poInput.getAttribute('data-existing-po');
+                    if (!existingPOsData) {
+                        console.log('No existing PO data found');
+                        return;
+                    }
+
+                    try {
+                        const existingPOs = JSON.parse(existingPOsData);
+                        const currentPO = poInput.getAttribute('data-current-po') || '';
+
+                        // Normalize PO numbers (trim and lowercase for comparison)
+                        const normalizedExisting = existingPOs.map(po => {
+                            return po ? po.toString().trim().toLowerCase() : '';
+                        }).filter(po => po !== ''); // Remove empty strings
+
+                        console.log('Existing POs loaded:', normalizedExisting);
+                        console.log('Current PO:', currentPO);
+
+                        function validatePONumber() {
+                            const inputValue = poInput.value.trim();
+                            const normalizedInput = inputValue.toLowerCase();
+
+                            // Reset validation
+                            poInput.classList.remove('is-valid', 'is-invalid');
+
+                            if (inputValue === '') {
+                                // Empty input - show normal state
+                                poInput.classList.remove('is-valid', 'is-invalid');
+                                return false;
+                            }
+
+                            // Check if it's the same as current PO (allow during edit)
+                            if (currentPO && normalizedInput === currentPO.toLowerCase()) {
+                                poInput.classList.add('is-valid');
+                                poInput.classList.remove('is-invalid');
+                                return true;
+                            }
+
+                            // Check if PO already exists
+                            if (normalizedExisting.includes(normalizedInput)) {
+                                poInput.classList.add('is-invalid');
+                                poInput.classList.remove('is-valid');
+                                return false;
+                            }
+
+                            // PO is available
+                            poInput.classList.add('is-valid');
+                            poInput.classList.remove('is-invalid');
+                            return true;
+                        }
+
+                        // Event listeners
+                        poInput.addEventListener('input', function() {
+                            validatePONumber();
+                        });
+
+                        poInput.addEventListener('blur', function() {
+                            validatePONumber();
+                        });
+
+                        poInput.addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                validatePONumber();
+                            }
+                        });
+
+                        // Initial validation
+                        validatePONumber();
+
+                    } catch (error) {
+                        console.error('Error parsing PO data:', error);
+                    }
+                }
+
+                // Function to setup form validation
+                function setupFormValidation() {
+                    const form = document.querySelector('#detailModal form');
+                    if (!form) return;
+
+                    form.addEventListener('submit', function(event) {
+                        if (!validateFormBeforeSubmit(event)) {
+                            event.preventDefault();
+                            return false;
+                        }
+                        return true;
+                    });
+                }
+
+                // Function to validate form before submission
+                function validateFormBeforeSubmit(event) {
+                    const poInput = document.getElementById('number_po');
+                    const moneyCurrency = document.getElementById('money-currency');
+                    const orderDate = document.getElementById('order_date');
+                    const nameSupplier = document.getElementById('name_supplier');
+
+                    // Validasi field required
+                    const errors = [];
+
+                    if (!moneyCurrency || !moneyCurrency.value) {
+                        errors.push('Pilih Money Currency terlebih dahulu.');
+                    }
+
+                    if (!orderDate || !orderDate.value) {
+                        errors.push('Isi Order Date terlebih dahulu.');
+                    }
+
+                    if (!nameSupplier || !nameSupplier.value.trim()) {
+                        errors.push('Isi Supplier terlebih dahulu.');
+                    }
+
+                    // Validasi PO number
+                    if (!poInput || !poInput.value.trim()) {
+                        errors.push('Isi No Purchase Order terlebih dahulu.');
+                    } else {
+                        // Check duplicate PO
+                        const existingPOsData = poInput.getAttribute('data-existing-po');
+                        const currentPO = poInput.getAttribute('data-current-po') || '';
+
+                        if (existingPOsData) {
+                            try {
+                                const existingPOs = JSON.parse(existingPOsData);
+                                const inputValue = poInput.value.trim().toLowerCase();
+                                const normalizedExisting = existingPOs.map(po => {
+                                    return po ? po.toString().trim().toLowerCase() : '';
+                                }).filter(po => po !== '');
+
+                                // Skip validation if it's the same as current PO during edit
+                                if (!(currentPO && inputValue === currentPO.toLowerCase())) {
+                                    if (normalizedExisting.includes(inputValue)) {
+                                        errors.push('Nomor PO sudah digunakan sebelumnya. Silakan gunakan nomor lain.');
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Error validating PO:', error);
+                            }
+                        }
+                    }
+
+                    // Show errors if any
+                    if (errors.length > 0) {
+                        event.preventDefault();
+                        alert(errors.join('\n'));
+                        return false;
+                    }
+
+                    // Validasi minimal satu produk memiliki qty > 0
+                    const qtyInputs = document.querySelectorAll('.qty-input');
+                    let hasQty = false;
+
+                    qtyInputs.forEach(input => {
+                        const qtyValue = parseInt(input.value) || 0;
+                        if (qtyValue > 0) {
+                            hasQty = true;
+                        }
+                    });
+
+                    if (!hasQty) {
+                        const confirmSubmit = confirm('Tidak ada produk dengan Qty Order > 0. Apakah Anda yakin ingin melanjutkan?');
+                        if (!confirmSubmit) {
+                            event.preventDefault();
+                            return false;
+                        }
+                    }
+
+                    // Show loading indicator
+                    const submitBtn = event.target.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                        submitBtn.disabled = true;
+                    }
+
+                    return true;
                 }
 
                 // Function to initialize search functionality

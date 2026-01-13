@@ -263,6 +263,20 @@ class Qty extends CI_Controller
         $current_name_container = $analisys_data->name_container ?? '';
         $current_name_supplier = $analisys_data->name_supplier ?? '';
 
+        // Ambil semua number_po yang sudah ada (kecuali yang sedang diedit)
+        $this->db->select('number_po');
+        $this->db->where('number_po IS NOT NULL');
+        $this->db->where('number_po !=', '');
+        $this->db->where('idanalisys_po !=', $idanalisys_po);
+        $existing_pos = $this->db->get('analisys_po')->result_array();
+
+        $existing_numbers = array_column($existing_pos, 'number_po');
+
+        // Konversi ke JSON untuk JavaScript
+        $existing_numbers_json = json_encode($existing_numbers);
+        // Escape untuk JavaScript
+        $existing_numbers_js = htmlspecialchars($existing_numbers_json, ENT_QUOTES, 'UTF-8');
+
         $this->db->select('idanalisys_po');
         $this->db->where('idanalisys_po <', $idanalisys_po);
         $this->db->order_by('idanalisys_po', 'DESC');
@@ -349,7 +363,21 @@ class Qty extends CI_Controller
     <div class="row mb-4">
         <div class="col-md-4">
             <label class="form-label">No Purchase Order <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="number_po" name="number_po" value="' . htmlspecialchars($current_number_po) . '" placeholder="Nomer Purchase Order" required>
+            <input type="text" 
+                   class="form-control" 
+                   id="number_po" 
+                   name="number_po" 
+                   value="' . htmlspecialchars($current_number_po) . '" 
+                   placeholder="Nomer Purchase Order" 
+                   required
+                   data-existing-po=\'' . $existing_numbers_js . '\'
+                   data-current-po=\'' . htmlspecialchars($current_number_po) . '\'>
+            <div class="invalid-feedback" id="po-error">
+                Nomor PO sudah digunakan sebelumnya.
+            </div>
+            <div class="valid-feedback">
+                Nomor PO tersedia.
+            </div>
         </div>
         <div class="col-md-4">
             <label class="form-label">Order Date <span class="text-danger">*</span></label>
