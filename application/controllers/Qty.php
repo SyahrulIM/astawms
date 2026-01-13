@@ -156,8 +156,6 @@ class Qty extends CI_Controller
                         'jam_terima' => date('H:i:s'),
                         'datetime' => date('Y-m-d H:i:s'),
                         'user' => $this->session->userdata('username'),
-                        'kategori' => 'PACKING LIST',
-                        'no_manual' => $number_po,
                         'distribution_date' => $order_date,
                         'created_by' => $this->session->userdata('username'),
                         'created_date' => date('Y-m-d H:i:s'),
