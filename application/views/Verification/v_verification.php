@@ -172,9 +172,34 @@
                                     <div class="col-md-3">
                                         <div class="mb-3">
                                             <label for="inputDistributionDate" class="form-label">Tanggal Distribution <span class="text-danger">*</span></label>
-                                            <input type="date" id="inputDistributionDate" name="tanggal_distribution" class="form-control">
+                                            <input type="datetime-local" id="inputDistributionDate" name="tanggal_distribution" class="form-control">
                                         </div>
                                     </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="inputNumberPlate" class="form-label">Nomor Kendaraan <span class="text-danger">*</span></label>
+                                            <input type="text" id="inputNumberPlate" name="number_plate" class="form-control" placeholder="Masukkan Nomor Kendaraan">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="inputDriver" class="form-label">Nama Sopir <span class="text-danger">*</span></label>
+                                            <input type="text" id="inputDriver" name="driver" class="form-control" placeholder="Masukkan Nama Sopir">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="inputContainerInstock" class="form-label">Nomor Container <span class="text-danger">*</span></label>
+                                            <input type="text" id="inputContainerInstock" name="container_instock" class="form-control" placeholder="Masukkan Nomor Container">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="inputNomorHandphone" class="form-label">Nomor Handphone <span class="text-danger">*</span></label>
+                                            <input type="text" id="inputNomorHandphone" name="handphbone_driver" class="form-control" placeholder="Masukkan Nomor Handphone">
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
