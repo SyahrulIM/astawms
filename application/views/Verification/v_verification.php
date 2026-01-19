@@ -592,8 +592,7 @@
         $('#detailHeaderInstockOutstock').html(
             '<th width="15%">SKU</th>' +
             '<th width="50%">Nama Produk</th>' +
-            '<th width="20%" class="text-end">Qty Instock</th>' +
-            '<th width="15%" class="text-center">Aksi</th>'
+            '<th width="20%" class="text-end">Qty Instock</th>'
         );
 
         let totalQtyInstock = 0;
@@ -620,11 +619,6 @@
                     'data-is-existing="true" ' +
                     'required>' +
                     '</td>' +
-                    '<td class="text-center">' +
-                    '<button type="button" class="btn btn-sm btn-danger btn-hapus-produk" data-index="' + index + '" data-is-existing="true" title="Hapus">' +
-                    '<i class="fas fa-trash"></i>' +
-                    '</button>' +
-                    '</td>' +
                     '</tr>';
                 $('#detailStockTable').append(row);
                 totalQtyInstock += qtyInstock;
@@ -638,7 +632,6 @@
                 '<tr class="table-info">' +
                 '<td colspan="2" class="text-end"><strong>Total Qty Instock:</strong></td>' +
                 '<td class="text-end"><strong id="totalQtyInstock">' + totalQtyInstock.toLocaleString() + '</strong></td>' +
-                '<td></td>' +
                 '</tr>'
             );
         }
