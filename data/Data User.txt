@@ -120,6 +120,10 @@ PC Remote List:
   ID: 126969812
   PASS: asta3101
 
+- Laptop Asus A407U
+  ID: 201308025
+  PASS: asta3101
+
 SMTP Gmail:
 Username: chalung.izha@gmail.com
 Password: apls xytd rkek nxqr
