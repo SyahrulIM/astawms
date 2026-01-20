@@ -107,7 +107,7 @@ class Verification extends CI_Controller
             $number_plate = $this->input->post('number_plate');
             $driver = $this->input->post('driver');
             $container_instock = $this->input->post('container_instock');
-            $handphbone_driver = $this->input->post('handphbone_driver');
+            $handphone_driver = $this->input->post('handphone_driver');
 
             // Cek apakah ini instock dari packing list (mengecek kategori saja)
             $is_from_packing_list = false;
@@ -195,7 +195,7 @@ class Verification extends CI_Controller
                     'number_plate' => $number_plate,
                     'driver' => $driver,
                     'container_instock' => $container_instock,
-                    'handphone_driver' => $handphbone_driver
+                    'handphone_driver' => $handphone_driver
                 ];
 
                 $this->db->set($update_instock_data)
@@ -716,7 +716,10 @@ class Verification extends CI_Controller
                         'distribution_date' => $main_data->distribution_date,
                         'user' => $main_data->user,
                         'status_verification' => $main_data->status_verification,
-                        'idgudang' => $main_data->idgudang
+                        'number_plate' => $main_data->number_plate,
+                        'driver' => $main_data->driver,
+                        'handphone_driver' => $main_data->handphone_driver,
+                        'container_instock' => $main_data->container_instock
                     ]
                 ]);
             } elseif ($type == 'outstock') {

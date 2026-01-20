@@ -667,6 +667,10 @@
         $('#inputNomorAccurate').val(response.main_data.no_manual || '');
         $('#inputWarehouse').val(response.main_data.idgudang || '');
         $('#inputKategori').val(response.main_data.kategori || 'PEMBELIAN');
+        $('#inputNumberPlate').val(response.main_data.number_plate || '');
+        $('#inputDriver').val(response.main_data.driver || '');
+        $('#inputContainerInstock').val(response.main_data.container_instock || '');
+        $('#inputNomorHandphone').val(response.main_data.handphone_driver || '');
         
         // Set tanggal distribution atau tanggal hari ini
         let distributionDate = response.main_data.distribution_date;
@@ -676,6 +680,7 @@
             let today = new Date().toISOString().split('T')[0];
             $('#inputDistributionDate').val(today);
         }
+
     }
 } else if (normalizedType === 'outstock') {
                             let totalQtyOutstock = 0;
