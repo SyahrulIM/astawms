@@ -20,6 +20,7 @@ $employees = [
     ['name' => 'Imroatin Fauziah', 'date' => '16-04-2026', 'phone' => '085755692019'],
     ['name' => 'Syahrul Izha Mahendra', 'date' => '18-05-2026', 'phone' => '085156340619'],
     ['name' => 'Widiawati', 'date' => '31-05-2026', 'phone' => '082141428660'],
+    ['name' => 'Arya Ananduta Setyaki', 'date' => '16-06-2026', 'phone' => '085926871752'],
     ['name' => 'Khodijah Atika', 'date' => '18-06-2026', 'phone' => '085926871752'],
     ['name' => 'Adinda Dewi Zulfia Putri', 'date' => '27-06-2026', 'phone' => '089612686399'],
     ['name' => 'Aditya Yuli Setyawan Pradana', 'date' => '16-07-2026', 'phone' => '0895371819977'],
