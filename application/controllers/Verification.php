@@ -716,6 +716,7 @@ class Verification extends CI_Controller
                         'distribution_date' => $main_data->distribution_date,
                         'user' => $main_data->user,
                         'status_verification' => $main_data->status_verification,
+                        'idgudang' => $main_data->idgudang,
                         'number_plate' => $main_data->number_plate,
                         'driver' => $main_data->driver,
                         'handphone_driver' => $main_data->handphone_driver,
