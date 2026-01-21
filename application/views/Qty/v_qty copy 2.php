@@ -269,6 +269,11 @@
             <script src="<?php echo base_url(); ?>js/scripts.js"></script>
 
             <script>
+                // Variabel global untuk produk tambahan
+                let additionalPOProducts = [];
+                let allPOProducts = [];
+                let productSearchTimeout = null;
+
                 $(document).ready(function() {
                     new DataTable('#tableproduct', {
                         responsive: true,
@@ -317,10 +322,27 @@
                             tabElement.tab('show');
                         }
                     }
+
+                    // Confirm cancel button event listener
+                    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+                        const id = document.getElementById('cancelIdPo').value;
+                        if (id) {
+                            const cancelBtn = this;
+                            const originalText = cancelBtn.innerHTML;
+                            cancelBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Membatalkan...';
+                            cancelBtn.disabled = true;
+
+                            window.location.href = '<?= base_url('qty/cancel/') ?>' + id;
+                        }
+                    });
                 });
 
                 // Global function to show detail modal
                 function showDetail(idanalisys_po) {
+                    // Reset variabel
+                    additionalPOProducts = [];
+                    allPOProducts = [];
+
                     document.getElementById('detailContent').innerHTML = `
             <div class="text-center py-4">
                 <div class="spinner-border text-primary" role="status">
@@ -346,6 +368,7 @@
                             initializeTooltips();
                             initializePONumberValidation();
                             setupFormValidation();
+                            initializePOProductAddition(); // Inisialisasi fitur tambah produk
                         })
                         .catch((error) => {
                             console.error('Error:', error);
@@ -356,6 +379,518 @@
                     </div>
                 `;
                         });
+                }
+
+                // Fungsi untuk inisialisasi fitur tambah produk di PO
+                function initializePOProductAddition() {
+                    console.log('Initializing PO Product Addition...');
+
+                    // Ambil data semua produk dari hidden input
+                    const allProductsData = document.getElementById('all_products_data');
+                    if (allProductsData && allProductsData.value) {
+                        try {
+                            allPOProducts = JSON.parse(allProductsData.value);
+                            console.log('Total produk tersedia:', allPOProducts.length);
+                        } catch (error) {
+                            console.error('Error parsing products data:', error);
+                        }
+                    }
+
+                    // Tombol tambah produk
+                    const btnTambahProdukPO = document.getElementById('btnTambahProdukPO');
+                    if (btnTambahProdukPO) {
+                        // Remove existing event listeners
+                        const newBtn = btnTambahProdukPO.cloneNode(true);
+                        btnTambahProdukPO.parentNode.replaceChild(newBtn, btnTambahProdukPO);
+
+                        // Add new event listener
+                        document.getElementById('btnTambahProdukPO').addEventListener('click', function() {
+                            console.log('Tambah produk clicked');
+                            showProductSearchForm();
+                        });
+                    } else {
+                        console.log('btnTambahProdukPO not found');
+                    }
+
+                    // Clear search produk
+                    const clearProductSearch = document.getElementById('clearProductSearch');
+                    if (clearProductSearch) {
+                        clearProductSearch.addEventListener('click', function() {
+                            document.getElementById('searchProductPO').value = '';
+                            filterProductListPO();
+                        });
+                    }
+
+                    // Batal cari produk
+                    const btnBatalCariProdukPO = document.getElementById('btnBatalCariProdukPO');
+                    if (btnBatalCariProdukPO) {
+                        btnBatalCariProdukPO.addEventListener('click', function() {
+                            hideProductSearchForm();
+                        });
+                    }
+
+                    // Pencarian produk dengan debounce
+                    const searchProductPO = document.getElementById('searchProductPO');
+                    if (searchProductPO) {
+                        searchProductPO.addEventListener('input', function() {
+                            // Clear timeout sebelumnya
+                            if (productSearchTimeout) {
+                                clearTimeout(productSearchTimeout);
+                            }
+
+                            // Set timeout baru
+                            productSearchTimeout = setTimeout(function() {
+                                filterProductListPO();
+                            }, 300);
+                        });
+
+                        // Enter untuk search
+                        searchProductPO.addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                filterProductListPO();
+                            }
+                        });
+                    }
+
+                    // Event delegation untuk tombol pilih produk
+                    const modalContent = document.getElementById('detailContent');
+                    if (modalContent) {
+                        modalContent.addEventListener('click', function(e) {
+                            // Tombol pilih produk
+                            if (e.target.classList.contains('btn-pilih-produk-po')) {
+                                selectProductPO(e.target);
+                            } else if (e.target.closest('.btn-pilih-produk-po')) {
+                                selectProductPO(e.target.closest('.btn-pilih-produk-po'));
+                            }
+
+                            // Tombol hapus produk tambahan
+                            if (e.target.classList.contains('btn-hapus-produk-po')) {
+                                removeAdditionalProductPO(e.target);
+                            } else if (e.target.closest('.btn-hapus-produk-po')) {
+                                removeAdditionalProductPO(e.target.closest('.btn-hapus-produk-po'));
+                            }
+                        });
+
+                        // Event untuk input qty di produk tambahan
+                        modalContent.addEventListener('input', function(e) {
+                            if (e.target.classList.contains('qty-additional')) {
+                                updateAdditionalProductQty(e.target);
+                            }
+                        });
+
+                        // Event untuk select type_sgs di produk tambahan
+                        modalContent.addEventListener('change', function(e) {
+                            if (e.target.classList.contains('type-sgs-additional')) {
+                                updateAdditionalProductTypeSgs(e.target);
+                            }
+                        });
+                    }
+                }
+
+                // Tampilkan form pencarian produk
+                function showProductSearchForm() {
+                    const searchForm = document.getElementById('productSearchForm');
+                    const searchResults = document.getElementById('productSearchResultsPO');
+                    const btnTambah = document.getElementById('btnTambahProdukPO');
+
+                    if (searchForm) searchForm.style.display = 'block';
+                    if (searchResults) searchResults.style.display = 'block';
+                    if (btnTambah) btnTambah.style.display = 'none';
+
+                    filterProductListPO();
+
+                    const searchInput = document.getElementById('searchProductPO');
+                    if (searchInput) {
+                        searchInput.focus();
+                    }
+                }
+
+                // Sembunyikan form pencarian produk
+                function hideProductSearchForm() {
+                    const searchForm = document.getElementById('productSearchForm');
+                    const searchResults = document.getElementById('productSearchResultsPO');
+                    const btnTambah = document.getElementById('btnTambahProdukPO');
+
+                    if (searchForm) searchForm.style.display = 'none';
+                    if (searchResults) searchResults.style.display = 'none';
+                    if (btnTambah) btnTambah.style.display = 'block';
+
+                    const searchInput = document.getElementById('searchProductPO');
+                    if (searchInput) {
+                        searchInput.value = '';
+                    }
+                }
+
+                // Filter daftar produk berdasarkan pencarian
+                function filterProductListPO() {
+                    const searchInput = document.getElementById('searchProductPO');
+                    const productListPO = document.getElementById('productListPO');
+
+                    if (!searchInput || !productListPO) {
+                        console.log('Search elements not found');
+                        return;
+                    }
+
+                    const searchTerm = searchInput.value.toLowerCase().trim();
+                    productListPO.innerHTML = '';
+
+                    if (allPOProducts.length === 0) {
+                        productListPO.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Tidak ada produk tersedia</td></tr>';
+                        return;
+                    }
+
+                    // Dapatkan ID produk yang sudah ada di tabel utama
+                    const existingProductIds = new Set();
+                    const mainTableRows = document.querySelectorAll('#detailTableBody tr[data-product-id]');
+                    mainTableRows.forEach(tr => {
+                        const productId = tr.getAttribute('data-product-id');
+                        if (productId) {
+                            existingProductIds.add(productId.toString());
+                        }
+                    });
+
+                    // Dapatkan ID produk yang sudah ditambahkan
+                    additionalPOProducts.forEach(product => {
+                        if (product && product.id) {
+                            existingProductIds.add(product.id.toString());
+                        }
+                    });
+
+                    // Filter produk
+                    const filteredProducts = allPOProducts.filter(product => {
+                        // Skip jika produk tidak valid
+                        if (!product || !product.id) return false;
+
+                        // Skip jika produk sudah ada
+                        if (existingProductIds.has(product.id.toString())) {
+                            return false;
+                        }
+
+                        // Filter berdasarkan pencarian
+                        if (searchTerm === '') {
+                            return true;
+                        }
+
+                        const sku = (product.sku || '').toLowerCase();
+                        const nama = (product.nama || '').toLowerCase();
+                        const text = (product.text || '').toLowerCase();
+
+                        return sku.includes(searchTerm) ||
+                            nama.includes(searchTerm) ||
+                            text.includes(searchTerm);
+                    });
+
+                    if (filteredProducts.length === 0) {
+                        productListPO.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">' +
+                            (searchTerm ? 'Tidak ada produk ditemukan untuk "' + searchTerm + '"' : 'Semua produk sudah ditambahkan') +
+                            '</td></tr>';
+                        return;
+                    }
+
+                    // Tampilkan produk (maksimal 20 hasil)
+                    const displayProducts = filteredProducts.slice(0, 20);
+
+                    displayProducts.forEach((product, index) => {
+                        const row = document.createElement('tr');
+                        row.className = 'product-item';
+                        row.innerHTML = `
+                <td><strong>${product.sku || ''}</strong></td>
+                <td>${product.nama || ''}</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-primary btn-pilih-produk-po" 
+                            data-id="${product.id}" 
+                            data-sku="${product.sku || ''}" 
+                            data-nama="${product.nama || ''}">
+                        <i class="fa-solid fa-plus me-1"></i> Pilih
+                    </button>
+                </td>
+            `;
+                        productListPO.appendChild(row);
+                    });
+
+                    // Tampilkan pesan jika hasil lebih dari 20
+                    if (filteredProducts.length > 20) {
+                        const infoRow = document.createElement('tr');
+                        infoRow.innerHTML = `
+                <td colspan="3" class="text-center text-info">
+                    <small>Menampilkan 20 dari ${filteredProducts.length} hasil. Gunakan kata kunci lebih spesifik.</small>
+                </td>
+            `;
+                        productListPO.appendChild(infoRow);
+                    }
+                }
+
+                // Pilih produk untuk ditambahkan
+                function selectProductPO(button) {
+                    if (!button) return;
+
+                    const productId = button.getAttribute('data-id');
+                    const sku = button.getAttribute('data-sku');
+                    const nama = button.getAttribute('data-nama');
+
+                    if (!productId) {
+                        console.error('Invalid product ID');
+                        return;
+                    }
+
+                    // Cek apakah produk sudah ditambahkan
+                    if (additionalPOProducts.some(p => p && p.id == productId)) {
+                        alert('Produk ini sudah ditambahkan');
+                        return;
+                    }
+
+                    // Ambil tipe PO untuk menentukan default qty_packing_list
+                    const currentTypePO = document.getElementById('current_type_po');
+                    const currentTypePOValue = currentTypePO ? currentTypePO.value : '';
+                    const isLocalPO = currentTypePOValue === 'local';
+
+                    // Tambahkan ke array
+                    additionalPOProducts.push({
+                        id: productId,
+                        sku: sku,
+                        nama: nama,
+                        type_sgs: '',
+                        qty_order: 1,
+                        qty_packing_list: isLocalPO ? 1 : 0,
+                        price: 0,
+                        description: ''
+                    });
+
+                    // Update tabel produk tambahan
+                    updateAdditionalProductsTable();
+
+                    // Sembunyikan form pencarian
+                    hideProductSearchForm();
+
+                    // Tampilkan tabel produk tambahan jika ada produk
+                    const tableContainer = document.getElementById('additionalProductsTableContainer');
+                    if (tableContainer && additionalPOProducts.length > 0) {
+                        tableContainer.style.display = 'block';
+                    }
+
+                    // Refresh daftar pencarian
+                    setTimeout(filterProductListPO, 100);
+
+                    // Tampilkan notifikasi
+                    showNotification('success', 'Produk "' + sku + '" berhasil ditambahkan');
+                }
+
+                // Update tabel produk tambahan
+                function updateAdditionalProductsTable() {
+                    const tbody = document.getElementById('additionalProductsBody');
+                    if (!tbody) {
+                        console.log('additionalProductsBody not found');
+                        return;
+                    }
+
+                    tbody.innerHTML = '';
+
+                    if (additionalPOProducts.length === 0) {
+                        const tableContainer = document.getElementById('additionalProductsTableContainer');
+                        if (tableContainer) {
+                            tableContainer.style.display = 'none';
+                        }
+                        return;
+                    }
+
+                    // Ambil tipe PO untuk menentukan tampilan
+                    const currentTypePO = document.getElementById('current_type_po');
+                    const currentTypePOValue = currentTypePO ? currentTypePO.value : '';
+                    const isLocalPO = currentTypePOValue === 'local';
+
+                    additionalPOProducts.forEach((product, index) => {
+                        if (!product) return;
+
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-index', index);
+
+                        if (isLocalPO) {
+                            // Untuk local PO, qty_packing_list sama dengan qty_order
+                            row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${product.sku || ''}</td>
+                    <td>${product.nama || ''}</td>
+                    <td>
+                        <select class="form-select form-select-sm type-sgs-additional" 
+                                name="additional_products[${index}][type_sgs]"
+                                data-index="${index}">
+                            <option value="">Pilih SGS</option>
+                            <option value="sgs" ${product.type_sgs === 'sgs' ? 'selected' : ''}>SGS</option>
+                            <option value="non sgs" ${product.type_sgs === 'non sgs' ? 'selected' : ''}>Non SGS</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" 
+                               class="form-control form-control-sm qty-additional" 
+                               name="additional_products[${index}][qty_order]" 
+                               value="${product.qty_order || 1}" 
+                               min="1" 
+                               data-index="${index}"
+                               required>
+                        <input type="hidden" name="additional_products[${index}][qty_packing_list]" value="${product.qty_order || 1}">
+                        <input type="hidden" name="additional_products[${index}][idproduct]" value="${product.id}">
+                        <input type="hidden" name="additional_products[${index}][price]" value="${product.price || 0}">
+                        <small class="text-muted">Auto qty packing list: ${product.qty_order || 1}</small>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-danger btn-hapus-produk-po" 
+                                data-index="${index}"
+                                title="Hapus produk">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                        } else {
+                            // Untuk import PO, qty_packing_list terpisah
+                            row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${product.sku || ''}</td>
+                    <td>${product.nama || ''}</td>
+                    <td>
+                        <select class="form-select form-select-sm type-sgs-additional" 
+                                name="additional_products[${index}][type_sgs]"
+                                data-index="${index}">
+                            <option value="">Pilih SGS</option>
+                            <option value="sgs" ${product.type_sgs === 'sgs' ? 'selected' : ''}>SGS</option>
+                            <option value="non sgs" ${product.type_sgs === 'non sgs' ? 'selected' : ''}>Non SGS</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" 
+                               class="form-control form-control-sm qty-additional" 
+                               name="additional_products[${index}][qty_order]" 
+                               value="${product.qty_order || 1}" 
+                               min="1" 
+                               data-index="${index}"
+                               required>
+                        <input type="hidden" name="additional_products[${index}][qty_packing_list]" value="${product.qty_packing_list || 0}">
+                        <input type="hidden" name="additional_products[${index}][idproduct]" value="${product.id}">
+                        <input type="hidden" name="additional_products[${index}][price]" value="${product.price || 0}">
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-danger btn-hapus-produk-po" 
+                                data-index="${index}"
+                                title="Hapus produk">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                        }
+                        tbody.appendChild(row);
+                    });
+                }
+
+                // Update qty produk tambahan di array
+                function updateAdditionalProductQty(input) {
+                    const index = parseInt(input.getAttribute('data-index'));
+                    if (isNaN(index) || index < 0 || index >= additionalPOProducts.length) {
+                        console.error('Invalid index:', index);
+                        return;
+                    }
+
+                    const qty = parseInt(input.value) || 1;
+
+                    if (qty < 1) {
+                        input.value = 1;
+                        showNotification('warning', 'Qty minimal 1');
+                        return;
+                    }
+
+                    if (additionalPOProducts[index]) {
+                        additionalPOProducts[index].qty_order = qty;
+
+                        // Jika local PO, update juga qty_packing_list
+                        const currentTypePO = document.getElementById('current_type_po');
+                        const currentTypePOValue = currentTypePO ? currentTypePO.value : '';
+                        if (currentTypePOValue === 'local') {
+                            additionalPOProducts[index].qty_packing_list = qty;
+
+                            // Update hidden input qty_packing_list
+                            const parent = input.parentNode;
+                            const hiddenInput = parent.querySelector('input[name*="qty_packing_list"]');
+                            if (hiddenInput) {
+                                hiddenInput.value = qty;
+                            }
+
+                            // Update text info
+                            const infoText = parent.querySelector('small.text-muted');
+                            if (infoText) {
+                                infoText.textContent = 'Auto qty packing list: ' + qty;
+                            }
+                        }
+                    }
+                }
+
+                // Update type_sgs produk tambahan di array
+                function updateAdditionalProductTypeSgs(select) {
+                    const index = parseInt(select.getAttribute('data-index'));
+                    if (isNaN(index) || index < 0 || index >= additionalPOProducts.length) {
+                        return;
+                    }
+
+                    const typeSgs = select.value;
+
+                    if (additionalPOProducts[index]) {
+                        additionalPOProducts[index].type_sgs = typeSgs;
+                    }
+                }
+
+                // Hapus produk tambahan
+                function removeAdditionalProductPO(button) {
+                    if (!button) return;
+
+                    const index = parseInt(button.getAttribute('data-index'));
+                    if (isNaN(index) || index < 0 || index >= additionalPOProducts.length) {
+                        console.error('Invalid index:', index);
+                        return;
+                    }
+
+                    if (!confirm('Apakah Anda yakin ingin menghapus produk ini dari daftar tambahan?')) {
+                        return;
+                    }
+
+                    // Hapus dari array
+                    const removedProduct = additionalPOProducts[index];
+                    additionalPOProducts.splice(index, 1);
+
+                    // Update tabel
+                    updateAdditionalProductsTable();
+
+                    // Refresh daftar pencarian
+                    setTimeout(filterProductListPO, 100);
+
+                    // Tampilkan notifikasi
+                    if (removedProduct) {
+                        showNotification('info', 'Produk "' + (removedProduct.sku || '') + '" telah dihapus');
+                    }
+                }
+
+                // Tampilkan notifikasi
+                function showNotification(type, message) {
+                    // Cek jika sudah ada notifikasi
+                    const existingNotification = document.getElementById('product-notification');
+                    if (existingNotification) {
+                        existingNotification.remove();
+                    }
+
+                    // Buat notifikasi
+                    const notification = document.createElement('div');
+                    notification.id = 'product-notification';
+                    notification.className = 'alert alert-' + type + ' alert-dismissible fade show';
+                    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+
+                    notification.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+
+                    document.body.appendChild(notification);
+
+                    // Auto hide setelah 3 detik
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            const bsAlert = new bootstrap.Alert(notification);
+                            bsAlert.close();
+                        }
+                    }, 3000);
                 }
 
                 // Function to initialize PO number validation
@@ -513,11 +1048,20 @@
                         return false;
                     }
 
-                    // Validasi minimal satu produk memiliki qty > 0
+                    // Validasi minimal satu produk memiliki qty > 0 (baik di tabel utama maupun tambahan)
                     const qtyInputs = document.querySelectorAll('.qty-input');
+                    const additionalQtyInputs = document.querySelectorAll('.qty-additional');
+
                     let hasQty = false;
 
                     qtyInputs.forEach(input => {
+                        const qtyValue = parseInt(input.value) || 0;
+                        if (qtyValue > 0) {
+                            hasQty = true;
+                        }
+                    });
+
+                    additionalQtyInputs.forEach(input => {
                         const qtyValue = parseInt(input.value) || 0;
                         if (qtyValue > 0) {
                             hasQty = true;
@@ -530,6 +1074,26 @@
                             event.preventDefault();
                             return false;
                         }
+                    }
+
+                    // Validasi tambahan: pastikan semua produk tambahan memiliki type_sgs jika diisi
+                    const additionalTypeSgsSelects = document.querySelectorAll('.type-sgs-additional');
+                    let hasInvalidTypeSgs = false;
+
+                    additionalTypeSgsSelects.forEach(select => {
+                        // Jika type_sgs diisi, pastikan valid
+                        if (select.value && !['sgs', 'non sgs'].includes(select.value)) {
+                            hasInvalidTypeSgs = true;
+                            select.classList.add('is-invalid');
+                        } else {
+                            select.classList.remove('is-invalid');
+                        }
+                    });
+
+                    if (hasInvalidTypeSgs) {
+                        alert('Type SGS untuk produk tambahan harus "SGS" atau "Non SGS".');
+                        event.preventDefault();
+                        return false;
                     }
 
                     // Show loading indicator
@@ -643,39 +1207,40 @@
                     modal.show();
                 }
 
-                // Event listener for modal show (to reset search when modal opens)
-                document.getElementById('detailModal').addEventListener('show.bs.modal', function() {
-                    const searchInput = document.getElementById('searchDetailTable');
-                    const searchResultInfo = document.getElementById('searchResultInfo');
+                // Utility function to debounce rapid function calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
 
-                    if (searchInput) {
-                        searchInput.value = '';
-                    }
-                    if (searchResultInfo) {
-                        searchResultInfo.textContent = 'Menampilkan semua data';
-                        searchResultInfo.className = 'form-text text-muted';
-                    }
-                });
+                // Event listener untuk modal hidden (cleanup)
+                const detailModal = document.getElementById('detailModal');
+                if (detailModal) {
+                    detailModal.addEventListener('hidden.bs.modal', function() {
+                        // Reset variabel
+                        additionalPOProducts = [];
+                        allPOProducts = [];
 
-                // Event listener for modal hidden (cleanup)
-                document.getElementById('detailModal').addEventListener('hidden.bs.modal', function() {
-                    document.getElementById('detailContent').innerHTML = 'Memuat data...';
-                    // Remove any tooltips
-                    $('.qty-input').tooltip('dispose');
-                });
+                        // Clear timeout
+                        if (productSearchTimeout) {
+                            clearTimeout(productSearchTimeout);
+                            productSearchTimeout = null;
+                        }
 
-                // Confirm cancel button event listener
-                document.getElementById('confirmCancelBtn').addEventListener('click', function() {
-                    const id = document.getElementById('cancelIdPo').value;
-                    if (id) {
-                        const cancelBtn = this;
-                        const originalText = cancelBtn.innerHTML;
-                        cancelBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Membatalkan...';
-                        cancelBtn.disabled = true;
-
-                        window.location.href = '<?= base_url('qty/cancel/') ?>' + id;
-                    }
-                });
+                        // Hapus notifikasi
+                        const notification = document.getElementById('product-notification');
+                        if (notification) {
+                            notification.remove();
+                        }
+                    });
+                }
 
                 // Global keyboard shortcuts
                 document.addEventListener('keydown', function(e) {
@@ -712,19 +1277,6 @@
                         }
                     }
                 });
-
-                // Utility function to debounce rapid function calls
-                function debounce(func, wait) {
-                    let timeout;
-                    return function executedFunction(...args) {
-                        const later = () => {
-                            clearTimeout(timeout);
-                            func(...args);
-                        };
-                        clearTimeout(timeout);
-                        timeout = setTimeout(later, wait);
-                    };
-                }
 
                 // Add Bootstrap tooltips on page load
                 document.addEventListener('DOMContentLoaded', function() {

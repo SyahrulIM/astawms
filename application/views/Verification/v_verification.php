@@ -204,7 +204,7 @@
                                     <div class="col-md-3">
                                         <div class="mb-3">
                                             <label for="inputNomorHandphone" class="form-label">Nomor Handphone <span class="text-danger">*</span></label>
-                                            <input type="text" id="inputNomorHandphone" name="handphbone_driver" class="form-control" placeholder="Masukkan Nomor Handphone">
+                                            <input type="text" id="inputNomorHandphone" name="handphone_driver" class="form-control" placeholder="Masukkan Nomor Handphone">
                                         </div>
                                     </div>
 

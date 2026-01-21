@@ -52,10 +52,14 @@ class Qty extends CI_Controller
         $typeUnitList = $this->input->post('editTypeUnit');
         $descriptionList = $this->input->post('editDescription');
 
+        // Data produk tambahan
+        $additional_products_data = $this->input->post('additional_products');
+
         error_log("idanalisys_po: " . $idanalisys_po);
         error_log("money-currency: " . $money_currency);
         error_log("Qty List received: " . print_r($qtyList, true));
         error_log("Price List received: " . print_r($priceList, true));
+        error_log("Additional Products received: " . print_r($additional_products_data, true));
 
         // Validate required fields
         if (empty($idanalisys_po) || empty($money_currency) || empty($number_po) || empty($order_date) || empty($name_supplier)) {
@@ -66,29 +70,36 @@ class Qty extends CI_Controller
 
         // Ambil data analisys_po untuk cek type_po
         $analisys_po = $this->db->where('idanalisys_po', $idanalisys_po)->get('analisys_po')->row();
+        if (!$analisys_po) {
+            $this->session->set_flashdata('error', 'Data analisys PO tidak ditemukan.');
+            redirect('qty');
+            return;
+        }
+
         $is_local = ($analisys_po->type_po == 'local');
-
-        // Update main analisys_po record
-        $updateAnalisys = [
-            'money_currency' => $money_currency,
-            'number_po' => $number_po,
-            'order_date' => $order_date,
-            'name_container' => $name_container,
-            'name_supplier' => $name_supplier,
-            'status_progress' => 'Finish',
-            'updated_by' => $this->session->userdata('username'),
-            'updated_date' => date('Y-m-d H:i:s')
-        ];
-
-        $this->db->where('idanalisys_po', $idanalisys_po);
-        $update_result = $this->db->update('analisys_po', $updateAnalisys);
-
-        error_log("Update analisys_po result: " . ($update_result ? 'Success' : 'Failed'));
 
         // Start transaction
         $this->db->trans_start();
 
         try {
+            // Update main analisys_po record
+            $updateAnalisys = [
+                'money_currency' => $money_currency,
+                'number_po' => $number_po,
+                'order_date' => $order_date,
+                'name_container' => $name_container,
+                'name_supplier' => $name_supplier,
+                'status_progress' => 'Finish',
+                'updated_by' => $this->session->userdata('username'),
+                'updated_date' => date('Y-m-d H:i:s')
+            ];
+
+            $this->db->where('idanalisys_po', $idanalisys_po);
+            $update_result = $this->db->update('analisys_po', $updateAnalisys);
+
+            error_log("Update analisys_po result: " . ($update_result ? 'Success' : 'Failed'));
+
+            // 1. Update produk yang sudah ada di detail analisys po
             if (!empty($qtyList) && is_array($qtyList)) {
                 error_log("Processing " . count($qtyList) . " qty items");
 
@@ -138,6 +149,78 @@ class Qty extends CI_Controller
                 error_log("QtyList is empty or not an array");
             }
 
+            // 2. Handle additional products
+            if (!empty($additional_products_data) && is_array($additional_products_data)) {
+                error_log("Processing " . count($additional_products_data) . " additional products");
+
+                foreach ($additional_products_data as $index => $additional_product) {
+                    if (!empty($additional_product['idproduct']) && isset($additional_product['qty_order'])) {
+                        $idproduct = (int) $additional_product['idproduct'];
+                        $qty_order = (int) $additional_product['qty_order'];
+                        $type_sgs = !empty($additional_product['type_sgs']) ? $additional_product['type_sgs'] : null;
+                        $type_unit = !empty($additional_product['type_unit']) ? $additional_product['type_unit'] : null; // PERBAIKAN: ambil type_unit
+                        $qty_packing_list = !empty($additional_product['qty_packing_list']) ? (int) $additional_product['qty_packing_list'] : 0;
+                        $price = !empty($additional_product['price']) ? floatval($additional_product['price']) : 0;
+                        $description = !empty($additional_product['description']) ? $additional_product['description'] : null; // PERBAIKAN: gunakan string langsung
+
+                        error_log("Processing additional product #{$index}: ID={$idproduct}, Qty={$qty_order}, Desc='{$description}'");
+
+                        if ($qty_order <= 0) {
+                            error_log("Skipping additional product ID {$idproduct} - qty_order is 0 or negative");
+                            continue;
+                        }
+
+                        // Get product info
+                        $product = $this->db->where('idproduct', $idproduct)->get('product')->row();
+                        if (!$product) {
+                            error_log("Product with ID {$idproduct} not found, skipping...");
+                            continue;
+                        }
+
+                        // Get sales data for this product (last month sales, current month sales, balance)
+                        $last_month_sales = 0;
+                        $current_month_sales = 0;
+                        $balance_per_today = 0;
+
+                        // You might want to fetch actual sales data here or leave as 0
+                        // This is just placeholder - adjust based on your business logic
+
+                        // Insert new detail for additional product
+                        $new_detail_data = [
+                            'idanalisys_po' => $idanalisys_po,
+                            'idproduct' => $idproduct,
+                            'product_name_en' => $product->nama_produk,
+                            'qty_order' => $qty_order,
+                            'qty_packing_list' => $is_local ? $qty_order : $qty_packing_list,
+                            'price' => $price,
+                            'type_sgs' => $type_sgs,
+                            'type_unit' => $type_unit, // PERBAIKAN: masukkan type_unit
+                            'latest_incoming_stock_mouth' => date('M Y'),
+                            'latest_incoming_stock_pcs' => 0,
+                            'last_mouth_sales' => $last_month_sales,
+                            'current_month_sales' => $current_month_sales,
+                            'balance_per_today' => $balance_per_today,
+                            'description' => $description // PERBAIKAN: langsung gunakan string
+                        ];
+
+                        error_log("Inserting additional product data: " . print_r($new_detail_data, true));
+
+                        $insert_result = $this->db->insert('detail_analisys_po', $new_detail_data);
+
+                        if ($insert_result) {
+                            error_log("Successfully added additional product ID {$idproduct} with qty {$qty_order}");
+                        } else {
+                            $error = $this->db->error();
+                            error_log("Failed to add additional product ID {$idproduct}: " . print_r($error, true));
+                        }
+                    } else {
+                        error_log("Invalid additional product data at index {$index}: " . print_r($additional_product, true));
+                    }
+                }
+            } else {
+                error_log("No additional products data received");
+            }
+
             // ===================================================
             // JIKA TYPE_PO = LOCAL, BUAT INSTOCK OTOMATIS
             // ===================================================
@@ -149,24 +232,31 @@ class Qty extends CI_Controller
                 $existing_instock = $this->db->where('instock_code', $instock_code)->get('instock')->row();
 
                 if (!$existing_instock) {
+                    // Get default warehouse ID
+                    $default_warehouse = $this->db->where('is_default', 1)->get('gudang')->row();
+                    $idgudang = $default_warehouse ? $default_warehouse->idgudang : 1;
+
                     // Buat data instock baru
                     $instock_data = [
                         'instock_code' => $instock_code,
+                        'idgudang' => $idgudang,
                         'tgl_terima' => date('Y-m-d'),
                         'jam_terima' => date('H:i:s'),
                         'datetime' => date('Y-m-d H:i:s'),
                         'user' => $this->session->userdata('username'),
                         'distribution_date' => $order_date,
+                        'kategori' => 'PEMBELIAN',
+                        'no_manual' => $number_po,
                         'created_by' => $this->session->userdata('username'),
                         'created_date' => date('Y-m-d H:i:s'),
-                        'status_verification' => 0 // Langsung diverifikasi untuk local PO
+                        'status_verification' => 1 // Langsung diverifikasi untuk local PO
                     ];
 
                     $this->db->insert('instock', $instock_data);
                     $idinstock = $this->db->insert_id();
                     error_log("Created instock with ID: " . $idinstock);
 
-                    // Ambil semua detail analisys_po untuk PO ini
+                    // Ambil semua detail analisys_po untuk PO ini (termasuk produk tambahan)
                     $details = $this->db
                         ->select('dap.*, p.sku, p.nama_produk')
                         ->from('detail_analisys_po dap')
@@ -176,6 +266,8 @@ class Qty extends CI_Controller
                         ->get()
                         ->result();
 
+                    $total_qty_instock = 0;
+
                     // Insert ke detail_instock
                     foreach ($details as $detail) {
                         $detail_instock_data = [
@@ -184,15 +276,12 @@ class Qty extends CI_Controller
                             'nama_produk' => $detail->nama_produk,
                             'jumlah' => $detail->qty_order, // Jumlah sama dengan qty_order
                             'sisa' => 0,
-                            'keterangan' => 'Auto-instock dari Local PO: ' . $number_po
+                            'keterangan' => 'Auto-instock dari Local PO: ' . $number_po . ($detail->description ? ' - ' . $detail->description : '')
                         ];
 
                         $this->db->insert('detail_instock', $detail_instock_data);
 
                         // Update stock di product_stock
-                        // Catatan: Anda perlu menyesuaikan idgudang sesuai kebutuhan
-                        $idgudang = 1; // Default gudang, sesuaikan dengan kebutuhan
-
                         $stock = $this->db->where('idproduct', $detail->idproduct)
                             ->where('idgudang', $idgudang)
                             ->get('product_stock')
@@ -211,6 +300,7 @@ class Qty extends CI_Controller
                                 ->update('product_stock');
                         }
 
+                        $total_qty_instock += $detail->qty_order;
                         error_log("Added to instock: SKU {$detail->sku}, Qty: {$detail->qty_order}");
                     }
 
@@ -218,10 +308,11 @@ class Qty extends CI_Controller
                     $this->db->where('idanalisys_po', $idanalisys_po)
                         ->update('analisys_po', [
                             'status_verification' => 1,
-                            'no_manual' => $number_po
+                            'no_manual' => $number_po,
+                            'idgudang' => $idgudang
                         ]);
 
-                    error_log("Auto-instock created successfully for local PO");
+                    error_log("Auto-instock created successfully for local PO. Total products: " . count($details) . ", Total Qty: " . $total_qty_instock);
                 } else {
                     error_log("Instock already exists for PO: " . $number_po);
                 }
@@ -233,12 +324,34 @@ class Qty extends CI_Controller
                 throw new Exception('Gagal memperbarui database.');
             }
 
-            // Pesan sukses berdasarkan type_po
-            if ($is_local) {
-                $this->session->set_flashdata('success', 'Data PO berhasil disimpan dan instock telah dibuat otomatis untuk local PO.');
-            } else {
-                $this->session->set_flashdata('success', 'Data PO berhasil disimpan dan silakan lanjut ke tahap Pre-Order.');
+            // Hitung total produk yang diproses
+            $total_products = 0;
+            $additional_products_count = 0;
+
+            if (!empty($qtyList)) {
+                $total_products += count($qtyList);
             }
+
+            if (!empty($additional_products_data)) {
+                $additional_products_count = count($additional_products_data);
+                $total_products += $additional_products_count;
+            }
+
+            // Pesan sukses berdasarkan type_po
+            $success_message = 'Data PO berhasil disimpan. ';
+            $success_message .= 'Total produk yang diproses: ' . $total_products . '.';
+
+            if ($additional_products_count > 0) {
+                $success_message .= ' Termasuk ' . $additional_products_count . ' produk tambahan.';
+            }
+
+            if ($is_local) {
+                $success_message .= ' Instock telah dibuat otomatis untuk local PO.';
+            } else {
+                $success_message .= ' Silakan lanjut ke tahap Pre-Order.';
+            }
+
+            $this->session->set_flashdata('success', $success_message);
         } catch (Exception $e) {
             $this->db->trans_rollback();
             error_log("Transaction failed: " . $e->getMessage());
@@ -253,7 +366,7 @@ class Qty extends CI_Controller
 
     public function get_detail_analisys_po($idanalisys_po)
     {
-        $this->db->select('money_currency, number_po, order_date, name_container, name_supplier');
+        $this->db->select('money_currency, number_po, order_date, name_container, name_supplier, type_po');
         $this->db->where('idanalisys_po', $idanalisys_po);
         $analisys_data = $this->db->get('analisys_po')->row();
 
@@ -262,6 +375,7 @@ class Qty extends CI_Controller
         $current_order_date = $analisys_data->order_date ?? '';
         $current_name_container = $analisys_data->name_container ?? '';
         $current_name_supplier = $analisys_data->name_supplier ?? '';
+        $current_type_po = $analisys_data->type_po ?? '';
 
         // Ambil semua number_po yang sudah ada (kecuali yang sedang diedit)
         $this->db->select('number_po');
@@ -274,7 +388,6 @@ class Qty extends CI_Controller
 
         // Konversi ke JSON untuk JavaScript
         $existing_numbers_json = json_encode($existing_numbers);
-        // Escape untuk JavaScript
         $existing_numbers_js = htmlspecialchars($existing_numbers_json, ENT_QUOTES, 'UTF-8');
 
         $this->db->select('idanalisys_po');
@@ -308,6 +421,22 @@ class Qty extends CI_Controller
         $this->db->join('analisys_po a', 'a.idanalisys_po = d.idanalisys_po', 'left');
         $this->db->where('d.idanalisys_po', $idanalisys_po);
         $query = $this->db->get();
+
+        // Ambil semua produk aktif untuk dropdown tambah produk
+        $all_products = $this->db->select('idproduct, sku, nama_produk')
+            ->where('status', 1)
+            ->order_by('nama_produk', 'asc')
+            ->get('product')
+            ->result();
+
+        $all_products_json = json_encode(array_map(function ($product) {
+            return [
+                'id' => $product->idproduct,
+                'sku' => $product->sku,
+                'nama' => $product->nama_produk,
+                'text' => $product->sku . ' - ' . $product->nama_produk
+            ];
+        }, $all_products));
 
         if ($query->num_rows() == 0) {
             echo '<div class="alert alert-warning text-center">Tidak ada produk dalam analisis PO ini.</div>';
@@ -344,6 +473,8 @@ class Qty extends CI_Controller
         });
 
         echo '<input type="hidden" name="idanalisys_po" value="' . $idanalisys_po . '">';
+        echo '<input type="hidden" id="all_products_data" value=\'' . htmlspecialchars($all_products_json, ENT_QUOTES, 'UTF-8') . '\'>';
+        echo '<input type="hidden" id="current_type_po" value="' . $current_type_po . '">';
 
         echo '
     <div class="row mb-3">
@@ -356,6 +487,18 @@ class Qty extends CI_Controller
         </div>
         <div class="col-md-8">
             <div class="form-text" id="searchResultInfo">Menampilkan semua data</div>
+        </div>
+    </div>';
+
+        // TOMBOL TAMBAH PRODUK - TAMPIL UNTUK SEMUA TIPE PO
+        echo '
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-success btn-sm" id="btnTambahProdukPO">
+                    <i class="fa-solid fa-plus"></i> Tambah Produk
+                </button>
+            </div>
         </div>
     </div>';
 
@@ -401,6 +544,76 @@ class Qty extends CI_Controller
         </div>
     </div>';
 
+        // FORM PENCARIAN PRODUK (Sembunyikan Awalnya)
+        echo '
+    <div class="card mb-3" id="productSearchForm" style="display: none;">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0"><i class="fa-solid fa-search"></i> Cari Produk</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-search"></i></span>
+                        <input type="text" id="searchProductPO" class="form-control" placeholder="Ketik SKU atau nama produk...">
+                        <button type="button" class="btn btn-outline-secondary" id="clearProductSearch">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-secondary" id="btnBatalCariProdukPO">
+                        <i class="fa-solid fa-times"></i> Batal
+                    </button>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div id="productSearchResultsPO" style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; display: none;">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="20%">SKU</th>
+                                <th width="60%">Nama Produk</th>
+                                <th width="20%">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productListPO">
+                            <!-- Daftar produk akan diisi di sini -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>';
+
+        // TABEL PRODUK TAMBAHAN
+        echo '
+    <div class="card mb-3" id="additionalProductsTableContainer" style="display: none;">
+        <div class="card-header bg-success text-white">
+            <h6 class="mb-0"><i class="fa-solid fa-list"></i> Produk Tambahan</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover mb-0" id="additionalProductsTablePO">
+                    <thead class="table-success">
+                        <tr>
+                            <th width="5%">No</th>
+                            <th width="25%">SKU</th>
+                            <th width="40%">Nama Produk</th>
+                            <th width="15%">Type SGS</th>
+                            <th width="15%">Qty Order</th>
+                            <th width="10%">Hapus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="additionalProductsBody">
+                        <!-- Produk tambahan akan muncul di sini -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>';
+
+        // TABEL PRODUK UTAMA
         echo '
     <div class="table-responsive">
         <div class="table-scroll">
@@ -440,7 +653,7 @@ class Qty extends CI_Controller
             $row = $product['row'];
             $avg_vs_stock_display = $product['avg_vs_stock_display'];
 
-            // Tooltip untuk informasi qty sebelumnya (hanya untuk informasi)
+            // Tooltip untuk informasi qty sebelumnya
             $tooltip = '';
             if ($row->latest_incoming_stock_pcs !== null) {
                 $tooltip = 'title="Last Order Qty: ' . $row->latest_incoming_stock_pcs . '"';

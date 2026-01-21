@@ -57,13 +57,16 @@ class Finish extends CI_Controller
             $currency = ''; // fallback kalau ada mata uang lain
         }
 
-        // Ambil data detail PO
-        $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, , d.latest_incoming_stock_mouth, d.latest_incoming_stock_pcs, 
-                   d.last_mouth_sales, d.current_month_sales, d.balance_per_today, d.qty_order, d.price, d.description');
+        // Ambil data detail PO (termasuk produk tambahan)
+        $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, d.type_sgs, d.type_unit, 
+                   d.latest_incoming_stock_mouth, d.latest_incoming_stock_pcs, 
+                   d.last_mouth_sales, d.current_month_sales, d.balance_per_today, 
+                   d.qty_order, d.price, d.description, d.idproduct');
         $this->db->from('detail_analisys_po d');
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $idanalisys_po);
         $this->db->where('d.qty_order > 0');
+        $this->db->order_by('d.iddetail_analisys_po', 'ASC'); // Urutkan berdasarkan ID detail
         $query = $this->db->get();
 
         if ($query->num_rows() > 0) {
@@ -94,6 +97,10 @@ class Finish extends CI_Controller
                         <strong>Money Currency:</strong><br>
                         ' . ($header_data->money_currency ? strtoupper(htmlspecialchars($header_data->money_currency)) : '<span class="text-muted">-</span>') . '
                     </div>
+                    <div class="col-md">
+                        <strong>Type PO:</strong><br>
+                        ' . ($header_data->type_po ? strtoupper(htmlspecialchars($header_data->type_po)) : '<span class="text-muted">-</span>') . '
+                    </div>
                 </div>
             </div>
         </div>';
@@ -114,6 +121,7 @@ class Finish extends CI_Controller
                         <th class="text-center">Avg Ratio</th>
                         <th class="text-center" width="100">Qty Order</th>
                         <th class="text-center" width="125">Price</th>
+                        <th class="text-center" width="150">Keterangan</th>
                 </tr>
             </thead>
             <tbody>';
@@ -124,20 +132,37 @@ class Finish extends CI_Controller
             $found = false;
 
             foreach ($query->result() as $row) {
-                // Hitung rata-rata penjualan per minggu
-                $total_sales = floatval($row->current_month_sales);
-                $avg_sales = $total_sales / 4;
+                // Untuk produk tambahan yang mungkin tidak memiliki data sales, set default values
+                $last_sales = $row->last_mouth_sales ? $row->last_mouth_sales : 0;
+                $current_sales = $row->current_month_sales ? $row->current_month_sales : 0;
+                $balance = $row->balance_per_today ? $row->balance_per_today : 0;
+                $avg_vs_stock_display = '-';
 
-                // Filter: hanya tampilkan jika Avg Sales vs Stock di bawah 1
-                if ($avg_sales > 0) {
-                    $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
-                    if ($avg_vs_stock >= 1) {
-                        continue; // Skip produk dengan avg >= 1
+                // Hitung avg_vs_stock hanya jika data tersedia dan valid
+                if ($current_sales > 0 && $balance > 0) {
+                    $total_sales = floatval($current_sales);
+                    $avg_sales = $total_sales / 4;
+
+                    if ($avg_sales > 0) {
+                        $avg_vs_stock = floatval($balance) / $avg_sales;
+                        $avg_vs_stock_display = number_format($avg_vs_stock, 2);
+
+                        // Filter: hanya tampilkan jika Avg Sales vs Stock di bawah 1 (untuk produk original)
+                        // Tapi untuk produk tambahan, tampilkan semua meskipun avg >= 1
+                        // Kita cek apakah ini produk tambahan (mungkin memiliki description khusus)
+                        $is_additional_product = (strpos($row->description ?? '', 'Produk tambahan') !== false) || (empty($row->last_mouth_sales) && empty($row->current_month_sales));
+
+                        if (!$is_additional_product && $avg_vs_stock >= 1) {
+                            continue; // Skip produk original dengan avg >= 1
+                        }
+
+                        $found = true;
+                    } else {
+                        $found = true; // Produk tambahan dengan avg_sales = 0 tetap ditampilkan
                     }
-                    $avg_vs_stock_display = number_format($avg_vs_stock, 2);
-                    $found = true;
                 } else {
-                    continue; // Skip produk dengan avg_sales = 0
+                    // Produk tanpa data sales (kemungkinan produk tambahan)
+                    $found = true;
                 }
 
                 // Hitung total
@@ -145,19 +170,41 @@ class Finish extends CI_Controller
                 $total_qty += floatval($row->qty_order);
                 $total_value += $item_value;
 
+                // Format price dengan currency
+                $formatted_price = '';
+                if (!empty($row->price)) {
+                    if ($currency == '¥') {
+                        $formatted_price = $currency . number_format($row->price, 2);
+                    } else {
+                        $formatted_price = $currency . ' ' . number_format($row->price, 2);
+                    }
+                }
+
                 echo '<tr>
                 <td class="text-center">' . $no++ . '</td>
                 <td>' . htmlspecialchars($row->nama_produk) . '</td>
                 <td>' . htmlspecialchars($row->sku) . '</td>
                 <td class="text-center">' . ($row->type_sgs ? strtoupper(htmlspecialchars($row->type_sgs)) : '-') . '</td>
                 <td class="text-center">' . ($row->type_unit ? strtoupper(htmlspecialchars($row->type_unit)) : '-') . '</td>
-                <td class="text-center"><span class="text-primary"><i class="fa-solid fa-calendar"></i> ' . $row->latest_incoming_stock_mouth . '</span><br><span class="text-success"><i class="fa-solid fa-box"></i> ' . $row->latest_incoming_stock_pcs . ' Pcs</span></td>
-                <td class="text-end">' . ($row->last_mouth_sales ? htmlspecialchars($row->last_mouth_sales) : '-') . '</td>
-                <td class="text-end">' . ($row->current_month_sales ? htmlspecialchars($row->current_month_sales) : '-') . '</td>
-                <td class="text-end">' . ($row->balance_per_today ? htmlspecialchars($row->balance_per_today) : '-') . '</td>
-                <td class="text-end text-danger fw-bold">' . $avg_vs_stock_display . '</td>
+                <td class="text-center">';
+
+                if (!empty($row->latest_incoming_stock_mouth)) {
+                    echo '<span class="text-primary"><i class="fa-solid fa-calendar"></i> ' . $row->latest_incoming_stock_mouth . '</span><br>';
+                }
+                if (!empty($row->latest_incoming_stock_pcs)) {
+                    echo '<span class="text-success"><i class="fa-solid fa-box"></i> ' . $row->latest_incoming_stock_pcs . ' Pcs</span>';
+                } else {
+                    echo '-';
+                }
+
+                echo '</td>
+                <td class="text-end">' . ($last_sales ? number_format($last_sales) : '-') . '</td>
+                <td class="text-end">' . ($current_sales ? number_format($current_sales) : '-') . '</td>
+                <td class="text-end">' . ($balance ? number_format($balance) : '-') . '</td>
+                <td class="text-end">' . $avg_vs_stock_display . '</td>
                 <td class="text-end">' . ($row->qty_order ? number_format($row->qty_order) : '0') . '</td>
-                <td class="text-end">' . ($row->price ? number_format($row->price, 2) : '0.00') . '</td>
+                <td class="text-end">' . ($row->price ? $formatted_price : '0.00') . '</td>
+                <td class="text-center">' . ($row->description ? htmlspecialchars($row->description) : '-') . '</td>
             </tr>';
             }
 
@@ -165,14 +212,22 @@ class Finish extends CI_Controller
                 echo '<tr>
                 <td colspan="13" class="text-center text-muted py-4">
                     <i class="fa-solid fa-info-circle me-2"></i>
-                    Tidak ada produk dengan Avg Sales vs Stock di bawah 1.00.
+                    Tidak ada produk dalam PO ini.
                 </td>
             </tr>';
             } else {
+                // Format total value dengan currency
+                $formatted_total_value = '';
+                if ($currency == '¥') {
+                    $formatted_total_value = $currency . number_format($total_value, 2);
+                } else {
+                    $formatted_total_value = $currency . ' ' . number_format($total_value, 2);
+                }
+
                 echo '<tr class="table-info fw-bold">
                 <td colspan="10" class="text-end"><strong>TOTAL:</strong></td>
                 <td class="text-end">' . number_format($total_qty) . '</td>
-                <td class="text-end"> ' . $currency . number_format($total_value) . '</td>
+                <td class="text-end" colspan="2">' . $formatted_total_value . '</td>
             </tr>';
             }
 
@@ -212,7 +267,7 @@ class Finish extends CI_Controller
         $data_po = $this->db->get('analisys_po');
         $po = $data_po->row();
 
-        // Ambil data detail PO + gambar produk
+        // Ambil data detail PO + gambar produk (semua produk termasuk tambahan)
         $this->db->select('d.idanalisys_po, p.nama_produk, p.sku, p.gambar, d.type_sgs, d.type_unit, 
                        d.latest_incoming_stock_mouth, d.latest_incoming_stock_pcs, d.last_mouth_sales, d.current_month_sales, 
                        d.balance_per_today, d.qty_order, d.price, d.description');
@@ -220,50 +275,62 @@ class Finish extends CI_Controller
         $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
         $this->db->where('d.idanalisys_po', $id);
         $this->db->where('d.qty_order > 0');
+        $this->db->order_by('d.iddetail_analisys_po', 'ASC');
         $query = $this->db->get();
 
-        // Filter data (Avg Sales vs Stock < 1) dan translate
+        // Filter data dan translate
         $filtered_detail_po = [];
         $total_qty = 0;
         $total_value = 0;
         $no = 1;
 
         foreach ($query->result() as $row) {
-            $total_sales = floatval($row->current_month_sales);
-            $avg_sales = $total_sales / 4;
+            // Untuk produk tambahan, tampilkan semua tanpa filter avg_vs_stock
+            $is_additional_product = (strpos($row->description ?? '', 'Produk tambahan') !== false) || (empty($row->last_mouth_sales) && empty($row->current_month_sales));
 
-            if ($avg_sales > 0) {
-                $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
-                if ($avg_vs_stock < 1) {
-                    $item_value = floatval($row->qty_order) * floatval($row->price);
+            // Jika bukan produk tambahan, cek avg_vs_stock
+            if (!$is_additional_product) {
+                $total_sales = floatval($row->current_month_sales);
+                $avg_sales = $total_sales / 4;
 
-                    // Try to translate using API, fallback to simple translation
-                    try {
-                        $translated_product_name = translate_id_to_en($row->nama_produk);
-                        $translated_description = !empty($row->description) ? translate_id_to_en($row->description) : '';
-                    } catch (Exception $e) {
-                        // Fallback to simple translation
-                        $translated_product_name = simple_translate_id_to_en($row->nama_produk);
-                        $translated_description = !empty($row->description) ? simple_translate_id_to_en($row->description) : '';
+                if ($avg_sales > 0) {
+                    $avg_vs_stock = floatval($row->balance_per_today) / $avg_sales;
+                    if ($avg_vs_stock >= 1) {
+                        continue; // Skip produk original dengan avg >= 1
                     }
-
-                    // FIXED: Get correct image path with better checking
-                    $image_url = $this->getProductImageUrl($row->gambar);
-
-                    $filtered_detail_po[] = [
-                        'row' => $row,
-                        'translated_product_name' => $translated_product_name,
-                        'translated_description' => $translated_description,
-                        'avg_vs_stock' => number_format($avg_vs_stock, 2),
-                        'item_value' => $item_value,
-                        'no' => $no++,
-                        'image_url' => $image_url
-                    ];
-
-                    $total_qty += floatval($row->qty_order);
-                    $total_value += $item_value;
+                } else {
+                    continue; // Skip produk original dengan avg_sales = 0
                 }
             }
+
+            $item_value = floatval($row->qty_order) * floatval($row->price);
+
+            // Try to translate using API, fallback to simple translation
+            try {
+                $translated_product_name = translate_id_to_en($row->nama_produk);
+                $translated_description = !empty($row->description) ? translate_id_to_en($row->description) : '';
+            } catch (Exception $e) {
+                // Fallback to simple translation
+                $translated_product_name = simple_translate_id_to_en($row->nama_produk);
+                $translated_description = !empty($row->description) ? simple_translate_id_to_en($row->description) : '';
+            }
+
+            // FIXED: Get correct image path with better checking
+            $image_url = $this->getProductImageUrl($row->gambar);
+
+            $filtered_detail_po[] = [
+                'row' => $row,
+                'translated_product_name' => $translated_product_name,
+                'translated_description' => $translated_description,
+                'avg_vs_stock' => $is_additional_product ? '-' : number_format($avg_vs_stock ?? 0, 2),
+                'item_value' => $item_value,
+                'no' => $no++,
+                'image_url' => $image_url,
+                'is_additional' => $is_additional_product
+            ];
+
+            $total_qty += floatval($row->qty_order);
+            $total_value += $item_value;
         }
 
         $data = [
@@ -274,7 +341,7 @@ class Finish extends CI_Controller
             'total_value' => $total_value
         ];
 
-        $this->load->view('finish/v_pdf', $data); // Use fixed view
+        $this->load->view('finish/v_pdf', $data);
     }
 
     // Helper function to get product image URL
@@ -301,46 +368,5 @@ class Finish extends CI_Controller
 
         // If image not found in any location
         return base_url('assets/image/no-image.png');
-    }
-
-    // Optional: Pre-translate function for better performance
-    public function preTranslate($idanalisys_po = null)
-    {
-        if ($idanalisys_po) {
-            // Translate single PO
-            $this->db->select('d.idanalisys_po, p.nama_produk, d.description');
-            $this->db->from('detail_analisys_po d');
-            $this->db->join('product p', 'p.idproduct = d.idproduct', 'left');
-            $this->db->where('d.idanalisys_po', $idanalisys_po);
-            $this->db->where('d.qty_order > 0');
-            $query = $this->db->get();
-
-            $translation_count = 0;
-            foreach ($query->result() as $row) {
-                // Pre-translate to cache
-                $translated_name = translate_id_to_en($row->nama_produk);
-                if (!empty($row->description)) {
-                    translate_id_to_en($row->description);
-                }
-                $translation_count++;
-            }
-
-            $this->session->set_flashdata('success', "Pre-translated $translation_count product names for PO #$idanalisys_po");
-            redirect('finish');
-        } else {
-            // Translate all products in database
-            $this->db->select('nama_produk');
-            $this->db->distinct();
-            $products = $this->db->get('product');
-
-            $translation_count = 0;
-            foreach ($products->result() as $product) {
-                translate_id_to_en($product->nama_produk);
-                $translation_count++;
-            }
-
-            $this->session->set_flashdata('success', "Pre-translated $translation_count unique product names");
-            redirect('finish');
-        }
     }
 }

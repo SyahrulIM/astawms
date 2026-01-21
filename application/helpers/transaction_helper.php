@@ -7,12 +7,12 @@ if (!function_exists('number_pending_verification')) {
 		$query = "
 	SELECT 
 		'INSTOCK' AS tipe,
-		i.instock_code AS kode_transaksi,
+		CONVERT(i.instock_code USING utf8mb4) COLLATE utf8mb4_unicode_ci AS kode_transaksi,
 		i.tgl_terima AS tanggal,
 		i.jam_terima AS jam,
-		i.kategori,
-		i.user,
-		g.nama_gudang,
+		CONVERT(i.kategori USING utf8mb4) COLLATE utf8mb4_unicode_ci AS kategori,
+		CONVERT(i.user USING utf8mb4) COLLATE utf8mb4_unicode_ci AS user,
+		CONVERT(g.nama_gudang USING utf8mb4) COLLATE utf8mb4_unicode_ci AS nama_gudang,
 		i.status_verification
 	FROM instock i
 	LEFT JOIN gudang g ON g.idgudang = i.idgudang
@@ -22,16 +22,32 @@ if (!function_exists('number_pending_verification')) {
 
 	SELECT 
 		'OUTSTOCK' AS tipe,
-		o.outstock_code AS kode_transaksi,
+		CONVERT(o.outstock_code USING utf8mb4) COLLATE utf8mb4_unicode_ci AS kode_transaksi,
 		o.tgl_keluar AS tanggal,
 		o.jam_keluar AS jam,
-		o.kategori,
-		o.user,
-		g.nama_gudang,
+		CONVERT(o.kategori USING utf8mb4) COLLATE utf8mb4_unicode_ci AS kategori,
+		CONVERT(o.user USING utf8mb4) COLLATE utf8mb4_unicode_ci AS user,
+		CONVERT(g.nama_gudang USING utf8mb4) COLLATE utf8mb4_unicode_ci AS nama_gudang,
 		o.status_verification
 	FROM outstock o
 	LEFT JOIN gudang g ON g.idgudang = o.idgudang
 	WHERE o.status_verification = 0
+
+	UNION ALL
+
+	SELECT 
+		'ANALISYS_PO' AS tipe,
+		CONVERT(COALESCE(ap.number_po, '') USING utf8mb4) COLLATE utf8mb4_unicode_ci AS kode_transaksi,
+		ap.order_date AS tanggal,
+		NULL AS jam,
+		'PURCHASE ORDER' AS kategori,
+		CONVERT(COALESCE(ap.created_by, '') USING utf8mb4) COLLATE utf8mb4_unicode_ci AS user,
+		CONVERT(COALESCE(g.nama_gudang, '') USING utf8mb4) COLLATE utf8mb4_unicode_ci AS nama_gudang,
+		ap.status_verification
+	FROM analisys_po ap
+	LEFT JOIN gudang g ON g.idgudang = ap.idgudang
+	WHERE ap.status_verification = 0
+		AND ap.status_progress = 'Finish'
 
 	ORDER BY tanggal DESC, jam DESC
 ";
