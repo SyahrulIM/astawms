@@ -7,9 +7,9 @@
                 </div>
                 <!-- Button trigger modal Tambah Produk -->
                 <?php if ($this->session->userdata('idrole') != 4) { ?>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProduct">
-                        <i class="fa-solid fa-plus"></i> Tambah Transaksi Barang Keluar
-                    </button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProduct">
+                    <i class="fa-solid fa-plus"></i> Tambah Transaksi Barang Keluar
+                </button>
                 <?php } ?>
 
                 <!-- Modal Tambah Produk -->
@@ -44,7 +44,7 @@
                                             <select class="form-select" aria-label="Default select example" id="inputGudang" name="inputGudang" required>
                                                 <option value="" selected disabled>Pilih Gudang</option>
                                                 <?php foreach ($gudang as $gkey => $gvalue) { ?>
-                                                    <option value="<?php echo $gvalue->idgudang; ?>"><?php echo $gvalue->nama_gudang; ?></option>
+                                                <option value="<?php echo $gvalue->idgudang; ?>"><?php echo $gvalue->nama_gudang; ?></option>
                                                 <?php } ?>
                                             </select>
                                         </div>
@@ -58,7 +58,7 @@
                                         </div>
                                         <div class="col">
                                             <label for="inputDistribution" class="form-label">Tanggal Distribusi</label>
-                                            <input type="date" class="form-control" id="inputDistribution" name="inputDistribution">
+                                            <input type="datetime-local" class="form-control" id="inputDistribution" name="inputDistribution">
                                         </div>
                                     </div>
                                     <table id="tableTambahBarangMasuk" class="display" style="width:100%">
@@ -79,7 +79,7 @@
                                                     <input list="skuList" class="form-control sku-input" name="inputSKU[]" placeholder="Pilih SKU" required>
                                                     <datalist id="skuList">
                                                         <?php foreach ($product as $pkey => $pvalue) { ?>
-                                                            <option value="<?php echo $pvalue->sku; ?>" data-nama="<?php echo htmlspecialchars($pvalue->nama_produk); ?>">
+                                                        <option value="<?php echo $pvalue->sku; ?>" data-nama="<?php echo htmlspecialchars($pvalue->nama_produk); ?>">
                                                             <?php } ?>
                                                     </datalist>
                                                 </td>
@@ -117,17 +117,17 @@
                             </thead>
                             <tbody>
                                 <?php foreach ($outstock as $oskey => $osvalue) { ?>
-                                    <tr>
-                                        <td><?php echo $oskey + 1; ?></td>
-                                        <td><?php echo $osvalue->outstock_code; ?></td>
-                                        <td><?php echo $osvalue->no_manual; ?></td>
-                                        <td><?php echo $osvalue->datetime; ?></td>
-                                        <td><?php echo $osvalue->user; ?></td>
-                                        <td><?php echo $osvalue->kategori; ?></td>
-                                        <td><?php echo $osvalue->outstock_type; ?></td>
-                                        <td><?php echo $osvalue->distribution_date; ?></td>
-                                        <td><a href="<?php echo base_url('outstock/detail_outstock?outstock_code=' . $osvalue->outstock_code) ?>"><button type="button" class="btn btn-success"><i class="fas fa-list"></i> Details</button></a></td>
-                                    </tr>
+                                <tr>
+                                    <td><?php echo $oskey + 1; ?></td>
+                                    <td><?php echo $osvalue->outstock_code; ?></td>
+                                    <td><?php echo $osvalue->no_manual; ?></td>
+                                    <td><?php echo $osvalue->datetime; ?></td>
+                                    <td><?php echo $osvalue->user; ?></td>
+                                    <td><?php echo $osvalue->kategori; ?></td>
+                                    <td><?php echo $osvalue->outstock_type; ?></td>
+                                    <td><?php echo $osvalue->distribution_date; ?></td>
+                                    <td><a href="<?php echo base_url('outstock/detail_outstock?outstock_code=' . $osvalue->outstock_code) ?>"><button type="button" class="btn btn-success"><i class="fas fa-list"></i> Details</button></a></td>
+                                </tr>
                                 <?php } ?>
                             </tbody>
                         </table>
