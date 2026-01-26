@@ -34,7 +34,7 @@ class Finish extends CI_Controller
         ];
 
         $this->load->view('theme/v_head', $data);
-        $this->load->view('finish/v_finish');
+        $this->load->view('Finish/v_finish');
     }
 
     public function get_detail_analisys_po($idanalisys_po)

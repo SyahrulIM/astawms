@@ -123,11 +123,13 @@
                             <span class="badge rounded-pill text-bg-primary"><?= $manual_pending_verification; ?></span>
                             <?php endif; ?>
                             <?php
+                            $this->load->helper('transaction');
                             $manual_pending_validasi = number_pending_validasi_delivery_manual();
                             if ($manual_pending_validasi > 0) : ?>
                             <span class="badge rounded-pill text-bg-info"><?= $manual_pending_validasi; ?></span>
                             <?php endif; ?>
                             <?php
+                            $this->load->helper('transaction');
                             $manual_pending_final = number_pending_final_delivery_manual();
                             if ($manual_pending_final > 0) : ?>
                             <span class="badge rounded-pill text-bg-success"><?= $manual_pending_final; ?></span>
@@ -145,6 +147,7 @@
                             <span class="badge rounded-pill text-bg-primary"><?= $manual_pending_verification; ?></span>
                             <?php endif; ?>
                             <?php
+                            $this->load->helper('transaction');
                             $manual_pending_validasi = number_pending_validasi_delivery_mutasi();
                             if ($manual_pending_validasi > 0) : ?>
                             <span class="badge rounded-pill text-bg-info"><?= $manual_pending_validasi; ?></span>
@@ -189,7 +192,7 @@
                     <div class="modal-content">
                         <form action="<?= base_url('user/changePassword'); ?>" method="post" enctype="multipart/form-data">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="changePasswordModalLabel">Change Username</h5>
+                                <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body text-center">
@@ -233,7 +236,16 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body text-center">
-                                <img src="<?php echo base_url('assets/image/user/' . $this->session->userdata('foto')); ?>" alt="Preview Foto" class="img-thumbnail mb-3" width="120px" id="previewFoto">
+                                <?php
+                                $user_foto = $this->session->userdata('foto');
+                                // Check if file exists and is not empty
+                                if (!empty($user_foto) && file_exists(FCPATH . 'assets/image/user/' . $user_foto)) {
+                                    $current_src = base_url('assets/image/user/' . $user_foto);
+                                } else {
+                                    $current_src = base_url('assets/image/user/default-profile.jpg');
+                                }
+                                ?>
+                                <img src="<?php echo $current_src; ?>" alt="Preview Foto" class="img-thumbnail mb-3" width="120px" id="previewFoto">
                                 <input type="file" class="form-control" name="foto" id="fotoInput" accept="image/*" required>
                             </div>
                             <div class="modal-footer">
@@ -300,7 +312,20 @@
                         <ul class="navbar-nav d-flex align-items-center">
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <img src="<?php echo base_url('assets/image/user/' . $this->session->userdata('foto')); ?>" alt="" width="21px" height="21px" style="border-radius: 50%; object-fit: cover; margin-right: 0.5rem;">
+                                    <?php
+                                    $user_foto = $this->session->userdata('foto');
+                                    // Check if file exists and is not empty
+                                    if (!empty($user_foto) && file_exists(FCPATH . 'assets/image/user/' . $user_foto)) {
+                                        $profile_src = base_url('assets/image/user/' . $user_foto);
+                                        ?>
+                                    <img src="<?php echo $profile_src; ?>" alt="Profile" width="21px" height="21px" style="border-radius: 50%; object-fit: cover; margin-right: 0.5rem;">
+                                    <?php
+                                    } else {
+                                        ?>
+                                    <i class="fa-solid fa-user-circle me-1" style="font-size: 21px;"></i>
+                                    <?php
+                                    }
+                                    ?>
                                     <?php echo $this->session->userdata('username'); ?>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
@@ -331,13 +356,13 @@
                     const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
                     passwordField.setAttribute('type', type);
 
-                    // ganti icon
+                    // Update icon
                     if (type === 'password') {
-                        icon.classList.remove('bi-eye-slash');
-                        icon.classList.add('bi-eye');
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
                     } else {
-                        icon.classList.remove('bi-eye');
-                        icon.classList.add('bi-eye-slash');
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
                     }
                 });
             </script>
