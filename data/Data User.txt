@@ -152,6 +152,12 @@ Pass: HotDog123
 Shopee ID:
 333026876
 
+Apa yg kamu lihat,
+Apa yg kamu tau,
+Apa kendala/masalahnya,
+Apa solusinya
+dan apa yg akan kamu lakukan
+
 =SUM('Happy Mart'!F5,'Nike Jaya Abadi'!F5,'Jaya bintang'!F5)
 
 CV Surya Jaya Makmur

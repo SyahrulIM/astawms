@@ -1,0 +1,121 @@
+CREATE TABLE IF NOT EXISTS `acc_lazada` (
+  `idacc_lazada` int NOT NULL AUTO_INCREMENT,
+  `iduser` int DEFAULT NULL,
+  `excel_type` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `created_by` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `created_date` datetime DEFAULT NULL,
+  `updated_by` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `updated_date` datetime DEFAULT NULL,
+  `status` int DEFAULT NULL,
+  PRIMARY KEY (`idacc_lazada`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `acc_lazada_additional` (
+  `idacc_lazada_additional` int NOT NULL AUTO_INCREMENT,
+  `additional_revenue` int DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `created_by` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `created_date` datetime DEFAULT NULL,
+  `updated_by` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `updated_date` datetime DEFAULT NULL,
+  `status` int DEFAULT NULL,
+  PRIMARY KEY (`idacc_lazada_additional`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `acc_lazada_detail` (
+  `idacc_lazada_detail` int NOT NULL AUTO_INCREMENT,
+  `idacc_lazada` int DEFAULT NULL,
+  `no_faktur` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `order_date` date DEFAULT NULL,
+  `pay_date` date DEFAULT NULL,
+  `total_faktur` int DEFAULT NULL,
+  `pay` int DEFAULT NULL,
+  `discount` int DEFAULT NULL,
+  `payment` int DEFAULT NULL,
+  `refund` int DEFAULT NULL,
+  `note` varchar(255) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `is_check` int DEFAULT NULL,
+  `status_dir` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `created_date` datetime DEFAULT NULL,
+  `created_by` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `updated_date` datetime DEFAULT NULL,
+  `updated_by` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `status` int DEFAULT NULL,
+  PRIMARY KEY (`idacc_lazada_detail`) USING BTREE,
+  KEY `idx_lazada_pay_date` (`pay_date`) USING BTREE,
+  KEY `idx_lazada_order_date` (`order_date`) USING BTREE,
+  KEY `idx_lazada_no_faktur` (`no_faktur`) USING BTREE,
+  KEY `idx_lazada_refund` (`refund`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `acc_lazada_detail_details` (
+  `idacc_lazada_detail_details` int NOT NULL AUTO_INCREMENT,
+  `no_faktur` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `sku` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `name_product` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `price_after_discount` int DEFAULT NULL,
+  `address` varchar(225) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `pos_code` int DEFAULT NULL,
+  `created_by` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `created_date` datetime DEFAULT NULL,
+  `updated_by` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_bin DEFAULT NULL,
+  `updated_date` datetime DEFAULT NULL,
+  `status` int DEFAULT NULL,
+  PRIMARY KEY (`idacc_lazada_detail_details`) USING BTREE,
+  KEY `idx_details_no_faktur` (`no_faktur`) USING BTREE,
+  KEY `idx_details_poscode` (`pos_code`) USING BTREE,
+  KEY `idx_lazada_details_no_faktur` (`no_faktur`) USING BTREE,
+  KEY `idx_lazada_details_sku` (`sku`) USING BTREE,
+  KEY `idx_details_sku` (`sku`) USING BTREE,
+  KEY `idx_details_faktur` (`no_faktur`) USING BTREE,
+  KEY `idx_details_pos` (`pos_code`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `analisys_po` (
+  `idanalisys_po` int NOT NULL AUTO_INCREMENT,
+  `number_po` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `no_manual` varchar(255) DEFAULT NULL,
+  `order_date` date DEFAULT NULL,
+  `order_time` date DEFAULT NULL,
+  `distribution_date` datetime DEFAULT NULL,
+  `name_container` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `status_progress` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `money_currency` varchar(50) DEFAULT NULL,
+  `name_supplier` varchar(50) DEFAULT NULL,
+  `idwarehouse` int DEFAULT NULL,
+  `kategori` varchar(50) DEFAULT NULL,
+  `user` varchar(50) DEFAULT NULL,
+  `idgudang` varchar(50) DEFAULT NULL,
+  `status_verification` int DEFAULT NULL,
+  `created_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `created_date` datetime DEFAULT NULL,
+  `updated_by` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `updated_date` datetime DEFAULT NULL,
+  `status` tinyint DEFAULT NULL,
+  PRIMARY KEY (`idanalisys_po`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `detail_analisys_po` (
+  `iddetail_analisys_po` int NOT NULL AUTO_INCREMENT,
+  `idanalisys_po` int NOT NULL,
+  `idproduct` int DEFAULT NULL,
+  `product_name_en` varchar(50) DEFAULT NULL,
+  `type_sgs` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `type_unit` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `latest_incoming_stock_mouth` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `latest_incoming_stock_pcs` int DEFAULT NULL,
+  `last_mouth_sales` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `current_month_sales` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `current_stock` varchar(255) DEFAULT NULL,
+  `sale_week_one` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `sale_week_two` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `sale_week_three` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `sale_week_four` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `balance_per_today` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `qty_order` int DEFAULT NULL,
+  `price` int DEFAULT NULL,
+  `qty_receive` int DEFAULT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  PRIMARY KEY (`iddetail_analisys_po`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
