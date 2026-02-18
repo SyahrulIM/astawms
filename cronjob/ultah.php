@@ -17,10 +17,10 @@ $employees = [
     ['name' => 'Achmad Huriansyah', 'date' => '02-03', 'phone' => '085755313101'],
     ['name' => 'Catur Ardiansyah Wulandana', 'date' => '23-03', 'phone' => '085731122858'],
     ['name' => 'Alida April Lia', 'date' => '08-04', 'phone' => '085733207227'],
-    ['name' => 'Imroatin Fauziah', 'date' => '16-04', 'phone' => '085755692019'],
     ['name' => 'Syahrul Izha Mahendra', 'date' => '18-05', 'phone' => '085156340619'],
     ['name' => 'Widiawati', 'date' => '31-05', 'phone' => '082141428660'],
     ['name' => 'Arya Ananduta Setyaki', 'date' => '16-06', 'phone' => '085926871752'],
+    ['name' => 'Jean Kezia Lovitasari', 'date' => '16-06', 'phone' => '089523365649'],
     ['name' => 'Khodijah Atika', 'date' => '18-06', 'phone' => '085926871752'],
     ['name' => 'Adinda Dewi Zulfia Putri', 'date' => '27-06', 'phone' => '089612686399'],
     ['name' => 'Aditya Yuli Setyawan Pradana', 'date' => '16-07', 'phone' => '0895371819977'],
@@ -131,11 +131,11 @@ foreach ($employees as $emp) {
         . "📅 Tgl  : {$birthdayDate->format('d-m-Y')}\n"
         . "⏰ Status : {$hariText}\n"
         . "━━━━━━━━━━━━━━━━━━\n\n"
-        . "🔒 Mohon dijaga kerahasiaannya ya 🤓\n"
+        . "😉 Mohon dijaga kerahasiaannya ya\n"
         . "💳 *INFO TRANSFER*\n"
         . "🏦 Bank : BCA\n"
-        . "🔢 No Rek : 6720711981\n"
-        . "👩 A.n : Imroatin Fauziah\n"
+        . "🔢 No Rek : 5105013938\n"
+        . "👩 A.n : Jean Kezia Lovitasari\n"
         . "━━━━━━━━━━━━━━━━━━\n\n"
         . "🙏 *TERIMA KASIH*\n"
         . "Atas partisipasi dan kerja sama rekan-rekan semua kami ucapkan terima kasih😉\n"

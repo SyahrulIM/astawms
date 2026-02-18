@@ -364,11 +364,11 @@
                                         <?php } ?>
                                     </td>
                                     <td>
-                                        <?php if ($dvalue->progress == 1 && $this->session->userdata('idrole') == 6) { ?>
+                                        <?php if ($dvalue->progress == 1 && $this->session->userdata('idrole') == 6 || $dvalue->progress == 1 && $this->session->userdata('idrole') == 1) { ?>
                                         <a href="#" class="btn btn-sm btn-primary mb-1" onclick="showConfirmModal(<?= $dvalue->iddelivery_note ?>)">
                                             <i class="fas fa-check"></i> Verifikasi
                                         </a><br>
-                                        <?php } else if ($dvalue->progress == 2 && $this->session->userdata('idrole') == 5) { ?>
+                                        <?php } else if ($dvalue->progress == 2 && $this->session->userdata('idrole') == 5 || $dvalue->progress == 2 && $this->session->userdata('idrole') == 1) { ?>
                                         <a href="#" class="btn btn-sm btn-info mb-1" onclick="showValidasiModal(<?= $dvalue->iddelivery_note ?>)">
                                             <i class="fas fa-check-double"></i> Validasi
                                         </a><br>

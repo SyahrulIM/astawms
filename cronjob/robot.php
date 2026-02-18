@@ -15,7 +15,7 @@ function getStatusText($status)
     }
 }
 
-$servername = "103.163.138.82";
+$servername = "103.163.138.102";
 $username = "astahome_it";
 $password = "astawms=d17d09";
 $dbname = "astahome_wms";
@@ -285,13 +285,14 @@ $yesterday = date('Y-m-d', strtotime('-1 day'));
 $ratio_limit = 30;
 
 // ===============================================
-// CHECK MARKETPLACE STATUS
+// CHECK MARKETPLACE STATUS (TERMASUK BLIBLI - ONLY ASTA)
 // ===============================================
 
 $marketplace_status = [
     'shopee' => ['asta' => '', 'kotime' => ''],
     'tiktok' => ['asta' => '', 'kotime' => ''],
-    'lazada' => ['asta' => '', 'kotime' => '']
+    'lazada' => ['asta' => '', 'kotime' => ''],
+    'blibli' => ['asta' => '', 'kotime' => ''] // Blibli tetap di array tapi Kotime akan dikosongkan
 ];
 
 // Check Lazada ASTA data
@@ -438,7 +439,38 @@ if ($result_tiktok_kotime) {
     $marketplace_status['tiktok']['kotime'] = $row['status'];
 }
 
-// 2.2 Query untuk data Acol dengan periode tertentu - INCLUDE KOTIME
+// ===============================================
+// CHECK BLIBLI STATUS (ONLY ASTA - NO KOTIME)
+// ===============================================
+
+// Check Blibli ASTA data (ONLY ASTA)
+$sql_blibli_asta_status = "
+    SELECT 
+        CASE 
+            WHEN COUNT(*) = 0 THEN 'empty'
+            WHEN MAX(abd.updated_date) >= '{$today}' THEN 'safe'
+            WHEN MAX(abd.updated_date) >= '{$yesterday}' THEN 'safe'
+            ELSE 'not_updated_today'
+        END as status,
+        COUNT(*) as total_records,
+        MAX(abd.updated_date) as last_update
+    FROM acc_blibli_detail abd
+    INNER JOIN acc_blibli b ON b.idacc_blibli = abd.idacc_blibli
+    WHERE abd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
+    AND abd.status = 1
+    AND (b.is_kotime = 0 OR b.is_kotime IS NULL)  -- ONLY ASTA, NO KOTIME
+";
+
+$result_blibli_asta = $conn->query($sql_blibli_asta_status);
+if ($result_blibli_asta) {
+    $row = $result_blibli_asta->fetch_assoc();
+    $marketplace_status['blibli']['asta'] = $row['status'];
+}
+
+// Blibli Kotime - TIDAK ADA DATA, set empty
+$marketplace_status['blibli']['kotime'] = 'empty';
+
+// 2.2 Query untuk data Acol dengan periode tertentu - INCLUDE KOTIME DAN BLIBLI (ONLY ASTA)
 $sql_acol_detail = "
     SELECT
         asd.no_faktur,
@@ -546,12 +578,50 @@ $sql_acol_detail = "
     AND ald.status = 1
     GROUP BY ald.no_faktur
 
+    UNION
+
+    -- TAMBAHAN BLIBLI - ONLY ASTA (NO KOTIME)
+    SELECT
+        abd.no_faktur,
+        MAX(abd.order_date) AS shopee_order_date,
+        MAX(abd.pay_date) AS shopee_pay_date,
+        MAX(abd.total_faktur) AS shopee_total_faktur,
+        MAX(abd.discount) AS shopee_discount,
+        MAX(abd.payment) AS shopee_payment,
+        MAX(abd.refund) AS shopee_refund,
+        MAX(abd.note) AS note,
+        MAX(abd.is_check) AS is_check,
+        MAX(abd.status_dir) AS status_dir,
+        MAX(aad.pay_date) AS accurate_pay_date,
+        MAX(aad.total_faktur) AS accurate_total_faktur,
+        MAX(aad.discount) AS accurate_discount,
+        MAX(aad.payment) AS accurate_payment,
+        'blibli' as source,
+        0 as is_kotime  -- FORCE ASTA ONLY, NO KOTIME
+    FROM acc_blibli_detail abd
+    INNER JOIN acc_blibli b ON b.idacc_blibli = abd.idacc_blibli
+    LEFT JOIN (
+        SELECT a1.*
+        FROM acc_accurate_detail a1
+        INNER JOIN (
+            SELECT no_faktur, MAX(idacc_accurate_detail) AS max_id
+            FROM acc_accurate_detail
+            GROUP BY no_faktur
+        ) latest ON a1.no_faktur = latest.no_faktur AND a1.idacc_accurate_detail = latest.max_id
+    ) aad ON aad.no_faktur = abd.no_faktur
+    WHERE abd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
+    AND aad.payment IS NOT NULL
+    AND abd.total_faktur > 0
+    AND abd.status = 1
+    AND (b.is_kotime = 0 OR b.is_kotime IS NULL)  -- ONLY ASTA, EXCLUDE KOTIME
+    GROUP BY abd.no_faktur
+
     ORDER BY no_faktur ASC
 ";
 
 $result_acol = $conn->query($sql_acol_detail);
 
-// Inisialisasi data Acol untuk ASTA dan Kotime terpisah
+// Inisialisasi data Acol untuk ASTA dan Kotime terpisah - TAMBAH BLIBLI (ONLY ASTA)
 $acol_data = [
     'asta_shopee' => [
         'total_faktur' => 0,
@@ -580,6 +650,19 @@ $acol_data = [
         'total_diterima_retur' => 0
     ],
     'asta_lazada' => [
+        'total_faktur' => 0,
+        'belum_note' => 0,
+        'belum_check' => 0,
+        'butuh_final_dir' => 0,
+        'total_invoice' => 0,
+        'total_diterima' => 0,
+        'ratio_exceed' => 0,
+        'total_selisih' => 0,
+        'total_faktur_retur' => 0,
+        'total_invoice_retur' => 0,
+        'total_diterima_retur' => 0
+    ],
+    'asta_blibli' => [ // TAMBAHAN BLIBLI - ONLY ASTA
         'total_faktur' => 0,
         'belum_note' => 0,
         'belum_check' => 0,
@@ -631,6 +714,7 @@ $acol_data = [
         'total_invoice_retur' => 0,
         'total_diterima_retur' => 0
     ]
+    // KOTIME BLIBLI - TIDAK ADA, TIDAK DITAMBAHKAN
 ];
 
 $critical_invoices = [];
@@ -641,8 +725,19 @@ if ($result_acol) {
         $source = $row['source'];
         // Handle NULL is_kotime values (treat as ASTA)
         $is_kotime = ($row['is_kotime'] == 1) ? 1 : 0;
+        
+        // BLIBLI: Force ASTA only, skip if somehow is_kotime = 1 for blibli
+        if ($source == 'blibli' && $is_kotime == 1) {
+            continue; // Skip Blibli Kotime data (should not exist)
+        }
+        
         $brand_prefix = $is_kotime ? 'kotime_' : 'asta_';
         $data_key = $brand_prefix . $source;
+
+        // Skip jika source tidak dikenali
+        if (!isset($acol_data[$data_key])) {
+            continue;
+        }
 
         $is_retur = ($row['shopee_refund'] ?? 0) < 0;
         $shopee = (float) ($row['shopee_total_faktur'] ?? 0);
@@ -707,7 +802,7 @@ if ($result_acol) {
 }
 
 // ===============================================
-// 3. HITUNG ADDITIONAL REVENUE UNTUK ASTA & KOTIME
+// 3. HITUNG ADDITIONAL REVENUE UNTUK ASTA & KOTIME - BLIBLI ONLY ASTA
 // ===============================================
 
 $additional_revenue_asta = 0;
@@ -745,7 +840,7 @@ if ($result_tiktok_add_asta) {
     $additional_revenue_asta += $row['total'] ?? 0;
 }
 
-// Lazada ASTA Additional Revenue (is_kotime = 0 or NULL)
+// Lazada ASTA
 $sql_additional_lazada_asta = "
     SELECT SUM(ala.additional_revenue) as total
     FROM acc_lazada_additional ala
@@ -758,6 +853,22 @@ $sql_additional_lazada_asta = "
 $result_lazada_add_asta = $conn->query($sql_additional_lazada_asta);
 if ($result_lazada_add_asta) {
     $row = $result_lazada_add_asta->fetch_assoc();
+    $additional_revenue_asta += $row['total'] ?? 0;
+}
+
+// Blibli ASTA (TAMBAHAN - ONLY ASTA)
+$sql_additional_blibli_asta = "
+    SELECT SUM(aba.additional_revenue) as total
+    FROM acc_blibli_additional aba
+    INNER JOIN acc_blibli b ON b.idacc_blibli = aba.idacc_blibli
+    WHERE aba.start_date >= '{$current_month_start}' 
+    AND aba.end_date <= '{$current_month_end}'
+    AND (b.is_kotime = 0 OR b.is_kotime IS NULL)  -- ONLY ASTA
+    AND aba.status = 1
+";
+$result_blibli_add_asta = $conn->query($sql_additional_blibli_asta);
+if ($result_blibli_add_asta) {
+    $row = $result_blibli_add_asta->fetch_assoc();
     $additional_revenue_asta += $row['total'] ?? 0;
 }
 
@@ -793,7 +904,7 @@ if ($result_tiktok_add_kotime) {
     $additional_revenue_kotime += $row['total'] ?? 0;
 }
 
-// Lazada Kotime Additional Revenue (is_kotime = 1)
+// Lazada Kotime
 $sql_additional_lazada_kotime = "
     SELECT SUM(ala.additional_revenue) as total
     FROM acc_lazada_additional ala
@@ -809,21 +920,23 @@ if ($result_lazada_add_kotime) {
     $additional_revenue_kotime += $row['total'] ?? 0;
 }
 
+// Blibli Kotime - TIDAK ADA, SKIP
+
 $additional_revenue_total = $additional_revenue_asta + $additional_revenue_kotime;
 
 // ===============================================
-// 4. FORMAT PESAN WHATSAPP
+// 4. FORMAT PESAN WHATSAPP - TERMASUK BLIBLI (ONLY ASTA)
 // ===============================================
 
 $current_date = date('d F Y');
 $message = "📊 *ASTA HOMEWARE - DAILY REPORT*\n";
 $message .= "*Tanggal: " . $current_date . "*\n\n";
 
-// 4.0 Marketplace Status Section
+// 4.0 Marketplace Status Section - DENGAN BLIBLI (ONLY ASTA)
 $message .= "══════ STATUS MARKETPLACE ═════\n";
 $message .= "*Periode: " . date('d M Y', strtotime($current_month_start)) . " - " . date('d M Y', strtotime($current_month_end)) . "*\n\n";
 
-foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
+foreach (['shopee', 'tiktok', 'lazada', 'blibli'] as $mp) {
     $message .= "🛒 *" . strtoupper($mp) . "*\n";
 
     // ASTA Status
@@ -832,9 +945,15 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
     $message .= "  🟦 ASTA: " . $asta_status_text . "\n";
 
     // Kotime Status
-    $kotime_status = $marketplace_status[$mp]['kotime'];
-    $kotime_status_text = getStatusText($kotime_status);
-    $message .= "  🟧 Kotime: " . $kotime_status_text . "\n\n";
+    if ($mp == 'blibli') {
+        // Blibli tidak punya Kotime
+        $message .= "  🟧 Kotime: 📭 No Transaction (no data)\n";
+    } else {
+        $kotime_status = $marketplace_status[$mp]['kotime'];
+        $kotime_status_text = getStatusText($kotime_status);
+        $message .= "  🟧 Kotime: " . $kotime_status_text . "\n";
+    }
+    $message .= "\n";
 }
 
 $message .= "══════ Asta WMS ═════\n";
@@ -871,7 +990,7 @@ $message .= "• *" . $grand_total_wms . " transaksi* membutuhkan tindakan\n\n";
 $message .= "══════ Asta Acol ═════\n";
 $message .= "*Periode: " . date('d M Y', strtotime($current_month_start)) . " - " . date('d M Y', strtotime($current_month_end)) . "*\n";
 $message .= "*Bulan: " . date('F Y', strtotime($current_month_start)) . "*\n";
-$message .= "*Termasuk ASTA dan Kotime*\n";
+$message .= "*Termasuk ASTA (Shopee, TikTok, Lazada, Blibli) dan Kotime (Shopee, TikTok, Lazada)*\n";
 $message .= "*Ratio Limit: " . $ratio_limit . "%*\n";
 $message .= "*Hanya faktur dengan ratio >{$ratio_limit}% yang dihitung (non-retur)*\n\n";
 
@@ -904,9 +1023,9 @@ $total_faktur_retur_kotime = 0;
 $total_invoice_retur_kotime = 0;
 $total_diterima_retur_kotime = 0;
 
-// Tampilkan data per marketplace untuk ASTA
+// Tampilkan data per marketplace untuk ASTA (TERMASUK BLIBLI)
 $message .= "🟦 *ASTA HOMEWARE*\n";
-foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
+foreach (['shopee', 'tiktok', 'lazada', 'blibli'] as $mp) {
     $data_key = 'asta_' . $mp;
     $data = $acol_data[$data_key];
     if ($data['total_faktur'] > 0) {
@@ -924,7 +1043,7 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
         $message .= "  - Retur: " . number_format($data['total_faktur_retur']) . "\n";
 
         $message .= "• Ratio >{$ratio_limit}%: " . number_format($data['ratio_exceed']) .
-            " (" . number_format(($data['ratio_exceed'] / $total_faktur_non_retur * 100), 1) . "% dari non-retur)\n";
+            " (" . number_format(($data['ratio_exceed'] / max($total_faktur_non_retur, 1) * 100), 1) . "% dari non-retur)\n";
         $message .= "• Belum Note: " . number_format($data['belum_note']) . "\n";
         $message .= "• Belum Check: " . number_format($data['belum_check']) . "\n";
         $message .= "• Butuh Final DIR: " . number_format($data['butuh_final_dir']) . "\n";
@@ -951,9 +1070,9 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
     }
 }
 
-// Tampilkan data per marketplace untuk Kotime
+// Tampilkan data per marketplace untuk Kotime (TANPA BLIBLI)
 $message .= "🟧 *KOTIME*\n";
-foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
+foreach (['shopee', 'tiktok', 'lazada'] as $mp) { // TANPA BLIBLI
     $data_key = 'kotime_' . $mp;
     $data = $acol_data[$data_key];
     if ($data['total_faktur'] > 0) {
@@ -971,7 +1090,7 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
         $message .= "  - Retur: " . number_format($data['total_faktur_retur']) . "\n";
 
         $message .= "• Ratio >{$ratio_limit}%: " . number_format($data['ratio_exceed']) .
-            " (" . number_format(($data['ratio_exceed'] / $total_faktur_non_retur * 100), 1) . "% dari non-retur)\n";
+            " (" . number_format(($data['ratio_exceed'] / max($total_faktur_non_retur, 1) * 100), 1) . "% dari non-retur)\n";
         $message .= "• Belum Note: " . number_format($data['belum_note']) . "\n";
         $message .= "• Belum Check: " . number_format($data['belum_check']) . "\n";
         $message .= "• Butuh Final DIR: " . number_format($data['butuh_final_dir']) . "\n";
@@ -1201,7 +1320,7 @@ if (curl_errno($curl)) {
 curl_close($curl);
 
 // ===============================================
-// 6. OUTPUT DAN DEBUG
+// 6. OUTPUT DAN DEBUG - TERMASUK BLIBLI (ONLY ASTA)
 // ===============================================
 
 echo "📊 ASTA DAILY REPORT SYSTEM\n";
@@ -1215,7 +1334,7 @@ echo "----------------\n";
 echo "ASTA WMS: Semua data (tanpa filter periode)\n";
 echo "ASTA ACOL: " . date('d M Y', strtotime($current_month_start)) . " - " . date('d M Y', strtotime($current_month_end)) . "\n";
 echo "Bulan: " . date('F Y', strtotime($current_month_start)) . "\n";
-echo "Termasuk: ASTA Homeware dan Kotime\n";
+echo "Termasuk: ASTA Homeware (Shopee, TikTok, Lazada, Blibli) dan Kotime (Shopee, TikTok, Lazada)\n";
 echo "Ratio Limit: " . $ratio_limit . "%\n";
 echo "Additional Revenue Total: Rp " . number_format($additional_revenue_total) . "\n";
 echo "  - ASTA: Rp " . number_format($additional_revenue_asta) . "\n";
@@ -1223,10 +1342,14 @@ echo "  - Kotime: Rp " . number_format($additional_revenue_kotime) . "\n\n";
 
 echo "📊 MARKETPLACE STATUS:\n";
 echo "---------------------\n";
-foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
+foreach (['shopee', 'tiktok', 'lazada', 'blibli'] as $mp) {
     echo strtoupper($mp) . ":\n";
     echo "  ASTA: " . getStatusText($marketplace_status[$mp]['asta']) . "\n";
-    echo "  Kotime: " . getStatusText($marketplace_status[$mp]['kotime']) . "\n";
+    if ($mp == 'blibli') {
+        echo "  Kotime: 📭 No Transaction (no data)\n";
+    } else {
+        echo "  Kotime: " . getStatusText($marketplace_status[$mp]['kotime']) . "\n";
+    }
 }
 echo "\n";
 
@@ -1266,7 +1389,7 @@ echo "  - Total WMS: " . $grand_total_wms . "\n\n";
 
 echo "ASTA ACOL (Periode: " . date('d M Y', strtotime($current_month_start)) . " - " . date('d M Y', strtotime($current_month_end)) . "):\n";
 echo "  🟦 ASTA HOMEWARE:\n";
-foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
+foreach (['shopee', 'tiktok', 'lazada', 'blibli'] as $mp) {
     $data = $acol_data['asta_' . $mp];
     if ($data['total_faktur'] > 0) {
         echo "    " . strtoupper($mp) . ":\n";
@@ -1283,7 +1406,7 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
 }
 
 echo "  🟧 KOTIME:\n";
-foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
+foreach (['shopee', 'tiktok', 'lazada'] as $mp) { // TANPA BLIBLI
     $data = $acol_data['kotime_' . $mp];
     if ($data['total_faktur'] > 0) {
         echo "    " . strtoupper($mp) . ":\n";
