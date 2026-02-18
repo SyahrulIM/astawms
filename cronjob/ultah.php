@@ -30,7 +30,8 @@ $employees = [
     ['name' => 'Alfiyatur Rosida', 'date' => '02-10', 'phone' => '085816236056'],
     ['name' => 'Dwi Wahyu Nursanti', 'date' => '04-11', 'phone' => '089616460526'],
     ['name' => 'Priaji Utomo', 'date' => '13-11', 'phone' => '08563557912'],
-    ['name' => 'Purwono', 'date' => '18-12', 'phone' => '083143115467']
+    ['name' => 'Purwono', 'date' => '18-12', 'phone' => '083143115467'],
+    ['name' => 'Mirza Adriansyah', 'date' => '30-12', 'phone' => '081215908797']
 ];
 
 /* =====================
