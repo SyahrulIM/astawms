@@ -19,7 +19,7 @@ $employees = [
     ['name' => 'Alida April Lia', 'date' => '08-04', 'phone' => '085733207227'],
     ['name' => 'Syahrul Izha Mahendra', 'date' => '18-05', 'phone' => '085156340619'],
     ['name' => 'Widiawati', 'date' => '31-05', 'phone' => '082141428660'],
-    ['name' => 'Arya Ananduta Setyaki', 'date' => '16-06', 'phone' => '085926871752'],
+    ['name' => 'Arya Ananduta Setyaki', 'date' => '16-06', 'phone' => '081336753577'],
     ['name' => 'Jean Kezia Lovitasari', 'date' => '16-06', 'phone' => '089523365649'],
     ['name' => 'Khodijah Atika', 'date' => '18-06', 'phone' => '085926871752'],
     ['name' => 'Adinda Dewi Zulfia Putri', 'date' => '27-06', 'phone' => '089612686399'],
