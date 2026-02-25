@@ -152,13 +152,21 @@ Pass: HotDog123
 Shopee ID:
 333026876
 
+Internet WiFi Indihome IV 150Mbps:
+ID Pelanggan: 152412289273
+Email: info.suryaayamakmur@gmail.com
+Bayar: Rp425.800/Bulan
+
+Internet WiFi Indihome Gudang D17 75Mbps:
+ID Pelanggan: 1552331224613
+Email: schianger@gmail.com
+Bayar: Rp331.450/Bulan
+
 Apa yg kamu lihat,
 Apa yg kamu tau,
 Apa kendala/masalahnya,
 Apa solusinya
 dan apa yg akan kamu lakukan
-
-=SUM('Happy Mart'!F5,'Nike Jaya Abadi'!F5,'Jaya bintang'!F5)
 
 CV Surya Jaya Makmur
 Taman Internasional 1 B6 / 30

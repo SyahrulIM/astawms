@@ -245,140 +245,145 @@
                 });
 
                 document.addEventListener("DOMContentLoaded", function() {
+                    // Image validation helper function
+                    function isValidImage(file) {
+                        const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                        return validTypes.includes(file.type);
+                    }
+
+                    // Handle Add Product form
                     const formAdd = document.querySelector('#addProduct form');
                     const inputSku = document.getElementById('inputSku');
                     const inputNama = document.getElementById('inputNamaProduk');
+                    const inputGambar = document.getElementById('inputGambar');
+                    const inputSni = document.getElementById('inputSni');
                     const btnConfirmSave = document.getElementById('btnConfirmSave');
                     let currentForm = null;
 
-                    formAdd.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        if (/\s/.test(inputSku.value)) {
-                            alert('SKU tidak boleh mengandung spasi.');
-                            return;
-                        }
+                    if (formAdd) {
+                        formAdd.addEventListener('submit', function(e) {
+                            e.preventDefault();
 
-                        const gambar = document.getElementById('inputGambar');
-                        const sni = document.getElementById('inputSni');
-                        if (gambar.files.length > 0 && !isValidImage(gambar.files[0])) {
-                            alert('Format file Gambar harus JPG, JPEG, atau PNG.');
-                            return;
-                        }
+                            // Validate SKU no spaces
+                            if (/\s/.test(inputSku.value)) {
+                                alert('SKU tidak boleh mengandung spasi.');
+                                return;
+                            }
 
-                        if (sni.files.length > 0 && !isValidImage(sni.files[0])) {
-                            alert('Format file SNI harus JPG, JPEG, atau PNG.');
-                            return;
-                        }
+                            // Validate image file if uploaded
+                            if (inputGambar.files.length > 0 && !isValidImage(inputGambar.files[0])) {
+                                alert('Format file Gambar harus JPG, JPEG, atau PNG.');
+                                return;
+                            }
 
-                        // Show modal konfirmasi
-                        document.getElementById('productConfirmInfo').textContent = `${inputNama.value} (SKU: ${inputSku.value})`;
-                        currentForm = formAdd;
-                        const modal = new bootstrap.Modal(document.getElementById('confirmSaveModal'));
-                        modal.show();
-                    });
+                            // Validate SNI file if uploaded
+                            if (inputSni.files.length > 0 && !isValidImage(inputSni.files[0])) {
+                                alert('Format file SNI harus JPG, JPEG, atau PNG.');
+                                return;
+                            }
 
-                    // Tombol "Ya, Simpan" di modal konfirmasi
-                    btnConfirmSave.addEventListener('click', function() {
-                        if (currentForm) {
-                            currentForm.submit();
-                        }
-                    });
-                });
+                            // Show confirmation modal
+                            document.getElementById('productConfirmInfo').textContent = `${inputNama.value} (SKU: ${inputSku.value})`;
+                            currentForm = formAdd;
+                            const modal = new bootstrap.Modal(document.getElementById('confirmSaveModal'));
+                            modal.show();
+                        });
+                    }
 
-                document.addEventListener("DOMContentLoaded", function() {
+                    // Handle Edit Product form
                     const formEdit = document.querySelector('#editProduct form');
                     const editSku = document.getElementById('editSku');
                     const editNama = document.getElementById('editNamaProduk');
-                    const btnConfirmSave = document.getElementById('btnConfirmSave');
-                    let currentForm = null;
+                    const editGambar = document.getElementById('editGambar');
+                    const editSni = document.getElementById('editSni');
 
-                    formEdit.addEventListener('submit', function(e) {
-                        e.preventDefault();
+                    if (formEdit) {
+                        formEdit.addEventListener('submit', function(e) {
+                            e.preventDefault();
 
-                        // Show modal konfirmasi saat form disubmit
-                        document.getElementById('productConfirmInfo').textContent = `${editNama.value} (SKU: ${editSku.value})`;
-                        currentForm = formEdit; // Menyimpan form saat ini
-                        const modal = new bootstrap.Modal(document.getElementById('confirmSaveModal'));
-                        modal.show(); // Tampilkan modal konfirmasi
-                    });
+                            // Validate SKU no spaces
+                            if (/\s/.test(editSku.value)) {
+                                alert('SKU tidak boleh mengandung spasi.');
+                                return;
+                            }
 
-                    // Tombol "Ya, Simpan" di modal konfirmasi
-                    btnConfirmSave.addEventListener('click', function() {
-                        if (currentForm) {
-                            currentForm.submit(); // Jika konfirmasi, kirimkan form
-                        }
-                    });
-                });
+                            // Validate image file if uploaded
+                            if (editGambar.files.length > 0 && !isValidImage(editGambar.files[0])) {
+                                alert('Format file Gambar harus JPG, JPEG, atau PNG.');
+                                return;
+                            }
 
-                document.addEventListener('DOMContentLoaded', function() {
-                    const editButtons = document.querySelectorAll('.btnEditProduk');
+                            // Validate SNI file if uploaded
+                            if (editSni.files.length > 0 && !isValidImage(editSni.files[0])) {
+                                alert('Format file SNI harus JPG, JPEG, atau PNG.');
+                                return;
+                            }
 
-                    editButtons.forEach(button => {
+                            // Show confirmation modal
+                            document.getElementById('productConfirmInfo').textContent = `${editNama.value} (SKU: ${editSku.value})`;
+                            currentForm = formEdit;
+                            const modal = new bootstrap.Modal(document.getElementById('confirmSaveModal'));
+                            modal.show();
+                        });
+                    }
+
+                    // Handle confirmation button click
+                    if (btnConfirmSave) {
+                        btnConfirmSave.addEventListener('click', function() {
+                            if (currentForm) {
+                                currentForm.submit();
+                            }
+                        });
+                    }
+
+                    // Populate edit modal with data
+                    document.querySelectorAll('.btnEditProduk').forEach(button => {
                         button.addEventListener('click', function() {
-                            const idproduct = this.getAttribute('data-idproduct'); // Add this attribute
+                            const idproduct = this.getAttribute('data-idproduct');
                             const sku = this.getAttribute('data-sku');
                             const nama = this.getAttribute('data-nama');
                             const barcode = this.getAttribute('data-barcode');
                             const gambar = this.getAttribute('data-gambar');
                             const sni = this.getAttribute('data-sni');
 
-                            // Populate edit modal inputs
-                            document.getElementById('editIdProduct').value = idproduct; // Set the hidden idproduct
+                            document.getElementById('editIdProduct').value = idproduct;
                             document.getElementById('editSku').value = sku;
                             document.getElementById('editNamaProduk').value = nama;
                             document.getElementById('editBarcode').value = barcode;
 
-                            // Extract filename from image path
-                            const gambarFile = gambar.split('/').pop();
-                            const sniFile = sni.split('/').pop();
+                            // Extract and display current filenames
+                            if (gambar) {
+                                const gambarFile = gambar.split('/').pop();
+                                document.getElementById('gambarFilename').innerText = "File sebelumnya: " + gambarFile;
+                            } else {
+                                document.getElementById('gambarFilename').innerText = "Tidak ada file sebelumnya";
+                            }
 
-                            // Show filename under file input
-                            document.getElementById('gambarFilename').innerText = "File sebelumnya: " + gambarFile;
-                            document.getElementById('sniFilename').innerText = "File sebelumnya: " + sniFile;
+                            if (sni) {
+                                const sniFile = sni.split('/').pop();
+                                document.getElementById('sniFilename').innerText = "File sebelumnya: " + sniFile;
+                            } else {
+                                document.getElementById('sniFilename').innerText = "Tidak ada file sebelumnya";
+                            }
                         });
                     });
-                });
 
-                document.addEventListener("DOMContentLoaded", function() {
+                    // Generate barcodes
                     <?php foreach ($product as $pvalue) { ?>
                     try {
-                        bwipjs.toCanvas("barcode-<?= $pvalue->idproduct ?>", {
-                            bcid: "code128",
-                            text: "<?= $pvalue->barcode ?>",
-                            scaleX: 1,
-                            scaleY: 1,
-                            height: 5,
-                            includetext: true,
-                            textxalign: "center",
-                            textsize: 6
+                        JsBarcode("#barcode-<?= $pvalue->idproduct ?>", "<?= $pvalue->barcode ?>", {
+                            format: "CODE128",
+                            width: 2,
+                            height: 40,
+                            displayValue: true,
+                            fontSize: 12
                         });
                     } catch (e) {
                         console.error("Barcode generation failed for ID <?= $pvalue->idproduct ?>", e);
                     }
                     <?php } ?>
-                });
 
-                function downloadCanvasAsJpeg(canvasId, filename, barcodeText) {
-                    const canvas = document.getElementById(canvasId);
-                    JsBarcode(canvas, barcodeText, {
-                        format: "CODE128",
-                        width: 2,
-                        height: 40,
-                        displayValue: true
-                    });
-
-                    setTimeout(() => {
-                        const image = canvas.toDataURL("image/jpeg", 1.0);
-                        const link = document.createElement('a');
-                        link.href = image;
-                        link.download = filename + '.jpg';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    }, 500); // Delay to ensure the barcode is rendered
-                }
-
-                document.addEventListener('DOMContentLoaded', function() {
+                    // Handle delete button
                     document.querySelectorAll('.btnDelete').forEach(button => {
                         button.addEventListener('click', function() {
                             const nama = this.getAttribute('data-nama');
@@ -390,6 +395,30 @@
                         });
                     });
                 });
+
+                function downloadCanvasAsJpeg(canvasId, filename, barcodeText) {
+                    const canvas = document.getElementById(canvasId);
+
+                    // Regenerate barcode with better quality for download
+                    JsBarcode(canvas, barcodeText, {
+                        format: "CODE128",
+                        width: 3,
+                        height: 60,
+                        displayValue: true,
+                        fontSize: 14
+                    });
+
+                    // Small delay to ensure barcode is rendered
+                    setTimeout(() => {
+                        const image = canvas.toDataURL("image/jpeg", 1.0);
+                        const link = document.createElement('a');
+                        link.href = image;
+                        link.download = filename + '.jpg';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }, 100);
+                }
             </script>
             </body>
 
