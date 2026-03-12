@@ -42,10 +42,6 @@
                                         <input type="file" class="form-control" id="inputGambar" name="inputGambar" accept="image/*">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="inputBarcode" class="form-label">Barcode</label>
-                                        <input type="text" class="form-control" id="inputBarcode" name="inputBarcode" required>
-                                    </div>
-                                    <div class="mb-3">
                                         <label for="inputSni">SNI</label>
                                         <input type="file" class="form-control" id="inputSni" name="inputSni" accept="image/*">
                                     </div>
@@ -83,10 +79,6 @@
                                         <label for="editGambar">Gambar</label>
                                         <input type="file" class="form-control" id="editGambar" name="inputGambar" accept="image/*">
                                         <small id="gambarFilename" class="form-text text-muted"></small>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="editBarcode" class="form-label">Barcode</label>
-                                        <input type="text" class="form-control" id="editBarcode" name="inputBarcode" required>
                                     </div>
                                     <div class="mb-3">
                                         <label for="editSni">SNI</label>
@@ -230,7 +222,9 @@
             <script>
                 $(document).ready(function() {
                     new DataTable('#tableproduct', {
-                        responsive: true,
+                        responsive: false,
+                        scrollX: true,
+                        paging: true,
                         layout: {
                             bottomEnd: {
                                 paging: {
@@ -239,8 +233,8 @@
                             }
                         },
                         order: [
-                            [9, 'dsc']
-                        ] // Index kolom 'created_date', ganti sesuai urutan sebenarnya
+                            [9, 'desc']
+                        ]
                     });
                 });
 

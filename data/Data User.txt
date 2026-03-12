@@ -96,11 +96,11 @@ Email astahomeware@gmail.com
 Pass: sta@Mail600!%
 
 PC Remote List:
-- PC MSI Penjualan Mbak Dinda 18-02-2025
+- PC MSI Admin Penjualan 18-02-2025
   ID: 117053943
   PASS: asta3101
 
-- PC Admin Stock Mbak Dwi
+- PC Admin Stock 07-07-2020
   ID: 121982935
   PASS: asta3101
 
@@ -123,14 +123,6 @@ PC Remote List:
 - Laptop Asus A407U
   ID: 201308025
   PASS: asta3101
-
-SMTP Gmail:
-Username: chalung.izha@gmail.com
-Password: apls xytd rkek nxqr
-
-fonnte cronjob
-https://script.google.com/u/0/home/projects/16Ns9hnEzGLp3uwF0dqCgLXsb1H78wNcE88TaKk8XTuz8gGKM7EGBjExH/edit
-https://docs.google.com/spreadsheets/d/1JoGzx2IrNF9ns0PbarzkzQrphhHLomXz7K_Ppp-rmjE/edit?usp=sharing
 
 Data User CCTV D17:
 Username: admin
@@ -181,3 +173,6 @@ Saya ingin menyampaikan bahwa hari ini adalah hari terakhir saya bekerja di Asta
 Mohon maaf apabila selama bekerja ada kata atau perbuatan saya yang kurang berkenan.
 Semoga Asta Homeware semakin maju dan sukses ke depannya.
 Terima kasih dan salam hangat untuk semuanya 🙏🏻
+
+Jobdesk
+	Serever, Networking, Programming, and Support

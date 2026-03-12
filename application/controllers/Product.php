@@ -99,7 +99,7 @@ class Product extends CI_Controller
 
         $sku = $this->input->post('inputSku');
         $namaProduk = $this->input->post('inputNamaProduk');
-        $barcode = $this->input->post('inputBarcode');
+        $barcode = $this->input->post('inputSku');
 
         // Cek duplikasi SKU atau Barcode
         $this->db->where('sku', $sku);
@@ -181,7 +181,7 @@ class Product extends CI_Controller
         $idproduct = $this->input->post('inputIdProduct');
         $sku = $this->input->post('inputSku');
         $namaProduk = $this->input->post('inputNamaProduk');
-        $barcode = $this->input->post('inputBarcode');
+        $barcode = $this->input->post('inputSku');
 
         $produkLama = $this->db->get_where('product', ['idproduct' => $idproduct])->row();
 

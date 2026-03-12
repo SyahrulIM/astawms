@@ -1,6 +1,8 @@
 <?php
 
-// Helper function di luar class
+// ===============================================
+// Helper function
+// ===============================================
 function getStatusText($status)
 {
     switch ($status) {
@@ -15,6 +17,9 @@ function getStatusText($status)
     }
 }
 
+// ===============================================
+// Koneksi Database
+// ===============================================
 $servername = "103.163.138.102";
 $username = "astahome_it";
 $password = "astawms=d17d09";
@@ -25,6 +30,9 @@ if ($conn->connect_error) {
     die("Koneksi database gagal: " . $conn->connect_error);
 }
 
+// ===============================================
+// Konfigurasi Fonnte
+// ===============================================
 $token = 'ZsZ2Dp71dyKrgz3YAQKg';
 $targets = '6281331090331-1528429522@g.us';
 // $targets = '6285156340619';
@@ -33,186 +41,147 @@ $targets = '6281331090331-1528429522@g.us';
 // PERIODE ACOL: tanggal 1 bulan sekarang sampai kemarin
 // ===============================================
 $current_month_start = date('Y-m-01');
-$current_month_end = date('Y-m-d', strtotime('-1 day')); // Sampai kemarin
-$today = date('Y-m-d');
-$yesterday = date('Y-m-d', strtotime('-1 day'));
-$ratio_limit = 30;
+$current_month_end   = date('Y-m-d', strtotime('-1 day')); // sampai kemarin
+$today               = date('Y-m-d');
+$yesterday           = date('Y-m-d', strtotime('-1 day'));
+$ratio_limit         = 30;
 
 // ===============================================
-// CHECK MARKETPLACE STATUS (TERMASUK BLIBLI - ONLY ASTA)
+// 1. CEK STATUS MARKETPLACE (ASTA & KOTIME)
 // ===============================================
 $marketplace_status = [
-    'shopee' => ['asta' => '', 'kotime' => ''],
-    'tiktok' => ['asta' => '', 'kotime' => ''],
-    'lazada' => ['asta' => '', 'kotime' => ''],
-    'blibli' => ['asta' => '', 'kotime' => '']
+    'shopee'  => ['asta' => '', 'kotime' => ''],
+    'tiktok'  => ['asta' => '', 'kotime' => ''],
+    'lazada'  => ['asta' => '', 'kotime' => ''],
+    'blibli'  => ['asta' => '', 'kotime' => '']  // Blibli hanya ASTA
 ];
 
-// Check Lazada ASTA data
-$sql_lazada_asta_status = "
+// ---- Lazada ----
+$sql_lazada_asta = "
     SELECT 
         CASE 
             WHEN COUNT(*) = 0 THEN 'empty'
             WHEN MAX(ald.updated_date) >= '{$today}' THEN 'safe'
             WHEN MAX(ald.updated_date) >= '{$yesterday}' THEN 'safe'
             ELSE 'not_updated_today'
-        END as status,
-        COUNT(*) as total_records,
-        MAX(ald.updated_date) as last_update
+        END as status
     FROM acc_lazada_detail ald
     INNER JOIN acc_lazada al ON al.idacc_lazada = ald.idacc_lazada
     WHERE ald.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND ald.status = 1
-    AND (al.is_kotime = 0 OR al.is_kotime IS NULL)
+      AND ald.status = 1
+      AND (al.is_kotime = 0 OR al.is_kotime IS NULL)
 ";
-$result_lazada_asta = $conn->query($sql_lazada_asta_status);
-if ($result_lazada_asta) {
-    $row = $result_lazada_asta->fetch_assoc();
-    $marketplace_status['lazada']['asta'] = $row['status'];
-}
+$res = $conn->query($sql_lazada_asta);
+if ($res) $marketplace_status['lazada']['asta'] = $res->fetch_assoc()['status'];
 
-// Check Lazada Kotime data
-$sql_lazada_kotime_status = "
+$sql_lazada_kotime = "
     SELECT 
         CASE 
             WHEN COUNT(*) = 0 THEN 'empty'
             WHEN MAX(ald.updated_date) >= '{$today}' THEN 'safe'
             WHEN MAX(ald.updated_date) >= '{$yesterday}' THEN 'safe'
             ELSE 'not_updated_today'
-        END as status,
-        COUNT(*) as total_records,
-        MAX(ald.updated_date) as last_update
+        END as status
     FROM acc_lazada_detail ald
     INNER JOIN acc_lazada al ON al.idacc_lazada = ald.idacc_lazada
     WHERE ald.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND ald.status = 1
-    AND al.is_kotime = 1
+      AND ald.status = 1
+      AND al.is_kotime = 1
 ";
-$result_lazada_kotime = $conn->query($sql_lazada_kotime_status);
-if ($result_lazada_kotime) {
-    $row = $result_lazada_kotime->fetch_assoc();
-    $marketplace_status['lazada']['kotime'] = $row['status'];
-}
+$res = $conn->query($sql_lazada_kotime);
+if ($res) $marketplace_status['lazada']['kotime'] = $res->fetch_assoc()['status'];
 
-// Check Shopee ASTA data
-$sql_shopee_asta_status = "
+// ---- Shopee ----
+$sql_shopee_asta = "
     SELECT 
         CASE 
             WHEN COUNT(*) = 0 THEN 'empty'
             WHEN MAX(asd.updated_date) >= '{$today}' THEN 'safe'
             WHEN MAX(asd.updated_date) >= '{$yesterday}' THEN 'safe'
             ELSE 'not_updated_today'
-        END as status,
-        COUNT(*) as total_records,
-        MAX(asd.updated_date) as last_update
+        END as status
     FROM acc_shopee_detail asd
     INNER JOIN acc_shopee s ON s.idacc_shopee = asd.idacc_shopee
     WHERE asd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND asd.status = 1
-    AND (s.is_kotime = 0 OR s.is_kotime IS NULL)
+      AND asd.status = 1
+      AND (s.is_kotime = 0 OR s.is_kotime IS NULL)
 ";
-$result_shopee_asta = $conn->query($sql_shopee_asta_status);
-if ($result_shopee_asta) {
-    $row = $result_shopee_asta->fetch_assoc();
-    $marketplace_status['shopee']['asta'] = $row['status'];
-}
+$res = $conn->query($sql_shopee_asta);
+if ($res) $marketplace_status['shopee']['asta'] = $res->fetch_assoc()['status'];
 
-// Check Shopee Kotime data
-$sql_shopee_kotime_status = "
+$sql_shopee_kotime = "
     SELECT 
         CASE 
             WHEN COUNT(*) = 0 THEN 'empty'
             WHEN MAX(asd.updated_date) >= '{$today}' THEN 'safe'
             WHEN MAX(asd.updated_date) >= '{$yesterday}' THEN 'safe'
             ELSE 'not_updated_today'
-        END as status,
-        COUNT(*) as total_records,
-        MAX(asd.updated_date) as last_update
+        END as status
     FROM acc_shopee_detail asd
     INNER JOIN acc_shopee s ON s.idacc_shopee = asd.idacc_shopee
     WHERE asd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND asd.status = 1
-    AND s.is_kotime = 1
+      AND asd.status = 1
+      AND s.is_kotime = 1
 ";
-$result_shopee_kotime = $conn->query($sql_shopee_kotime_status);
-if ($result_shopee_kotime) {
-    $row = $result_shopee_kotime->fetch_assoc();
-    $marketplace_status['shopee']['kotime'] = $row['status'];
-}
+$res = $conn->query($sql_shopee_kotime);
+if ($res) $marketplace_status['shopee']['kotime'] = $res->fetch_assoc()['status'];
 
-// Check TikTok ASTA data
-$sql_tiktok_asta_status = "
+// ---- TikTok ----
+$sql_tiktok_asta = "
     SELECT 
         CASE 
             WHEN COUNT(*) = 0 THEN 'empty'
             WHEN MAX(atd.updated_date) >= '{$today}' THEN 'safe'
             WHEN MAX(atd.updated_date) >= '{$yesterday}' THEN 'safe'
             ELSE 'not_updated_today'
-        END as status,
-        COUNT(*) as total_records,
-        MAX(atd.updated_date) as last_update
+        END as status
     FROM acc_tiktok_detail atd
     INNER JOIN acc_tiktok t ON t.idacc_tiktok = atd.idacc_tiktok
     WHERE atd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND atd.status = 1
-    AND (t.is_kotime = 0 OR t.is_kotime IS NULL)
+      AND atd.status = 1
+      AND (t.is_kotime = 0 OR t.is_kotime IS NULL)
 ";
-$result_tiktok_asta = $conn->query($sql_tiktok_asta_status);
-if ($result_tiktok_asta) {
-    $row = $result_tiktok_asta->fetch_assoc();
-    $marketplace_status['tiktok']['asta'] = $row['status'];
-}
+$res = $conn->query($sql_tiktok_asta);
+if ($res) $marketplace_status['tiktok']['asta'] = $res->fetch_assoc()['status'];
 
-// Check TikTok Kotime data
-$sql_tiktok_kotime_status = "
+$sql_tiktok_kotime = "
     SELECT 
         CASE 
             WHEN COUNT(*) = 0 THEN 'empty'
             WHEN MAX(atd.updated_date) >= '{$today}' THEN 'safe'
             WHEN MAX(atd.updated_date) >= '{$yesterday}' THEN 'safe'
             ELSE 'not_updated_today'
-        END as status,
-        COUNT(*) as total_records,
-        MAX(atd.updated_date) as last_update
+        END as status
     FROM acc_tiktok_detail atd
     INNER JOIN acc_tiktok t ON t.idacc_tiktok = atd.idacc_tiktok
     WHERE atd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND atd.status = 1
-    AND t.is_kotime = 1
+      AND atd.status = 1
+      AND t.is_kotime = 1
 ";
-$result_tiktok_kotime = $conn->query($sql_tiktok_kotime_status);
-if ($result_tiktok_kotime) {
-    $row = $result_tiktok_kotime->fetch_assoc();
-    $marketplace_status['tiktok']['kotime'] = $row['status'];
-}
+$res = $conn->query($sql_tiktok_kotime);
+if ($res) $marketplace_status['tiktok']['kotime'] = $res->fetch_assoc()['status'];
 
-// Check Blibli ASTA data (ONLY ASTA)
-$sql_blibli_asta_status = "
+// ---- Blibli (hanya ASTA) ----
+$sql_blibli_asta = "
     SELECT 
         CASE 
             WHEN COUNT(*) = 0 THEN 'empty'
             WHEN MAX(abd.updated_date) >= '{$today}' THEN 'safe'
             WHEN MAX(abd.updated_date) >= '{$yesterday}' THEN 'safe'
             ELSE 'not_updated_today'
-        END as status,
-        COUNT(*) as total_records,
-        MAX(abd.updated_date) as last_update
+        END as status
     FROM acc_blibli_detail abd
     INNER JOIN acc_blibli b ON b.idacc_blibli = abd.idacc_blibli
     WHERE abd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND abd.status = 1
-    AND (b.is_kotime = 0 OR b.is_kotime IS NULL)  -- ONLY ASTA
+      AND abd.status = 1
+      AND (b.is_kotime = 0 OR b.is_kotime IS NULL)
 ";
-$result_blibli_asta = $conn->query($sql_blibli_asta_status);
-if ($result_blibli_asta) {
-    $row = $result_blibli_asta->fetch_assoc();
-    $marketplace_status['blibli']['asta'] = $row['status'];
-}
-// Blibli Kotime - tidak ada data
-$marketplace_status['blibli']['kotime'] = 'empty';
+$res = $conn->query($sql_blibli_asta);
+if ($res) $marketplace_status['blibli']['asta'] = $res->fetch_assoc()['status'];
+$marketplace_status['blibli']['kotime'] = 'empty'; // Kotime tidak ada di Blibli
 
 // ===============================================
-// QUERY DATA ACOL (UNION ALL MARKETPLACE)
+// 2. QUERY DATA ACOL (UNION SEMUA MARKETPLACE)
 // ===============================================
 $sql_acol_detail = "
     SELECT
@@ -244,9 +213,9 @@ $sql_acol_detail = "
         ) latest ON a1.no_faktur = latest.no_faktur AND a1.idacc_accurate_detail = latest.max_id
     ) aad ON aad.no_faktur = asd.no_faktur
     WHERE asd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND aad.payment IS NOT NULL
-    AND asd.total_faktur > 0
-    AND asd.status = 1
+      AND aad.payment IS NOT NULL
+      AND asd.total_faktur > 0
+      AND asd.status = 1
     GROUP BY asd.no_faktur
 
     UNION
@@ -280,9 +249,9 @@ $sql_acol_detail = "
         ) latest ON a1.no_faktur = latest.no_faktur AND a1.idacc_accurate_detail = latest.max_id
     ) aad ON aad.no_faktur = atd.no_faktur
     WHERE atd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND aad.payment IS NOT NULL
-    AND atd.total_faktur > 0
-    AND atd.status = 1
+      AND aad.payment IS NOT NULL
+      AND atd.total_faktur > 0
+      AND atd.status = 1
     GROUP BY atd.no_faktur
 
     UNION
@@ -316,9 +285,9 @@ $sql_acol_detail = "
         ) latest ON a1.no_faktur = latest.no_faktur AND a1.idacc_accurate_detail = latest.max_id
     ) aad ON aad.no_faktur = ald.no_faktur
     WHERE ald.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND aad.payment IS NOT NULL
-    AND ald.total_faktur > 0
-    AND ald.status = 1
+      AND aad.payment IS NOT NULL
+      AND ald.total_faktur > 0
+      AND ald.status = 1
     GROUP BY ald.no_faktur
 
     UNION
@@ -339,7 +308,7 @@ $sql_acol_detail = "
         MAX(aad.discount) AS accurate_discount,
         MAX(aad.payment) AS accurate_payment,
         'blibli' as source,
-        0 as is_kotime  -- force ASTA only
+        0 as is_kotime   -- Blibli hanya ASTA
     FROM acc_blibli_detail abd
     INNER JOIN acc_blibli b ON b.idacc_blibli = abd.idacc_blibli
     LEFT JOIN (
@@ -352,10 +321,10 @@ $sql_acol_detail = "
         ) latest ON a1.no_faktur = latest.no_faktur AND a1.idacc_accurate_detail = latest.max_id
     ) aad ON aad.no_faktur = abd.no_faktur
     WHERE abd.order_date BETWEEN '{$current_month_start}' AND '{$current_month_end}'
-    AND aad.payment IS NOT NULL
-    AND abd.total_faktur > 0
-    AND abd.status = 1
-    AND (b.is_kotime = 0 OR b.is_kotime IS NULL)  -- ONLY ASTA
+      AND aad.payment IS NOT NULL
+      AND abd.total_faktur > 0
+      AND abd.status = 1
+      AND (b.is_kotime = 0 OR b.is_kotime IS NULL)
     GROUP BY abd.no_faktur
 
     ORDER BY no_faktur ASC
@@ -363,138 +332,93 @@ $sql_acol_detail = "
 
 $result_acol = $conn->query($sql_acol_detail);
 
-// Inisialisasi data Acol untuk ASTA dan Kotime
+// ===============================================
+// 3. INISIALISASI STRUKTUR DATA ACOL
+// ===============================================
 $acol_data = [
     'asta_shopee' => [
-        'total_faktur' => 0,
-        'belum_note' => 0,
-        'belum_check' => 0,
-        'butuh_final_dir' => 0,
-        'total_invoice' => 0,
-        'total_diterima' => 0,
-        'ratio_exceed' => 0,
-        'total_selisih' => 0,
-        'total_faktur_retur' => 0,
-        'total_invoice_retur' => 0,
-        'total_diterima_retur' => 0
+        'total_faktur' => 0, 'belum_note' => 0, 'belum_check' => 0, 'butuh_final_dir' => 0,
+        'total_invoice' => 0, 'total_diterima' => 0, 'ratio_exceed' => 0, 'total_selisih' => 0,
+        'total_faktur_retur' => 0, 'total_invoice_retur' => 0, 'total_diterima_retur' => 0
     ],
     'asta_tiktok' => [
-        'total_faktur' => 0,
-        'belum_note' => 0,
-        'belum_check' => 0,
-        'butuh_final_dir' => 0,
-        'total_invoice' => 0,
-        'total_diterima' => 0,
-        'ratio_exceed' => 0,
-        'total_selisih' => 0,
-        'total_faktur_retur' => 0,
-        'total_invoice_retur' => 0,
-        'total_diterima_retur' => 0
+        'total_faktur' => 0, 'belum_note' => 0, 'belum_check' => 0, 'butuh_final_dir' => 0,
+        'total_invoice' => 0, 'total_diterima' => 0, 'ratio_exceed' => 0, 'total_selisih' => 0,
+        'total_faktur_retur' => 0, 'total_invoice_retur' => 0, 'total_diterima_retur' => 0
     ],
     'asta_lazada' => [
-        'total_faktur' => 0,
-        'belum_note' => 0,
-        'belum_check' => 0,
-        'butuh_final_dir' => 0,
-        'total_invoice' => 0,
-        'total_diterima' => 0,
-        'ratio_exceed' => 0,
-        'total_selisih' => 0,
-        'total_faktur_retur' => 0,
-        'total_invoice_retur' => 0,
-        'total_diterima_retur' => 0
+        'total_faktur' => 0, 'belum_note' => 0, 'belum_check' => 0, 'butuh_final_dir' => 0,
+        'total_invoice' => 0, 'total_diterima' => 0, 'ratio_exceed' => 0, 'total_selisih' => 0,
+        'total_faktur_retur' => 0, 'total_invoice_retur' => 0, 'total_diterima_retur' => 0
     ],
     'asta_blibli' => [
-        'total_faktur' => 0,
-        'belum_note' => 0,
-        'belum_check' => 0,
-        'butuh_final_dir' => 0,
-        'total_invoice' => 0,
-        'total_diterima' => 0,
-        'ratio_exceed' => 0,
-        'total_selisih' => 0,
-        'total_faktur_retur' => 0,
-        'total_invoice_retur' => 0,
-        'total_diterima_retur' => 0
+        'total_faktur' => 0, 'belum_note' => 0, 'belum_check' => 0, 'butuh_final_dir' => 0,
+        'total_invoice' => 0, 'total_diterima' => 0, 'ratio_exceed' => 0, 'total_selisih' => 0,
+        'total_faktur_retur' => 0, 'total_invoice_retur' => 0, 'total_diterima_retur' => 0
     ],
     'kotime_shopee' => [
-        'total_faktur' => 0,
-        'belum_note' => 0,
-        'belum_check' => 0,
-        'butuh_final_dir' => 0,
-        'total_invoice' => 0,
-        'total_diterima' => 0,
-        'ratio_exceed' => 0,
-        'total_selisih' => 0,
-        'total_faktur_retur' => 0,
-        'total_invoice_retur' => 0,
-        'total_diterima_retur' => 0
+        'total_faktur' => 0, 'belum_note' => 0, 'belum_check' => 0, 'butuh_final_dir' => 0,
+        'total_invoice' => 0, 'total_diterima' => 0, 'ratio_exceed' => 0, 'total_selisih' => 0,
+        'total_faktur_retur' => 0, 'total_invoice_retur' => 0, 'total_diterima_retur' => 0
     ],
     'kotime_tiktok' => [
-        'total_faktur' => 0,
-        'belum_note' => 0,
-        'belum_check' => 0,
-        'butuh_final_dir' => 0,
-        'total_invoice' => 0,
-        'total_diterima' => 0,
-        'ratio_exceed' => 0,
-        'total_selisih' => 0,
-        'total_faktur_retur' => 0,
-        'total_invoice_retur' => 0,
-        'total_diterima_retur' => 0
+        'total_faktur' => 0, 'belum_note' => 0, 'belum_check' => 0, 'butuh_final_dir' => 0,
+        'total_invoice' => 0, 'total_diterima' => 0, 'ratio_exceed' => 0, 'total_selisih' => 0,
+        'total_faktur_retur' => 0, 'total_invoice_retur' => 0, 'total_diterima_retur' => 0
     ],
     'kotime_lazada' => [
-        'total_faktur' => 0,
-        'belum_note' => 0,
-        'belum_check' => 0,
-        'butuh_final_dir' => 0,
-        'total_invoice' => 0,
-        'total_diterima' => 0,
-        'ratio_exceed' => 0,
-        'total_selisih' => 0,
-        'total_faktur_retur' => 0,
-        'total_invoice_retur' => 0,
-        'total_diterima_retur' => 0
+        'total_faktur' => 0, 'belum_note' => 0, 'belum_check' => 0, 'butuh_final_dir' => 0,
+        'total_invoice' => 0, 'total_diterima' => 0, 'ratio_exceed' => 0, 'total_selisih' => 0,
+        'total_faktur_retur' => 0, 'total_invoice_retur' => 0, 'total_diterima_retur' => 0
     ]
 ];
 
 $critical_invoices = [];
+$retur_invoices    = []; // untuk tabel retur di output
 
+// ===============================================
+// 4. LOOP DATA ACOL
+// ===============================================
 if ($result_acol) {
     while ($row = $result_acol->fetch_assoc()) {
-        $source = $row['source'];
+        $source    = $row['source'];
         $is_kotime = ($row['is_kotime'] == 1) ? 1 : 0;
 
-        // Skip blibli kotime (tidak mungkin, tapi jaga-jaga)
-        if ($source == 'blibli' && $is_kotime == 1) {
-            continue;
-        }
+        // Blibli tidak ada kotime
+        if ($source == 'blibli' && $is_kotime == 1) continue;
 
         $brand_prefix = $is_kotime ? 'kotime_' : 'asta_';
         $data_key = $brand_prefix . $source;
-
-        if (!isset($acol_data[$data_key])) {
-            continue;
-        }
+        if (!isset($acol_data[$data_key])) continue;
 
         $is_retur = ($row['refund'] ?? 0) < 0;
-        $shopee = (float) ($row['total_faktur'] ?? 0);
+        $shopee   = (float) ($row['total_faktur'] ?? 0);
         $accurate = (float) ($row['accurate_payment'] ?? 0);
 
-        // Akumulasi data dasar (termasuk retur)
+        // Akumulasi data
         $acol_data[$data_key]['total_faktur']++;
-        $acol_data[$data_key]['total_invoice'] += $shopee;
-        $acol_data[$data_key]['total_diterima'] += $accurate;
-        $acol_data[$data_key]['total_selisih'] += ($shopee - $accurate);
+        $acol_data[$data_key]['total_invoice']   += $shopee;
+        $acol_data[$data_key]['total_diterima']  += $accurate;
+        $acol_data[$data_key]['total_selisih']   += ($shopee - $accurate);
 
         if ($is_retur) {
             $acol_data[$data_key]['total_faktur_retur']++;
-            $acol_data[$data_key]['total_invoice_retur'] += $shopee;
+            $acol_data[$data_key]['total_invoice_retur']  += $shopee;
             $acol_data[$data_key]['total_diterima_retur'] += $accurate;
+
+            // Simpan untuk tabel retur
+            $retur_invoices[] = [
+                'no_faktur'     => $row['no_faktur'],
+                'source'        => ucfirst($source),
+                'brand'         => $is_kotime ? 'Kotime' : 'ASTA',
+                'refund'        => (float)($row['refund'] ?? 0),
+                'total_faktur'  => $shopee
+            ];
         }
 
+        // Hitung ratio dan kategorisasi (hanya non-retur)
         $ratio = ($accurate > 0 && $shopee > 0) ? (($shopee - $accurate) / $shopee) * 100 : 0;
-        $is_ratio_exceed = $ratio > $ratio_limit && !$is_retur; // retur dikecualikan dari perhitungan ratio exceed
+        $is_ratio_exceed = $ratio > $ratio_limit && !$is_retur;
 
         if ($is_ratio_exceed) {
             $acol_data[$data_key]['ratio_exceed']++;
@@ -514,141 +438,125 @@ if ($result_acol) {
             }
 
             $critical_invoices[] = [
-                'no_faktur' => $row['no_faktur'],
-                'source' => ucfirst($source),
-                'brand' => $is_kotime ? 'Kotime' : 'ASTA',
-                'category' => $category,
+                'no_faktur'       => $row['no_faktur'],
+                'source'          => ucfirst($source),
+                'brand'           => $is_kotime ? 'Kotime' : 'ASTA',
+                'category'        => $category,
                 'ratio_diference' => $ratio,
-                'note_status' => $is_note_empty ? 'Empty' : 'Filled',
-                'check_status' => $row['is_check'] == 1 ? 'Checked' : 'Not Checked',
-                'dir_status' => $row['status_dir'] ?? 'Empty'
+                'note_status'     => $is_note_empty ? 'Empty' : 'Filled',
+                'check_status'    => $row['is_check'] == 1 ? 'Checked' : 'Not Checked',
+                'dir_status'      => $row['status_dir'] ?? 'Empty'
             ];
         }
     }
 }
 
 // ===============================================
-// HITUNG ADDITIONAL REVENUE
+// 5. ADDITIONAL REVENUE
 // ===============================================
-$additional_revenue_asta = 0;
+$additional_revenue_asta   = 0;
 $additional_revenue_kotime = 0;
 
 // Shopee ASTA
-$sql_additional_shopee_asta = "
-    SELECT SUM(asa.additional_revenue) as total
-    FROM acc_shopee_additional asa
-    INNER JOIN acc_shopee s ON s.idacc_shopee = asa.idacc_shopee
-    WHERE asa.start_date >= '{$current_month_start}' 
-    AND asa.end_date <= '{$current_month_end}'
-    AND (s.is_kotime = 0 OR s.is_kotime IS NULL)
-    AND asa.status = 1
-";
-$result_shopee_add_asta = $conn->query($sql_additional_shopee_asta);
-if ($result_shopee_add_asta) {
-    $row = $result_shopee_add_asta->fetch_assoc();
-    $additional_revenue_asta += $row['total'] ?? 0;
-}
+$sql = "SELECT SUM(asa.additional_revenue) as total
+        FROM acc_shopee_additional asa
+        INNER JOIN acc_shopee s ON s.idacc_shopee = asa.idacc_shopee
+        WHERE asa.start_date >= '{$current_month_start}'
+          AND asa.end_date <= '{$current_month_end}'
+          AND (s.is_kotime = 0 OR s.is_kotime IS NULL)
+          AND asa.status = 1";
+$res = $conn->query($sql);
+if ($res) $additional_revenue_asta += (float)($res->fetch_assoc()['total'] ?? 0);
 
 // TikTok ASTA
-$sql_additional_tiktok_asta = "
-    SELECT SUM(ata.additional_revenue) as total
-    FROM acc_tiktok_additional ata
-    INNER JOIN acc_tiktok t ON t.idacc_tiktok = ata.idacc_tiktok
-    WHERE ata.start_date >= '{$current_month_start}' 
-    AND ata.end_date <= '{$current_month_end}'
-    AND (t.is_kotime = 0 OR t.is_kotime IS NULL)
-    AND ata.status = 1
-";
-$result_tiktok_add_asta = $conn->query($sql_additional_tiktok_asta);
-if ($result_tiktok_add_asta) {
-    $row = $result_tiktok_add_asta->fetch_assoc();
-    $additional_revenue_asta += $row['total'] ?? 0;
-}
+$sql = "SELECT SUM(ata.additional_revenue) as total
+        FROM acc_tiktok_additional ata
+        INNER JOIN acc_tiktok t ON t.idacc_tiktok = ata.idacc_tiktok
+        WHERE ata.start_date >= '{$current_month_start}'
+          AND ata.end_date <= '{$current_month_end}'
+          AND (t.is_kotime = 0 OR t.is_kotime IS NULL)
+          AND ata.status = 1";
+$res = $conn->query($sql);
+if ($res) $additional_revenue_asta += (float)($res->fetch_assoc()['total'] ?? 0);
 
 // Lazada ASTA
-$sql_additional_lazada_asta = "
-    SELECT SUM(ala.additional_revenue) as total
-    FROM acc_lazada_additional ala
-    INNER JOIN acc_lazada al ON al.idacc_lazada = ala.idacc_lazada
-    WHERE ala.start_date >= '{$current_month_start}' 
-    AND ala.end_date <= '{$current_month_end}'
-    AND (al.is_kotime = 0 OR al.is_kotime IS NULL)
-    AND ala.status = 1
-";
-$result_lazada_add_asta = $conn->query($sql_additional_lazada_asta);
-if ($result_lazada_add_asta) {
-    $row = $result_lazada_add_asta->fetch_assoc();
-    $additional_revenue_asta += $row['total'] ?? 0;
-}
+$sql = "SELECT SUM(ala.additional_revenue) as total
+        FROM acc_lazada_additional ala
+        INNER JOIN acc_lazada al ON al.idacc_lazada = ala.idacc_lazada
+        WHERE ala.start_date >= '{$current_month_start}'
+          AND ala.end_date <= '{$current_month_end}'
+          AND (al.is_kotime = 0 OR al.is_kotime IS NULL)
+          AND ala.status = 1";
+$res = $conn->query($sql);
+if ($res) $additional_revenue_asta += (float)($res->fetch_assoc()['total'] ?? 0);
 
 // Blibli ASTA
-$sql_additional_blibli_asta = "
-    SELECT SUM(aba.additional_revenue) as total
-    FROM acc_blibli_additional aba
-    INNER JOIN acc_blibli b ON b.idacc_blibli = aba.idacc_blibli
-    WHERE aba.start_date >= '{$current_month_start}' 
-    AND aba.end_date <= '{$current_month_end}'
-    AND (b.is_kotime = 0 OR b.is_kotime IS NULL)
-    AND aba.status = 1
-";
-$result_blibli_add_asta = $conn->query($sql_additional_blibli_asta);
-if ($result_blibli_add_asta) {
-    $row = $result_blibli_add_asta->fetch_assoc();
-    $additional_revenue_asta += $row['total'] ?? 0;
-}
+$sql = "SELECT SUM(aba.additional_revenue) as total
+        FROM acc_blibli_additional aba
+        INNER JOIN acc_blibli b ON b.idacc_blibli = aba.idacc_blibli
+        WHERE aba.start_date >= '{$current_month_start}'
+          AND aba.end_date <= '{$current_month_end}'
+          AND (b.is_kotime = 0 OR b.is_kotime IS NULL)
+          AND aba.status = 1";
+$res = $conn->query($sql);
+if ($res) $additional_revenue_asta += (float)($res->fetch_assoc()['total'] ?? 0);
 
 // Shopee Kotime
-$sql_additional_shopee_kotime = "
-    SELECT SUM(asa.additional_revenue) as total
-    FROM acc_shopee_additional asa
-    INNER JOIN acc_shopee s ON s.idacc_shopee = asa.idacc_shopee
-    WHERE asa.start_date >= '{$current_month_start}' 
-    AND asa.end_date <= '{$current_month_end}'
-    AND s.is_kotime = 1
-    AND asa.status = 1
-";
-$result_shopee_add_kotime = $conn->query($sql_additional_shopee_kotime);
-if ($result_shopee_add_kotime) {
-    $row = $result_shopee_add_kotime->fetch_assoc();
-    $additional_revenue_kotime += $row['total'] ?? 0;
-}
+$sql = "SELECT SUM(asa.additional_revenue) as total
+        FROM acc_shopee_additional asa
+        INNER JOIN acc_shopee s ON s.idacc_shopee = asa.idacc_shopee
+        WHERE asa.start_date >= '{$current_month_start}'
+          AND asa.end_date <= '{$current_month_end}'
+          AND s.is_kotime = 1
+          AND asa.status = 1";
+$res = $conn->query($sql);
+if ($res) $additional_revenue_kotime += (float)($res->fetch_assoc()['total'] ?? 0);
 
 // TikTok Kotime
-$sql_additional_tiktok_kotime = "
-    SELECT SUM(ata.additional_revenue) as total
-    FROM acc_tiktok_additional ata
-    INNER JOIN acc_tiktok t ON t.idacc_tiktok = ata.idacc_tiktok
-    WHERE ata.start_date >= '{$current_month_start}' 
-    AND ata.end_date <= '{$current_month_end}'
-    AND t.is_kotime = 1
-    AND ata.status = 1
-";
-$result_tiktok_add_kotime = $conn->query($sql_additional_tiktok_kotime);
-if ($result_tiktok_add_kotime) {
-    $row = $result_tiktok_add_kotime->fetch_assoc();
-    $additional_revenue_kotime += $row['total'] ?? 0;
-}
+$sql = "SELECT SUM(ata.additional_revenue) as total
+        FROM acc_tiktok_additional ata
+        INNER JOIN acc_tiktok t ON t.idacc_tiktok = ata.idacc_tiktok
+        WHERE ata.start_date >= '{$current_month_start}'
+          AND ata.end_date <= '{$current_month_end}'
+          AND t.is_kotime = 1
+          AND ata.status = 1";
+$res = $conn->query($sql);
+if ($res) $additional_revenue_kotime += (float)($res->fetch_assoc()['total'] ?? 0);
 
 // Lazada Kotime
-$sql_additional_lazada_kotime = "
-    SELECT SUM(ala.additional_revenue) as total
-    FROM acc_lazada_additional ala
-    INNER JOIN acc_lazada al ON al.idacc_lazada = ala.idacc_lazada
-    WHERE ala.start_date >= '{$current_month_start}' 
-    AND ala.end_date <= '{$current_month_end}'
-    AND al.is_kotime = 1
-    AND ala.status = 1
-";
-$result_lazada_add_kotime = $conn->query($sql_additional_lazada_kotime);
-if ($result_lazada_add_kotime) {
-    $row = $result_lazada_add_kotime->fetch_assoc();
-    $additional_revenue_kotime += $row['total'] ?? 0;
-}
+$sql = "SELECT SUM(ala.additional_revenue) as total
+        FROM acc_lazada_additional ala
+        INNER JOIN acc_lazada al ON al.idacc_lazada = ala.idacc_lazada
+        WHERE ala.start_date >= '{$current_month_start}'
+          AND ala.end_date <= '{$current_month_end}'
+          AND al.is_kotime = 1
+          AND ala.status = 1";
+$res = $conn->query($sql);
+if ($res) $additional_revenue_kotime += (float)($res->fetch_assoc()['total'] ?? 0);
 
 $additional_revenue_total = $additional_revenue_asta + $additional_revenue_kotime;
 
 // ===============================================
-// FORMAT PESAN WHATSAPP (TANPA WMS, TANPA RETUR)
+// 6. PERSIAPAN DATA RINGKASAN (tanpa retur)
+// ===============================================
+$total_faktur_asta          = 0;
+$total_ratio_exceed_asta    = 0;
+$total_belum_note_asta      = 0;
+$total_belum_check_asta     = 0;
+$total_butuh_final_dir_asta = 0;
+$total_invoice_asta         = 0;
+$total_diterima_asta        = 0;
+
+$total_faktur_kotime          = 0;
+$total_ratio_exceed_kotime    = 0;
+$total_belum_note_kotime      = 0;
+$total_belum_check_kotime     = 0;
+$total_butuh_final_dir_kotime = 0;
+$total_invoice_kotime         = 0;
+$total_diterima_kotime        = 0;
+
+// ===============================================
+// 7. MEMBUAT PESAN WHATSAPP
 // ===============================================
 $current_date = date('d F Y');
 $message = "📊 *ASTA HOMEWARE - DAILY REPORT*\n";
@@ -657,18 +565,13 @@ $message .= "*Tanggal: " . $current_date . "*\n\n";
 // Marketplace Status
 $message .= "══════ STATUS MARKETPLACE ═════\n";
 $message .= "*Periode: " . date('d M Y', strtotime($current_month_start)) . " - " . date('d M Y', strtotime($current_month_end)) . "*\n\n";
-
 foreach (['shopee', 'tiktok', 'lazada', 'blibli'] as $mp) {
     $message .= "🛒 *" . strtoupper($mp) . "*\n";
-    $asta_status = $marketplace_status[$mp]['asta'];
-    $asta_status_text = getStatusText($asta_status);
-    $message .= "  🟦 ASTA: " . $asta_status_text . "\n";
+    $message .= "  🟦 ASTA: " . getStatusText($marketplace_status[$mp]['asta']) . "\n";
     if ($mp == 'blibli') {
         $message .= "  🟧 Kotime: 📭 No Transaction (no data)\n";
     } else {
-        $kotime_status = $marketplace_status[$mp]['kotime'];
-        $kotime_status_text = getStatusText($kotime_status);
-        $message .= "  🟧 Kotime: " . $kotime_status_text . "\n";
+        $message .= "  🟧 Kotime: " . getStatusText($marketplace_status[$mp]['kotime']) . "\n";
     }
     $message .= "\n";
 }
@@ -686,30 +589,11 @@ $message .= "1. Belum Note: Ratio >{$ratio_limit}% & note kosong\n";
 $message .= "2. Belum Check: Ratio >{$ratio_limit}% & note terisi & belum check\n";
 $message .= "3. Butuh Final DIR: Ratio >{$ratio_limit}% & note terisi & sudah check & status dir bukan 'Final DIR'\n\n";
 
-// Hitung total untuk ASTA dan Kotime (tanpa menampilkan retur)
-$total_faktur_asta = 0;
-$total_ratio_exceed_asta = 0;
-$total_belum_note_asta = 0;
-$total_belum_check_asta = 0;
-$total_butuh_final_dir_asta = 0;
-$total_invoice_asta = 0;
-$total_diterima_asta = 0;
-
-$total_faktur_kotime = 0;
-$total_ratio_exceed_kotime = 0;
-$total_belum_note_kotime = 0;
-$total_belum_check_kotime = 0;
-$total_butuh_final_dir_kotime = 0;
-$total_invoice_kotime = 0;
-$total_diterima_kotime = 0;
-
-// Tampilkan per marketplace ASTA
+// ---- ASTA per marketplace ----
 $message .= "🟦 *ASTA HOMEWARE*\n";
 foreach (['shopee', 'tiktok', 'lazada', 'blibli'] as $mp) {
-    $data_key = 'asta_' . $mp;
-    $data = $acol_data[$data_key];
+    $data = $acol_data['asta_' . $mp];
     if ($data['total_faktur'] > 0) {
-        // Hitung non-retur untuk keperluan persentase (tidak ditampilkan)
         $total_faktur_non_retur = $data['total_faktur'] - $data['total_faktur_retur'];
         $total_invoice_non_retur = $data['total_invoice'] - $data['total_invoice_retur'];
         $total_diterima_non_retur = $data['total_diterima'] - $data['total_diterima_retur'];
@@ -728,7 +612,7 @@ foreach (['shopee', 'tiktok', 'lazada', 'blibli'] as $mp) {
         $message .= "• Selisih: Rp " . number_format($total_selisih_non_retur) . "\n";
         $message .= "• Ratio: " . number_format($ratio, 2) . "%\n\n";
 
-        // Akumulasi total ASTA (menggunakan non-retur untuk invoice/diterima)
+        // Akumulasi total ASTA (non-retur)
         $total_faktur_asta += $data['total_faktur'];
         $total_ratio_exceed_asta += $data['ratio_exceed'];
         $total_belum_note_asta += $data['belum_note'];
@@ -742,11 +626,10 @@ foreach (['shopee', 'tiktok', 'lazada', 'blibli'] as $mp) {
     }
 }
 
-// Tampilkan per marketplace Kotime
+// ---- KOTIME per marketplace ----
 $message .= "🟧 *KOTIME*\n";
 foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
-    $data_key = 'kotime_' . $mp;
-    $data = $acol_data[$data_key];
+    $data = $acol_data['kotime_' . $mp];
     if ($data['total_faktur'] > 0) {
         $total_faktur_non_retur = $data['total_faktur'] - $data['total_faktur_retur'];
         $total_invoice_non_retur = $data['total_invoice'] - $data['total_invoice_retur'];
@@ -766,6 +649,7 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
         $message .= "• Selisih: Rp " . number_format($total_selisih_non_retur) . "\n";
         $message .= "• Ratio: " . number_format($ratio, 2) . "%\n\n";
 
+        // Akumulasi total Kotime (non-retur)
         $total_faktur_kotime += $data['total_faktur'];
         $total_ratio_exceed_kotime += $data['ratio_exceed'];
         $total_belum_note_kotime += $data['belum_note'];
@@ -779,28 +663,28 @@ foreach (['shopee', 'tiktok', 'lazada'] as $mp) {
     }
 }
 
-// Hitung grand total semua brand (tanpa menyebut retur)
-$total_faktur_all = $total_faktur_asta + $total_faktur_kotime;
+// Grand total semua brand
+$total_faktur_all       = $total_faktur_asta + $total_faktur_kotime;
 $total_ratio_exceed_all = $total_ratio_exceed_asta + $total_ratio_exceed_kotime;
-$total_belum_note_all = $total_belum_note_asta + $total_belum_note_kotime;
-$total_belum_check_all = $total_belum_check_asta + $total_belum_check_kotime;
+$total_belum_note_all   = $total_belum_note_asta + $total_belum_note_kotime;
+$total_belum_check_all  = $total_belum_check_asta + $total_belum_check_kotime;
 $total_butuh_final_dir_all = $total_butuh_final_dir_asta + $total_butuh_final_dir_kotime;
-$total_invoice_all = $total_invoice_asta + $total_invoice_kotime;
-$total_diterima_all = $total_diterima_asta + $total_diterima_kotime;
+$total_invoice_all      = $total_invoice_asta + $total_invoice_kotime;
+$total_diterima_all     = $total_diterima_asta + $total_diterima_kotime;
 
 if ($total_faktur_all > 0) {
     $selisih_all = $total_invoice_all - $total_diterima_all;
-    $ratio_all = $total_invoice_all > 0 ? ($selisih_all / $total_invoice_all) * 100 : 0;
+    $ratio_all   = $total_invoice_all > 0 ? ($selisih_all / $total_invoice_all) * 100 : 0;
 
     $selisih_asta = $total_invoice_asta - $total_diterima_asta;
-    $ratio_asta = $total_invoice_asta > 0 ? ($selisih_asta / $total_invoice_asta) * 100 : 0;
+    $ratio_asta   = $total_invoice_asta > 0 ? ($selisih_asta / $total_invoice_asta) * 100 : 0;
 
     $selisih_kotime = $total_invoice_kotime - $total_diterima_kotime;
-    $ratio_kotime = $total_invoice_kotime > 0 ? ($selisih_kotime / $total_invoice_kotime) * 100 : 0;
+    $ratio_kotime   = $total_invoice_kotime > 0 ? ($selisih_kotime / $total_invoice_kotime) * 100 : 0;
 
     $message .= "📊 *SUMMARY PER BRAND*\n";
 
-    // ASTA Summary (tanpa retur)
+    // ASTA Summary
     $message .= "🟦 *ASTA HOMEWARE:*\n";
     $message .= "• Total Faktur: " . number_format($total_faktur_asta) . "\n";
     $non_retur_asta = $total_faktur_asta - array_sum(array_column(array_intersect_key($acol_data, array_flip(['asta_shopee','asta_tiktok','asta_lazada','asta_blibli'])), 'total_faktur_retur'));
@@ -873,11 +757,7 @@ if ($total_faktur_all > 0) {
 
 // Critical Invoices
 if (!empty($critical_invoices)) {
-    $grouped_by_brand = [
-        'ASTA' => [],
-        'Kotime' => []
-    ];
-
+    $grouped_by_brand = ['ASTA' => [], 'Kotime' => []];
     foreach ($critical_invoices as $inv) {
         $brand = $inv['brand'];
         $category = $inv['category'];
@@ -901,12 +781,12 @@ if (!empty($critical_invoices)) {
                 foreach ($category_order as $category) {
                     if (isset($grouped_by_brand[$brand][$category]) && !empty($grouped_by_brand[$brand][$category])) {
                         $invoices = $grouped_by_brand[$brand][$category];
-                        usort($invoices, function ($a, $b) {
+                        // Perbaikan: anonymous function biasa
+                        usort($invoices, function($a, $b) {
                             return $b['ratio_diference'] <=> $a['ratio_diference'];
                         });
 
                         $message .= "*" . $category . " (" . count($invoices) . "):*\n";
-
                         $display_count = min(2, count($invoices));
                         for ($i = 0; $i < $display_count; $i++) {
                             $inv = $invoices[$i];
@@ -914,7 +794,6 @@ if (!empty($critical_invoices)) {
                                 " (Ratio: " . number_format($inv['ratio_diference'], 2) . "%)" .
                                 " [" . $inv['source'] . "]\n";
                         }
-
                         if (count($invoices) > $display_count) {
                             $message .= "...dan " . (count($invoices) - $display_count) . " lainnya\n";
                         }
@@ -926,7 +805,7 @@ if (!empty($critical_invoices)) {
     }
 }
 
-// Total item yang perlu perhatian (hanya Acol)
+// Total item yang perlu perhatian
 $grand_total_acol = $total_belum_note_all + $total_belum_check_all + $total_butuh_final_dir_all;
 $message .= "📋 *TOTAL ITEM YANG MEMBUTUHKAN PERHATIAN (ACOL):*\n";
 $message .= "• Belum Note: " . $total_belum_note_all . "\n";
@@ -937,10 +816,10 @@ $message .= "━━━━━━━━━━━━━━━━━━\n";
 $message .= "_Asta Homeware ERP | Report Date: " . $current_date . "_";
 
 // ===============================================
-// KIRIM VIA FONNTE API
+// 8. KIRIM VIA FONNTE
 // ===============================================
 $curl = curl_init();
-curl_setopt_array($curl, array(
+curl_setopt_array($curl, [
     CURLOPT_URL => 'https://api.fonnte.com/send',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_ENCODING => '',
@@ -949,15 +828,15 @@ curl_setopt_array($curl, array(
     CURLOPT_FOLLOWLOCATION => true,
     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
     CURLOPT_CUSTOMREQUEST => 'POST',
-    CURLOPT_POSTFIELDS => array(
-        'target' => $targets,
-        'message' => $message,
+    CURLOPT_POSTFIELDS => [
+        'target'      => $targets,
+        'message'     => $message,
         'countryCode' => '62',
-    ),
-    CURLOPT_HTTPHEADER => array(
+    ],
+    CURLOPT_HTTPHEADER => [
         'Authorization: ' . $token
-    ),
-));
+    ],
+]);
 
 $response = curl_exec($curl);
 if (curl_errno($curl)) {
@@ -966,7 +845,7 @@ if (curl_errno($curl)) {
 curl_close($curl);
 
 // ===============================================
-// OUTPUT DEBUG (HANYA ACOL, TANPA RETUR)
+// 9. OUTPUT DEBUG (DENGAN TABEL RETUR)
 // ===============================================
 echo "📊 ASTA DAILY REPORT SYSTEM (ACOL ONLY, TANPA RETUR)\n";
 echo "==================================================\n";
@@ -1073,6 +952,52 @@ echo "  - Belum Note: " . $total_belum_note_all . "\n";
 echo "  - Belum Check: " . $total_belum_check_all . "\n";
 echo "  - Butuh Final DIR: " . $total_butuh_final_dir_all . "\n";
 echo "  - TOTAL: " . $grand_total_acol . "\n\n";
+
+// ===============================================
+// TABEL RETUR (HANYA OUTPUT)
+// ===============================================
+if (!empty($retur_invoices)) {
+    echo "📋 DAFTAR FAKTUR RETUR (REFUND < 0):\n";
+    echo "------------------------------------\n";
+
+    // Tentukan lebar kolom
+    $max_no     = max(array_map('strlen', array_column($retur_invoices, 'no_faktur')));
+    $max_source = max(array_map('strlen', array_column($retur_invoices, 'source')));
+    $max_brand  = max(array_map('strlen', array_column($retur_invoices, 'brand')));
+    $max_refund = max(array_map(function($inv) { return strlen(number_format(abs($inv['refund']))); }, $retur_invoices));
+    $max_total  = max(array_map(function($inv) { return strlen(number_format($inv['total_faktur'])); }, $retur_invoices));
+
+    // Padding
+    $max_no     = max($max_no, strlen('No. Faktur')) + 2;
+    $max_source = max($max_source, strlen('Source')) + 2;
+    $max_brand  = max($max_brand, strlen('Brand')) + 2;
+    $max_refund = max($max_refund, strlen('Refund (Rp)')) + 2;
+    $max_total  = max($max_total, strlen('Total Faktur (Rp)')) + 2;
+
+    $line = '+' . str_repeat('-', $max_no) . '+' . str_repeat('-', $max_source) . '+' . str_repeat('-', $max_brand) . '+' . str_repeat('-', $max_refund) . '+' . str_repeat('-', $max_total) . '+';
+
+    // Header
+    echo $line . "\n";
+    printf("| %-".($max_no-1)."s | %-".($max_source-1)."s | %-".($max_brand-1)."s | %-".($max_refund-1)."s | %-".($max_total-1)."s |\n",
+        'No. Faktur', 'Source', 'Brand', 'Refund (Rp)', 'Total Faktur (Rp)');
+    echo $line . "\n";
+
+    // Data
+    foreach ($retur_invoices as $inv) {
+        $refund_formatted = number_format(abs($inv['refund']));
+        $total_formatted  = number_format($inv['total_faktur']);
+        printf("| %-".($max_no-1)."s | %-".($max_source-1)."s | %-".($max_brand-1)."s | %-".($max_refund-1)."s | %-".($max_total-1)."s |\n",
+            $inv['no_faktur'],
+            $inv['source'],
+            $inv['brand'],
+            $refund_formatted,
+            $total_formatted);
+    }
+    echo $line . "\n";
+    echo "Total retur: " . count($retur_invoices) . " faktur\n\n";
+} else {
+    echo "📋 Tidak ada faktur retur pada periode ini.\n\n";
+}
 
 echo "📱 PANJANG PESAN: " . strlen($message) . " karakter\n";
 
